@@ -1,0 +1,35 @@
+{
+  "_fixtureNotice": "FICTIONAL TEST DATA — not verified real-world research.",
+  "id": "fictional-brief-crystal-001",
+  "audience": "lic_condo_owner",
+  "topics": [
+    {
+      "id": "fictional-topic-01",
+      "title": "Questions to ask before deciding whether to sell",
+      "question": "What would make a selling conversation useful for you?",
+      "sourceRefs": [
+        {
+          "id": "fictional-source-01",
+          "title": "Fictional Seller Question Notes",
+          "url": "https://fictional.example/sellerspark/source-01",
+          "date": "2026-10-20"
+        }
+      ],
+      "claims": []
+    },
+    {
+      "id": "fictional-topic-02",
+      "title": "What to gather before a listing conversation",
+      "question": "Which questions do you want answered before discussing next steps?",
+      "sourceRefs": [
+        {
+          "id": "fictional-source-02",
+          "title": "Fictional Planning Notes",
+          "url": "https://fictional.example/sellerspark/source-02",
+          "date": "2026-10-20"
+        }
+      ],
+      "claims": []
+    }
+  ]
+}
