@@ -30,6 +30,20 @@
         }
       ],
       "claims": []
+    },
+    {
+      "id": "fictional-topic-03",
+      "title": "How to prepare for a human selling consultation",
+      "question": "What would you want explained before choosing a next step?",
+      "sourceRefs": [
+        {
+          "id": "fictional-source-03",
+          "title": "Fictional Consultation Notes",
+          "url": "https://fictional.example/sellerspark/source-03",
+          "date": "2026-10-20"
+        }
+      ],
+      "claims": []
     }
   ]
 }

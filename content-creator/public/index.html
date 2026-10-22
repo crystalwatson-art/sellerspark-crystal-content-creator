@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SellerSpark AI · Crystal's Content Creator</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="SellerSpark AI Content Creator home">
+          <span class="brand-mark">S</span>
+          <span>SellerSpark AI</span>
+          <span class="brand-divider">/</span>
+          <span class="brand-muted">Content Creator</span>
+        </a>
+        <div class="topbar-actions">
+          <span class="workspace-label"><span class="status-dot"></span>Local workspace</span>
+          <button id="theme-toggle" class="icon-button" type="button" aria-pressed="false" aria-label="Switch to dark mode">
+            <span class="theme-icon" aria-hidden="true">◐</span>
+            <span class="theme-label">Dark mode</span>
+          </button>
+          <button id="reset-button" class="reset-button" type="button">Reset</button>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero" aria-labelledby="page-title">
+          <div class="hero-copy">
+            <p class="eyebrow">CRYSTAL'S COMPONENT · TIKTOK WORKSPACE</p>
+            <h1 id="page-title">Turn seller research into <span>content worth reviewing.</span></h1>
+            <p class="intro">
+              Three focused TikTok directions for the right homeowner audience,
+              grounded in the supplied brief and held for human approval.
+            </p>
+          </div>
+          <div class="hero-actions">
+            <button id="run-fictional-test" class="primary-button" type="button">
+              <span aria-hidden="true">✦</span> Run fictional test mode
+            </button>
+            <p>Fictional data only · no publishing or outreach</p>
+          </div>
+        </section>
+
+        <section class="workspace-strip" aria-label="Workspace status">
+          <div class="workspace-stat">
+            <span class="stat-label">Workflow</span>
+            <strong>Content Creator</strong>
+          </div>
+          <div class="workspace-stat">
+            <span class="stat-label">Audience</span>
+            <strong id="audience-value">Awaiting brief</strong>
+          </div>
+          <div class="workspace-stat">
+            <span class="stat-label">Draft status</span>
+            <span id="status-value" class="status-badge muted">Ready to test</span>
+          </div>
+          <div class="approval-note">
+            <span class="approval-icon" aria-hidden="true">✓</span>
+            <span><strong>Human review required</strong><small>Nothing is published automatically.</small></span>
+          </div>
+        </section>
+
+        <section class="drafts-section" aria-labelledby="drafts-heading">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">DRAFT QUEUE</p>
+              <h2 id="drafts-heading">Three ways into the conversation</h2>
+            </div>
+            <div id="audience-pill" class="audience-pill">Audience pending</div>
+          </div>
+
+          <p id="result-summary" class="section-summary" aria-live="polite">
+            Run fictional test mode to preview three compact, review-only draft packages.
+          </p>
+          <p id="demo-error" class="error" role="alert" hidden></p>
+          <div id="result-diagnostic" class="result-diagnostic" role="status" aria-live="polite" hidden>
+            <strong>Writer status: <span id="writer-status-value"></span></strong>
+            <span id="writer-explanation"></span>
+            <span><strong>Next step:</strong> <span id="writer-next-step"></span></span>
+          </div>
+          <div id="drafts" class="draft-grid"></div>
+          <div id="empty-state" class="empty-state">
+            <span class="empty-icon" aria-hidden="true">✦</span>
+            <strong>Your draft queue is ready</strong>
+            <span>Run the fictional test mode above to see three distinct TikTok angles.</span>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span>SellerSpark AI · Crystal's Content Creator</span>
+        <span>No research gathering, optimizer actions, publishing, or customer contact.</span>
+      </footer>
+    </div>
+
+    <div id="draft-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+      <div class="modal-backdrop" data-close-modal="true"></div>
+      <section class="modal-dialog" role="document">
+        <header class="modal-header">
+          <div>
+            <div class="modal-kicker"><span id="modal-number">DRAFT 01</span><span id="modal-angle">Seller education</span></div>
+            <h2 id="modal-title">Draft preview</h2>
+            <p id="modal-audience" class="modal-audience">Audience pending</p>
+          </div>
+          <button id="modal-close" class="close-button" type="button" aria-label="Close draft preview">×</button>
+        </header>
+
+        <div class="modal-body">
+          <section class="modal-feature">
+            <span class="modal-label">TikTok hook</span>
+            <p id="modal-hook" class="hook-copy"></p>
+          </section>
+
+          <div class="modal-columns">
+            <section class="modal-block">
+              <span class="modal-label">Short video script</span>
+              <p id="modal-script"></p>
+            </section>
+            <section class="modal-block">
+              <span class="modal-label">Video concept</span>
+              <p id="modal-concept"></p>
+            </section>
+          </div>
+
+          <section class="modal-block">
+            <span class="modal-label">Suggested scenes</span>
+            <ol id="modal-scenes" class="scene-list"></ol>
+          </section>
+
+          <div class="modal-columns">
+            <section class="modal-block">
+              <span class="modal-label">Caption</span>
+              <p id="modal-caption"></p>
+            </section>
+            <section class="modal-block">
+              <span class="modal-label">Hashtags</span>
+              <p id="modal-hashtags" class="hashtag-copy"></p>
+            </section>
+          </div>
+
+          <section class="modal-feature cta-block">
+            <span class="modal-label">Suggested call to action</span>
+            <p id="modal-cta"></p>
+          </section>
+
+          <div class="modal-columns final-blocks">
+            <section class="modal-block">
+              <span class="modal-label">Research references</span>
+              <ul id="modal-references" class="reference-list"></ul>
+            </section>
+            <section id="modal-warnings-block" class="modal-block warning-block" hidden>
+              <span class="modal-label">Warnings</span>
+              <ul id="modal-warnings" class="warning-list"></ul>
+            </section>
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <span id="modal-position" class="modal-position">Draft 1 of 3</span>
+          <div class="modal-actions">
+            <button id="modal-prev" class="secondary-button" type="button">← Previous Draft</button>
+            <button id="modal-next" class="secondary-button" type="button">Next Draft →</button>
+            <button id="modal-copy" class="primary-button compact-button" type="button">Copy</button>
+            <button id="modal-close-footer" class="secondary-button" type="button">Close</button>
+          </div>
+        </footer>
+      </section>
+    </div>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
