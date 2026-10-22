@@ -1,0 +1,49 @@
+{
+  "_fixtureNotice": "FICTIONAL TEST DATA — not verified real-world research.",
+  "id": "fictional-brief-brooklyn-001",
+  "audience": "brooklyn_townhouse_owner",
+  "topics": [
+    {
+      "id": "fictional-brooklyn-topic-01",
+      "title": "Fictional Brooklyn townhouse seller decision checklist",
+      "question": "What would I want to understand about preparing my townhouse before a seller conversation?",
+      "sourceRefs": [
+        {
+          "id": "fictional-brooklyn-source-01",
+          "title": "Fictional Brooklyn Townhouse Seller Notes",
+          "url": "https://fictional.example/sellerspark/brooklyn-source-01",
+          "date": "2026-10-21"
+        }
+      ],
+      "claims": []
+    },
+    {
+      "id": "fictional-brooklyn-topic-02",
+      "title": "Fictional Brooklyn townhouse question-list notes",
+      "question": "Which home details should I gather before asking what a seller plan could involve?",
+      "sourceRefs": [
+        {
+          "id": "fictional-brooklyn-source-02",
+          "title": "Fictional Brooklyn Townhouse Planning Notes",
+          "url": "https://fictional.example/sellerspark/brooklyn-source-02",
+          "date": "2026-10-21"
+        }
+      ],
+      "claims": []
+    },
+    {
+      "id": "fictional-brooklyn-topic-03",
+      "title": "Fictional Brooklyn townhouse consultation prompts",
+      "question": "What would make a first conversation about my townhouse feel useful and low-pressure?",
+      "sourceRefs": [
+        {
+          "id": "fictional-brooklyn-source-03",
+          "title": "Fictional Brooklyn Townhouse Consultation Notes",
+          "url": "https://fictional.example/sellerspark/brooklyn-source-03",
+          "date": "2026-10-21"
+        }
+      ],
+      "claims": []
+    }
+  ]
+}

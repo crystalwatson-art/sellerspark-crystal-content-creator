@@ -1,15 +1,15 @@
 # SellerSpark AI — Crystal's Content Creator
 
-This local, uncommitted component accepts a structured research brief and
+This local Content Creator component accepts a structured research brief and
 turns it into exactly three TikTok draft packages for:
 
 - Long Island City condo sellers
 - Brooklyn townhouse sellers
 
-It creates hooks, short scripts, written video concepts, suggested scenes,
-captions, hashtags, and suggested next steps. It preserves supplied source
-references, source dates, and warnings. It does not gather, validate, score, or
-fact-check research.
+It creates hooks, short scripts, clear viewer takeaways, written video
+concepts, suggested scenes, captions, hashtags, and specific next steps. It
+preserves supplied source references, source dates, and warnings. It does not
+gather, validate, score, or fact-check research.
 
 The fixture and tests use clearly labeled fictional data. Nothing in them is
 verified real-world research.
@@ -24,6 +24,11 @@ Then open http://127.0.0.1:3000 in a browser and choose Run fictional test mode.
 The visible interface does not expose a JSON editor. External research briefs
 remain accepted through the local `POST /api/content` handoff for a future
 Research Agent or human-supplied integration.
+
+The automated tests cover both clearly labeled fictional briefs:
+
+    fixtures/fictional-research-brief.json
+    fixtures/fictional-brooklyn-townhouse-brief.json
 
 The output is draft-only. Every result requires human approval, and there is no
 publishing or customer-contact function. The structured handoff remains in the

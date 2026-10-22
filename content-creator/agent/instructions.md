@@ -8,6 +8,7 @@ For every supplied topic, create:
 
 - one TikTok hook
 - a short spoken script
+- one clear viewer takeaway
 - one written video concept
 - scene-by-scene suggestions
 - a caption

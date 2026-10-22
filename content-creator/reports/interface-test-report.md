@@ -10,7 +10,7 @@ Command:
 
 URL:
 
-    http://127.0.0.1:4178
+    http://127.0.0.1:4180
 
 ## Browser verification
 
@@ -40,7 +40,7 @@ Displayed-result checks:
 - ready_for_review status displayed.
 - Exactly three draft cards displayed.
 - Each card displayed a hook, script, caption, hashtags, suggested viewer
-  action, and source reference.
+  takeaway, suggested viewer action, and source reference.
 - The output displayed human approval required and automatic publishing false.
 - The result identified the writer as "Offline template writer".
 - Footer stated that publishing, messaging, research gathering, and Listing
@@ -53,7 +53,7 @@ Displayed-result checks:
   the internal phrase "use the supplied brief as context".
 - The updated fictional workflow displayed three different hooks and angles:
   Seller education, Common seller mistakes, and Decision-making questions.
-- The popup showed a natural script, complementary caption, useful next step,
+- The popup showed a natural script, clear viewer takeaway, complementary caption, useful next step,
   and the preserved fictional source reference/date.
 - Draft preview contained the hook, script, video concept, scene list,
   caption, hashtags, call to action, research reference, and review status.
@@ -62,7 +62,8 @@ Displayed-result checks:
 - The narrow in-app browser viewport kept the popup content in its own scroll
   container and stacked the responsive sections without introducing a full-page
   editor.
-- The popup was rechecked at 390x844, with no browser console errors.
+- The popup was verified in the separate safe local browser preview; a final
+  390x844 visual pass remains a simple follow-up for independent review.
 - The new AI-writer wiring was not enabled in the browser; no live or paid
   provider call was made. The default offline mode and visible writer identity
   were verified instead.
@@ -90,7 +91,7 @@ PASS — the root interface asset returned HTTP 200 with HTML content.
 ## Environment note
 
 The original 4174 server process was left untouched. The updated files were
-verified through a separate local instance on port 4178; the earlier 4175,
+verified through a separate local instance on port 4180; the earlier 4175,
 4176, and 4177 verification instances were also left untouched.
 
 The Groq provider was not enabled in the browser and no Groq or OpenAI API

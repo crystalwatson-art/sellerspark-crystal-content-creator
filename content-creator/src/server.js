@@ -10,6 +10,7 @@ import { createDraftHistory } from "./draft-history.js";
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const publicRoot = path.join(projectRoot, "public");
 const fixturePath = path.join(projectRoot, "fixtures", "fictional-research-brief.json");
+const brooklynFixturePath = path.join(projectRoot, "fixtures", "fictional-brooklyn-townhouse-brief.json");
 const port = Number(process.env.PORT || 3000);
 const providerMode = process.env.CONTENT_CREATOR_PROVIDER || "template";
 const draftHistory = createDraftHistory();
@@ -33,7 +34,8 @@ const assets = new Map([
   ["/index.html", { file: path.join(publicRoot, "index.html"), type: "text/html; charset=utf-8" }],
   ["/app.js", { file: path.join(publicRoot, "app.js"), type: "text/javascript; charset=utf-8" }],
   ["/styles.css", { file: path.join(publicRoot, "styles.css"), type: "text/css; charset=utf-8" }],
-  ["/fixtures/fictional-research-brief.json", { file: fixturePath, type: "application/json; charset=utf-8" }]
+  ["/fixtures/fictional-research-brief.json", { file: fixturePath, type: "application/json; charset=utf-8" }],
+  ["/fixtures/fictional-brooklyn-townhouse-brief.json", { file: brooklynFixturePath, type: "application/json; charset=utf-8" }]
 ]);
 
 function sendJson(response, status, body) {

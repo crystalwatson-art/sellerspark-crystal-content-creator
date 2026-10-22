@@ -18,6 +18,7 @@ const modalTitle = document.querySelector("#modal-title");
 const modalAudience = document.querySelector("#modal-audience");
 const modalHook = document.querySelector("#modal-hook");
 const modalScript = document.querySelector("#modal-script");
+const modalTakeaway = document.querySelector("#modal-takeaway");
 const modalConcept = document.querySelector("#modal-concept");
 const modalScenes = document.querySelector("#modal-scenes");
 const modalCaption = document.querySelector("#modal-caption");
@@ -256,6 +257,7 @@ function renderModal() {
   modalAudience.textContent = draft.audienceLabel;
   modalHook.textContent = draft.hook;
   modalScript.textContent = draft.script;
+  modalTakeaway.textContent = draft.takeaway;
   modalConcept.textContent = draft.videoConcept;
   renderList(modalScenes, draft.suggestedScenes, "No scene suggestions supplied.");
   modalCaption.textContent = draft.caption;
@@ -295,6 +297,7 @@ function copyActiveDraft() {
   const copyText = [
     draft.hook,
     "\nScript: " + draft.script,
+    "\nTakeaway: " + draft.takeaway,
     "\nVideo concept: " + draft.videoConcept,
     "\nScenes:\n- " + draft.suggestedScenes.join("\n- "),
     "\nCaption: " + draft.caption,

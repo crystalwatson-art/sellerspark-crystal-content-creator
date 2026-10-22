@@ -5,12 +5,12 @@
   "topics": [
     {
       "id": "fictional-topic-01",
-      "title": "Questions to ask before deciding whether to sell",
-      "question": "What would make a selling conversation useful for you?",
+      "title": "Fictional LIC condo seller decision checklist",
+      "question": "What would I want to understand about timing before I invite a seller conversation?",
       "sourceRefs": [
         {
           "id": "fictional-source-01",
-          "title": "Fictional Seller Question Notes",
+          "title": "Fictional LIC Condo Seller Question Notes",
           "url": "https://fictional.example/sellerspark/source-01",
           "date": "2026-10-20"
         }
@@ -19,12 +19,12 @@
     },
     {
       "id": "fictional-topic-02",
-      "title": "What to gather before a listing conversation",
-      "question": "Which questions do you want answered before discussing next steps?",
+      "title": "Fictional LIC condo preparation notes",
+      "question": "Which building and unit details should I gather before asking for a listing conversation?",
       "sourceRefs": [
         {
           "id": "fictional-source-02",
-          "title": "Fictional Planning Notes",
+          "title": "Fictional LIC Condo Planning Notes",
           "url": "https://fictional.example/sellerspark/source-02",
           "date": "2026-10-20"
         }
@@ -33,12 +33,12 @@
     },
     {
       "id": "fictional-topic-03",
-      "title": "How to prepare for a human selling consultation",
-      "question": "What would you want explained before choosing a next step?",
+      "title": "Fictional LIC condo consultation prompts",
+      "question": "What would make a first conversation about my condo feel useful and low-pressure?",
       "sourceRefs": [
         {
           "id": "fictional-source-03",
-          "title": "Fictional Consultation Notes",
+          "title": "Fictional LIC Condo Consultation Notes",
           "url": "https://fictional.example/sellerspark/source-03",
           "date": "2026-10-20"
         }

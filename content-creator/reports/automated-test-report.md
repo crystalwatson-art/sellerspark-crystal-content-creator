@@ -4,7 +4,7 @@ Date: 2026-10-22
 
 ## Final result
 
-PASS — 32 tests passed, 0 failed, 0 skipped.
+PASS — 33 tests passed, 0 failed, 0 skipped.
 
 Command:
 
@@ -14,7 +14,7 @@ Coverage:
 
 1. Normal fictional brief creates exactly three complete drafts for the Long
    Island City condo audience.
-2. Brooklyn townhouse audience.
+2. Separate fictional Brooklyn townhouse audience brief.
 3. Missing research.
 4. Malformed topic input.
 5. Fewer than three topics.
@@ -28,28 +28,29 @@ Coverage:
 13. Client wiring for popup navigation, reset, and theme switching.
 14. Viewer-facing scripts use distinct, conversational language without the
     internal brief-handling phrase.
-15. Duplicate research topics are blocked instead of receiving fabricated
+15. Each package has a distinct topic-driven hook and clear viewer takeaway.
+16. Duplicate research topics are blocked instead of receiving fabricated
     creative variety.
-16. Explicit uncertainty warnings remain attached to the review handoff.
-17. OpenAI-shaped output returns exactly three structured drafts with writer
+17. Explicit uncertainty warnings remain attached to the review handoff.
+18. OpenAI-shaped output returns exactly three structured drafts with writer
     identity and strict schema configuration.
-18. Repetitive output triggers one bounded rewrite attempt.
-19. Repeated freshness failure returns no drafts without template fallback.
-20. Malformed model output is rejected safely.
-21. Unsupported claim identifiers and internal viewer-facing language are
+19. Repetitive output triggers one bounded rewrite attempt.
+20. Repeated freshness failure returns no drafts without template fallback.
+21. Malformed model output is rejected safely.
+22. Unsupported claim identifiers and internal viewer-facing language are
     rejected safely.
-22. Missing research stops before any provider request.
-23. Brooklyn history and audience metadata remain separate from LIC output.
-24. Provider instructions treat the supplied brief as untrusted data and keep
+23. Missing research stops before any provider request.
+24. Brooklyn history and audience metadata remain separate from LIC output.
+25. Provider instructions treat the supplied brief as untrusted data and keep
     the no-publication contract.
-25. Missing OpenAI configuration returns no drafts without a silent fallback.
-26. Groq returns three structured drafts with preserved review safeguards.
-27. Groq request payload keeps the research boundary and strict JSON schema.
-28. Groq rate limits return no drafts without switching providers.
-29. Malformed Groq output is rejected without template fallback.
-30. Missing Groq configuration returns no drafts.
-31. Authentication failures expose only safe category and HTTP status metadata.
-32. Network failures receive a safe diagnostic and next step.
+26. Missing OpenAI configuration returns no drafts without a silent fallback.
+27. Groq returns three structured drafts with preserved review safeguards.
+28. Groq request payload keeps the research boundary and strict JSON schema.
+29. Groq rate limits return no drafts without switching providers.
+30. Malformed Groq output is rejected without template fallback.
+31. Missing Groq configuration returns no drafts.
+32. Authentication failures expose only safe category and HTTP status metadata.
+33. Network failures receive a safe diagnostic and next step.
 
 ## Corrections made during verification
 
@@ -68,8 +69,11 @@ Coverage:
 - The final UI pass adds a restrained coral accent and reduces headline and
   vertical spacing without changing the popup layout.
 - The generation logic now uses three distinct creative approaches, creates
-  topic-driven hooks and takeaways, and keeps captions complementary to the
-  scripts.
+  topic-driven hooks, viewer takeaways, and complementary captions. The
+  offline templates use the supplied question and audience without inventing
+  property or market facts.
+- The fictional fixtures now include realistic, clearly labeled homeowner
+  questions for both Long Island City condos and Brooklyn townhouses.
 - Weak briefs with duplicate topics now return needs_more_research instead of
   pretending they support three different drafts.
 - Supplied uncertainty warnings now remain available in each draft's review
@@ -113,6 +117,7 @@ PASS — the fictional LIC brief produced three drafts with:
 - customerContacted: false
 - writer: offline_template
 - writerLabel: Offline template writer
+- three distinct hooks, scripts, takeaways, and creative angles
 
 The dashboard also keeps the external research handoff available through
 `POST /api/content` while keeping raw JSON out of the everyday UI.

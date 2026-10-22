@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createContentDraft, REQUIRED_DRAFT_COUNT } from "../src/content-creator.js";
 import fictionalBrief from "../fixtures/fictional-research-brief.json" with { type: "json" };
+import fictionalBrooklynBrief from "../fixtures/fictional-brooklyn-townhouse-brief.json" with { type: "json" };
 
 function briefWithTopics(topics) {
   return { ...fictionalBrief, topics };
@@ -17,6 +18,7 @@ test("normal fictional brief produces exactly three complete draft packages", ()
   for (const draft of result.drafts) {
     assert.equal(typeof draft.hook, "string");
     assert.equal(typeof draft.script, "string");
+    assert.equal(typeof draft.takeaway, "string");
     assert.equal(typeof draft.caption, "string");
     assert.equal(typeof draft.angle, "string");
     assert.equal(typeof draft.videoConcept, "string");
@@ -30,23 +32,20 @@ test("normal fictional brief produces exactly three complete draft packages", ()
   }
   assert.equal(new Set(result.drafts.map((draft) => draft.angle)).size, 3);
   assert.equal(new Set(result.drafts.map((draft) => draft.hook)).size, 3);
+  assert.equal(new Set(result.drafts.map((draft) => draft.takeaway)).size, 3);
   assert.ok(result.drafts.every((draft) => !/\{(?:property|audience|question)\}/.test(draft.hook + draft.script + draft.caption)));
   assert.notEqual(result.drafts[0].caption, result.drafts[0].script);
 });
 
 test("fictional Brooklyn townhouse brief uses the second supported audience", () => {
-  const result = createContentDraft({
-    ...fictionalBrief,
-    audience: "brooklyn_townhouse_owner"
-  });
+  const result = createContentDraft(fictionalBrooklynBrief);
 
   assert.equal(result.status, "ready_for_review");
   assert.equal(result.audienceLabel, "Brooklyn townhouse owners");
   assert.equal(result.drafts.length, 3);
   assert.ok(result.drafts.every((draft) => draft.hashtags.includes("#Brooklyn")));
-  assert.ok(result.drafts.every((draft) =>
-    [draft.hook, draft.script].every((text) => text.includes("Brooklyn townhouse"))
-  ));
+  assert.ok(result.drafts.every((draft) => draft.hook.includes("Brooklyn townhouse")));
+  assert.ok(result.drafts.every((draft) => draft.script.includes("Brooklyn townhouse")));
   assert.ok(result.drafts.every((draft) =>
     ![draft.hook, draft.script].some((text) => text.includes("Long Island City condo"))
   ));
@@ -58,15 +57,27 @@ test("scripts stay viewer-facing and use distinct creative language", () => {
 
   assert.equal(new Set(scripts).size, 3);
   assert.ok(scripts.every((script) => !/use the supplied brief as context/i.test(script)));
-  assert.ok(scripts.every((script) => /write down|name the information/i.test(script)));
-  assert.ok(result.drafts.every((draft) => /qualified local professional/i.test(draft.suggestedNextStep)));
-  assert.ok(scripts.some((script) => /seller mistake/i.test(script)));
-  assert.ok(scripts.some((script) => /before you decide/i.test(script)));
+  assert.ok(scripts.every((script) => /question|write it down|note what/i.test(script)));
+  assert.ok(result.drafts.every((draft) => /contact Shalinthia/i.test(draft.suggestedNextStep)));
+  assert.ok(result.drafts.some((draft) => /Seller education/i.test(draft.angle)));
+  assert.ok(result.drafts.some((draft) => /seller mistake/i.test(draft.script)));
+  assert.ok(result.drafts.some((draft) => /first conversation/i.test(draft.script)));
+  assert.ok(result.drafts.every((draft) => draft.takeaway.length > 35));
   assert.ok(result.drafts.every((draft) =>
     [draft.hook, draft.script, draft.caption].every((text) =>
       !/use the supplied brief|human review required|based on the research input|this is a fictional topic/i.test(text)
     )
   ));
+});
+
+test("each fictional topic shapes a different audience-appropriate takeaway", () => {
+  const result = createContentDraft(fictionalBrief);
+
+  result.drafts.forEach((draft, index) => {
+    assert.ok(draft.script.includes(fictionalBrief.topics[index].question));
+    assert.match(draft.videoConcept, /Long Island City condo/);
+    assert.ok(draft.takeaway.includes("question"));
+  });
 });
 
 test("duplicate topics are blocked instead of receiving fabricated variety", () => {
@@ -210,6 +221,7 @@ test("output has a stable future-optimizer handoff shape", () => {
     "sourceRefs",
     "suggestedNextStep",
     "suggestedScenes",
+    "takeaway",
     "uncertaintyWarnings",
     "unsupportedClaims",
     "videoConcept",

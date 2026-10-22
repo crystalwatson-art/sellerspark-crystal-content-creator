@@ -15,6 +15,7 @@ test("dashboard exposes fictional mode and popup controls without a JSON editor"
   assert.match(html, /id="modal-prev"/);
   assert.match(html, /id="modal-next"/);
   assert.match(html, /id="modal-copy"/);
+  assert.match(html, /id="modal-takeaway"/);
   assert.match(html, /id="result-diagnostic"/);
   assert.match(html, /id="writer-status-value"/);
   assert.match(html, /id="writer-explanation"/);
@@ -31,6 +32,8 @@ test("client wiring includes reset, theme, popup navigation, and contained close
   assert.match(app, /function resetWorkspace\(\)/);
   assert.match(app, /result\.writerLabel/);
   assert.match(app, /result\.writerStatus/);
+  assert.match(app, /modalTakeaway\.textContent = draft\.takeaway/);
+  assert.match(app, /"\\nTakeaway: " \+ draft\.takeaway/);
   assert.match(app, /function renderWriterDiagnostic\(result\)/);
   assert.match(app, /The AI provider is temporarily rate-limited\./);
   assert.match(app, /The Content Creator stopped before producing drafts\./);

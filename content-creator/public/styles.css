@@ -63,6 +63,7 @@ body {
 body.modal-open { overflow: hidden; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { font: inherit; }
+button { white-space: nowrap; }
 button:focus-visible, a:focus-visible, .draft-card:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--purple) 48%, transparent);
   outline-offset: 3px;
@@ -89,6 +90,7 @@ button:focus-visible, a:focus-visible, .draft-card:focus-visible {
 .eyebrow { margin: 0 0 11px; color: var(--purple); font-size: 0.69rem; font-weight: 850; letter-spacing: 0.16em; }
 h1, h2, h3, p { margin-top: 0; }
 h1, h2, h3 { line-height: 1.08; letter-spacing: -0.045em; }
+h1, h2, h3, p { overflow-wrap: anywhere; }
 h1 { max-width: 690px; margin-bottom: 14px; font-size: clamp(2.2rem, 4.7vw, 3.75rem); font-weight: 820; }
 h1 span { color: var(--purple); }
 h2 { margin-bottom: 0; font-size: clamp(1.45rem, 2vw, 1.9rem); }
@@ -153,6 +155,7 @@ button:disabled { cursor: not-allowed; opacity: 0.4; }
 .modal-dialog { position: relative; width: min(780px, 100%); max-height: calc(100vh - 32px); display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--line); border-radius: 22px; background: var(--panel); box-shadow: 0 30px 100px rgba(20, 14, 43, 0.32); }
 .modal-header { display: flex; align-items: start; justify-content: space-between; gap: 20px; padding: 24px 26px 19px; border-bottom: 1px solid var(--line); }
 .modal-kicker { display: flex; align-items: center; gap: 9px; margin-bottom: 9px; color: var(--purple); font-size: 0.68rem; font-weight: 850; letter-spacing: 0.1em; text-transform: uppercase; }
+.modal-kicker { flex-wrap: wrap; }
 .modal-kicker span + span { padding-left: 9px; border-left: 1px solid var(--line); color: var(--muted); letter-spacing: 0; text-transform: none; }
 .modal-header h2 { max-width: 630px; margin-bottom: 8px; font-size: clamp(1.35rem, 3vw, 2rem); }
 .modal-audience { margin: 0; color: var(--muted); font-size: 0.8rem; font-weight: 700; }
@@ -168,6 +171,9 @@ button:disabled { cursor: not-allowed; opacity: 0.4; }
 .hook-copy { font-size: 1.02rem !important; font-weight: 750; line-height: 1.4 !important; }
 .hashtag-copy { color: var(--purple-deep) !important; font-weight: 700; }
 .cta-block { border-color: color-mix(in srgb, var(--purple) 35%, var(--line)); background: var(--purple-soft); }
+.takeaway-block { border-color: color-mix(in srgb, var(--coral) 48%, var(--line)); background: var(--coral-soft); }
+.takeaway-block .modal-label { color: var(--coral); }
+.hashtag-copy { overflow-wrap: anywhere; }
 .scene-list, .reference-list, .warning-list { display: grid; gap: 7px; margin: 0; padding-left: 19px; color: var(--muted); font-size: 0.78rem; line-height: 1.45; }
 .reference-list { list-style: none; padding-left: 0; }
 .reference-list li::before { content: "↗"; margin-right: 7px; color: var(--purple); font-weight: 900; }

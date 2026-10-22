@@ -8,41 +8,44 @@ export const SUPPORTED_AUDIENCES = Object.freeze({
 const CREATIVE_ANGLES = Object.freeze([
   {
     angle: "Seller education",
-    hook: "Before you list your {property}, ask yourself this: {question}",
-    script: "If you’re thinking about selling your {property}, start with one clear question: {question} A useful first step is to write down what you want to understand, then bring that list to a qualified professional.",
-    caption: "Selling a {property} starts with clarity, not a rush. Save this question and write down what you would want answered.",
-    suggestedNextStep: "Save your question and bring it to a qualified local professional when you are ready to discuss selling.",
-    videoConcept: "Direct-to-camera explainer that turns one seller question into a clear first conversation.",
+    hook: "Before you list your {property}, start with the question you want answered.",
+    script: "If selling your {property} is on your mind, begin with one question: {question} Write it down before the first conversation. That gives you something concrete to ask and a way to tell whether the conversation was useful.",
+    takeaway: "Bring one written question to a seller conversation so you can focus on the information you actually want to understand.",
+    caption: "Clarity starts before the listing conversation. Save the question you want answered and bring it with you.",
+    suggestedNextStep: "Contact Shalinthia with this question when you are ready for a respectful seller conversation about your home.",
+    videoConcept: "Direct-to-camera explainer for {property} owners that turns one supplied question into a focused first conversation.",
     suggestedScenes: [
-      "Opening: show the seller question as large on-screen text.",
-      "Middle: read the question and name the information a homeowner would want to understand.",
-      "Close: invite the viewer to save the prompt for a future seller conversation."
+      "Opening: show the supplied seller question as large on-screen text.",
+      "Middle: read the question and write one note about what you want to understand.",
+      "Close: invite the viewer to save the question for a future seller conversation."
     ]
   },
   {
     angle: "Common seller mistakes",
-    hook: "One seller mistake to avoid before making a decision about your {property}.",
-    script: "One seller mistake is moving forward before naming the questions you still have about your {property}. Start here: {question} Write down what you want answered before choosing a next step.",
-    caption: "A small planning step can make a seller conversation easier to enter: name the question you still have about your {property}.",
-    suggestedNextStep: "Write down one follow-up question and bring it to a conversation with a qualified local professional.",
-    videoConcept: "Checklist-style short that names one avoidable process mistake and offers a simple preparation step.",
+    hook: "The seller mistake that can make a {property} conversation harder: arriving without a question list.",
+    script: "A common seller mistake is showing up without one. Before discussing your {property}, write down this question: {question} Keep the list short so you can leave knowing what you still need to learn.",
+    takeaway: "A short question list can keep the first seller conversation focused and easier to review afterward.",
+    caption: "A first seller conversation does not need a perfect plan. Start with the question you already have.",
+    suggestedNextStep: "Contact Shalinthia with the question you wrote down if you want help sorting out what to ask next.",
+    videoConcept: "Checklist-style short for {property} owners that shows how one written question can prevent a rushed conversation.",
     suggestedScenes: [
-      "Opening: hold up a simple one-item checklist labeled before listing.",
-      "Middle: name the question the homeowner still wants answered and pause for a note.",
-      "Close: invite the viewer to write down one follow-up question before choosing a next step."
+      "Opening: hold up a simple checklist labeled before the seller conversation.",
+      "Middle: put the supplied question on the list and leave room for one follow-up.",
+      "Close: invite the viewer to save the checklist before choosing a next step."
     ]
   },
   {
     angle: "Decision-making questions",
-    hook: "Not sure what to ask before selling your {property}? Start here: {question}",
-    script: "Before you decide whether to sell your {property}, ask: {question} The takeaway is to name the information you still want, then bring those questions to a qualified professional.",
-    caption: "If a sale is on your mind, let your questions lead. Save this prompt and bring it to a qualified local professional when you are ready.",
-    suggestedNextStep: "Save this prompt and ask a qualified local professional what it means for your situation.",
-    videoConcept: "Question-led planning prompt that helps a homeowner sort out what they need to understand next.",
+    hook: "You do not need every answer before asking this about your {property}.",
+    script: "You do not need every answer before the first conversation about your {property}. Ask yourself: {question} Then note what you still need to learn and decide what conversation would be useful next.",
+    takeaway: "A useful first conversation can answer one clear question and help you name the next one.",
+    caption: "You can ask for information before you decide. Save this prompt for a calmer next step.",
+    suggestedNextStep: "Contact Shalinthia when you are ready to talk through this question and decide what information you still need.",
+    videoConcept: "Question-led planning prompt for {property} owners that separates what they know from what they still want to learn.",
     suggestedScenes: [
-      "Opening: use a calm title card with the question the homeowner wants answered.",
-      "Middle: speak the question slowly and pause for the viewer to reflect.",
-      "Close: show a save reminder and an invitation to discuss the situation with a qualified professional."
+      "Opening: use a calm title card with the supplied question.",
+      "Middle: show two handwritten headings: know and still want to learn.",
+      "Close: show a save reminder and an invitation to discuss the question without pressure."
     ]
   }
 ]);
@@ -223,7 +226,10 @@ function createDraft(brief, topic, index) {
       .replace("{property}", propertyLabel)
       .replace("{audience}", audienceLabel)
       .replace("{question}", question),
-    videoConcept: creativePackage.videoConcept,
+    takeaway: creativePackage.takeaway,
+    videoConcept: creativePackage.videoConcept
+      .replace("{property}", propertyLabel)
+      .replace("{audience}", audienceLabel),
     suggestedScenes: creativePackage.suggestedScenes,
     caption: creativePackage.caption
       .replace("{property}", propertyLabel)
