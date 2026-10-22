@@ -10,7 +10,7 @@ Command:
 
 URL:
 
-    http://127.0.0.1:4180
+    http://127.0.0.1:4181
 
 ## Browser verification
 
@@ -55,6 +55,8 @@ Displayed-result checks:
   Seller education, Common seller mistakes, and Decision-making questions.
 - The popup showed a natural script, clear viewer takeaway, complementary caption, useful next step,
   and the preserved fictional source reference/date.
+- All three popup positions were checked: each showed its own non-empty viewer
+  takeaway while navigating with Next Draft.
 - Draft preview contained the hook, script, video concept, scene list,
   caption, hashtags, call to action, research reference, and review status.
 - Closing the preview returned to the dashboard; Reset cleared the cards and
@@ -91,8 +93,8 @@ PASS — the root interface asset returned HTTP 200 with HTML content.
 ## Environment note
 
 The original 4174 server process was left untouched. The updated files were
-verified through a separate local instance on port 4180; the earlier 4175,
-4176, and 4177 verification instances were also left untouched.
+verified through a separate offline-only local instance on port 4181; the
+earlier 4175, 4176, 4177, and 4178 instances were also left untouched.
 
 The Groq provider was not enabled in the browser and no Groq or OpenAI API
 call was made.

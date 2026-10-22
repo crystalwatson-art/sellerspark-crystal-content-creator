@@ -4,7 +4,7 @@ Date: 2026-10-22
 
 ## Final result
 
-PASS — 33 tests passed, 0 failed, 0 skipped.
+PASS — 35 tests passed, 0 failed, 0 skipped.
 
 Command:
 
@@ -51,6 +51,8 @@ Coverage:
 31. Missing Groq configuration returns no drafts.
 32. Authentication failures expose only safe category and HTTP status metadata.
 33. Network failures receive a safe diagnostic and next step.
+34. Groq-generated takeaways survive validation and reach the popup contract.
+35. Missing Groq takeaways are rejected without silently inventing replacement text.
 
 ## Corrections made during verification
 
@@ -94,6 +96,14 @@ Coverage:
   status/status class when available, plain-language explanation, and next
   step. Provider response bodies, headers, and credential values are not
   returned.
+- Groq writing instructions now require seller-specific opening hooks, natural
+  professional spoken language, minimal unnecessary emojis, and no invented
+  building details or market claims.
+- The popup now shows an explicit review warning if an older or malformed API
+  response omits a takeaway; it never substitutes a fabricated takeaway.
+- The mocked Groq regression test confirms all three takeaways reach the popup
+  contract, while the missing-field test confirms the provider response is
+  rejected with no template fallback.
 
 ## Interim correction during this run
 

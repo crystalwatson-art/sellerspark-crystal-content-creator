@@ -32,7 +32,8 @@ test("client wiring includes reset, theme, popup navigation, and contained close
   assert.match(app, /function resetWorkspace\(\)/);
   assert.match(app, /result\.writerLabel/);
   assert.match(app, /result\.writerStatus/);
-  assert.match(app, /modalTakeaway\.textContent = draft\.takeaway/);
+  assert.match(app, /modalTakeaway\.textContent = typeof draft\.takeaway === "string"/);
+  assert.match(app, /Takeaway unavailable\. This draft needs review before approval\./);
   assert.match(app, /"\\nTakeaway: " \+ draft\.takeaway/);
   assert.match(app, /function renderWriterDiagnostic\(result\)/);
   assert.match(app, /The AI provider is temporarily rate-limited\./);

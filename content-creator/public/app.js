@@ -257,7 +257,9 @@ function renderModal() {
   modalAudience.textContent = draft.audienceLabel;
   modalHook.textContent = draft.hook;
   modalScript.textContent = draft.script;
-  modalTakeaway.textContent = draft.takeaway;
+  modalTakeaway.textContent = typeof draft.takeaway === "string" && draft.takeaway.trim()
+    ? draft.takeaway
+    : "Takeaway unavailable. This draft needs review before approval.";
   modalConcept.textContent = draft.videoConcept;
   renderList(modalScenes, draft.suggestedScenes, "No scene suggestions supplied.");
   modalCaption.textContent = draft.caption;
