@@ -31,6 +31,9 @@ const modalCta = document.querySelector("#modal-cta");
 const modalReferences = document.querySelector("#modal-references");
 const modalWarningsBlock = document.querySelector("#modal-warnings-block");
 const modalWarnings = document.querySelector("#modal-warnings");
+const modalQuality = document.querySelector("#modal-quality");
+const modalQualitySummary = document.querySelector("#modal-quality-summary");
+const modalQualityList = document.querySelector("#modal-quality-list");
 const optimizerStatus = document.querySelector("#optimizer-review-status");
 const optimizerOriginal = document.querySelector("#optimizer-original");
 const optimizerProposed = document.querySelector("#optimizer-proposed");
@@ -50,6 +53,7 @@ const modalNext = document.querySelector("#modal-next");
 const modalCopy = document.querySelector("#modal-copy");
 
 let currentDrafts = [];
+let currentEditorialQuality = null;
 let currentListingReview = null;
 let currentReviewId = null;
 let currentReviewVersion = null;
@@ -222,6 +226,7 @@ function persistWorkspace() {
   try {
     localStorage.setItem(WORKSPACE_STORAGE_KEY, JSON.stringify({
       drafts: clone(currentDrafts),
+      editorialQuality: clone(currentEditorialQuality),
       listingReview: clone(currentListingReview),
       listingReviewId: currentReviewId,
       listingReviewVersion: currentReviewVersion,
@@ -258,6 +263,7 @@ function restoreWorkspace() {
     const saved = JSON.parse(localStorage.getItem(WORKSPACE_STORAGE_KEY) || "null");
     if (!saved || !Array.isArray(saved.drafts) || !saved.listingReview) return;
     currentDrafts = saved.drafts;
+    currentEditorialQuality = saved.editorialQuality || null;
     currentListingReview = saved.listingReview;
     currentReviewId = saved.listingReviewId || null;
     currentReviewVersion = Number.isInteger(saved.listingReviewVersion) ? saved.listingReviewVersion : null;
@@ -342,6 +348,7 @@ function renderDraftCards() {
 
 function renderResult(result) {
   currentDrafts = Array.isArray(result.drafts) ? result.drafts : [];
+  currentEditorialQuality = result.editorialQuality || null;
   currentListingReview = result.listingReview
     ? clone(result.listingReview)
     : null;
@@ -375,6 +382,17 @@ function renderList(parent, values, emptyText) {
     item.textContent = value;
     parent.append(item);
   });
+}
+
+function renderEditorialQuality() {
+  const quality = currentEditorialQuality?.drafts?.[activeDraftIndex];
+  if (!quality) {
+    modalQuality.hidden = true;
+    return;
+  }
+  modalQuality.hidden = false;
+  modalQualitySummary.textContent = quality.score + " heuristic editorial checks passed. These signals are not semantic judgment or a prediction of performance; human editorial review remains required.";
+  renderList(modalQualityList, quality.warnings, quality.warnings.length ? "Address the listed checks before approval." : "All checks passed for this draft.");
 }
 
 function activeReview() {
@@ -475,6 +493,7 @@ function renderModal() {
   renderList(modalReferences, draft.sourceRefs.map(referenceLabel), "No source references supplied.");
   renderList(modalWarnings, draft.warnings, "No warnings.");
   modalWarningsBlock.hidden = draft.warnings.length === 0;
+  renderEditorialQuality();
   renderOptimizerReview();
   modalPosition.textContent = "Draft " + String(activeDraftIndex + 1) + " of " + String(currentDrafts.length);
   modalPrevious.disabled = activeDraftIndex === 0;
@@ -543,6 +562,7 @@ function resetWorkspace() {
   localStorage.removeItem(WORKSPACE_STORAGE_KEY);
   closeDraft();
   currentDrafts = [];
+  currentEditorialQuality = null;
   currentListingReview = null;
   currentReviewId = null;
   currentReviewVersion = null;

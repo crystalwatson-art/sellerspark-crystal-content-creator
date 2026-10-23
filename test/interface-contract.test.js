@@ -20,6 +20,8 @@ test("dashboard exposes fictional mode and popup controls without a JSON editor"
   assert.match(html, /id="modal-next"/);
   assert.match(html, /id="modal-copy"/);
   assert.match(html, /id="modal-takeaway"/);
+  assert.match(html, /id="modal-quality"/);
+  assert.match(html, /id="modal-quality-summary"/);
   assert.match(html, /id="result-diagnostic"/);
   assert.match(html, /id="writer-status-value"/);
   assert.match(html, /id="writer-explanation"/);
@@ -67,6 +69,8 @@ test("client wiring includes reset, theme, popup navigation, and contained close
   assert.match(app, /Research verification needed/);
   assert.match(app, /HTTPS source link, source date/);
   assert.match(app, /modalTakeaway\.textContent = typeof draft\.takeaway === "string"/);
+  assert.match(app, /function renderEditorialQuality\(\)/);
+  assert.match(app, /not semantic judgment or a prediction of performance/);
   assert.match(app, /Takeaway unavailable\. This draft needs review before approval\./);
   assert.match(app, /"\\nTakeaway: " \+ draft\.takeaway/);
   assert.match(app, /function renderWriterDiagnostic\(result\)/);

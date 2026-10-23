@@ -1,4 +1,5 @@
 import { verifyResearchBrief } from "./research-verification.js";
+import { evaluateDraftSetQuality } from "./editorial-quality.js";
 
 export const REQUIRED_DRAFT_COUNT = 3;
 
@@ -10,44 +11,44 @@ export const SUPPORTED_AUDIENCES = Object.freeze({
 const CREATIVE_ANGLES = Object.freeze([
   {
     angle: "Seller education",
-    hook: "Before you list your {property}, start with the question you want answered.",
-    script: "If selling your {property} is on your mind, begin with one question: {question} Write it down before the first conversation. That gives you something concrete to ask and a way to tell whether the conversation was useful.",
-    takeaway: "Bring one written question to a seller conversation so you can focus on the information you actually want to understand.",
-    caption: "Clarity starts before the listing conversation. Save the question you want answered and bring it with you.",
+    hook: "Selling your {property} someday? Start with the question you want answered.",
+    script: "If selling your {property} is on your mind, start with the question you want answered: {question} Write one sentence about why that answer matters to you, then bring it to a conversation. That turns a broad concern into one useful thing to discuss.",
+    takeaway: "Writing the exact question — {question} — and why its answer matters can make a broad seller concern easier to discuss.",
+    caption: "The first step can be a question, not a commitment. Follow for more practical NYC seller guidance.",
     suggestedNextStep: "Contact Shalinthia with this question when you are ready for a respectful seller conversation about your home.",
     videoConcept: "Direct-to-camera explainer for {property} owners that turns one supplied question into a focused first conversation.",
     suggestedScenes: [
       "Opening: show the supplied seller question as large on-screen text.",
-      "Middle: read the question and write one note about what you want to understand.",
-      "Close: invite the viewer to save the question for a future seller conversation."
+      "Middle: write one sentence about why the answer matters to you.",
+      "Close: invite the viewer to follow for more practical seller questions."
     ]
   },
   {
     angle: "Common seller mistakes",
-    hook: "The seller mistake that can make a {property} conversation harder: arriving without a question list.",
-    script: "A common seller mistake is showing up without one. Before discussing your {property}, write down this question: {question} Keep the list short so you can leave knowing what you still need to learn.",
-    takeaway: "A short question list can keep the first seller conversation focused and easier to review afterward.",
-    caption: "A first seller conversation does not need a perfect plan. Start with the question you already have.",
+    hook: "Before a seller conversation about your {property}, avoid this prep mistake.",
+    script: "A practical seller mistake for {property} owners is bringing a broad goal but no details to discuss. Use this question as a checklist prompt: {question} Note the one building, unit, or home detail you want explained, so the conversation has a clear starting point.",
+    takeaway: "Pair the supplied seller question — {question} — with one property detail you want explained before the conversation.",
+    caption: "A question becomes more useful when you pair it with one detail you want explained. Follow for more NYC seller prompts.",
     suggestedNextStep: "Contact Shalinthia with the question you wrote down if you want help sorting out what to ask next.",
     videoConcept: "Checklist-style short for {property} owners that shows how one written question can prevent a rushed conversation.",
     suggestedScenes: [
       "Opening: hold up a simple checklist labeled before the seller conversation.",
-      "Middle: put the supplied question on the list and leave room for one follow-up.",
-      "Close: invite the viewer to save the checklist before choosing a next step."
+      "Middle: add the supplied question and one building, unit, or home detail.",
+      "Close: invite the viewer to follow for more practical seller guidance."
     ]
   },
   {
     angle: "Decision-making questions",
-    hook: "You do not need every answer before asking this about your {property}.",
-    script: "You do not need every answer before the first conversation about your {property}. Ask yourself: {question} Then note what you still need to learn and decide what conversation would be useful next.",
-    takeaway: "A useful first conversation can answer one clear question and help you name the next one.",
-    caption: "You can ask for information before you decide. Save this prompt for a calmer next step.",
+    hook: "Not sure what to do next with your {property}? Ask this before you decide.",
+    script: "Before deciding whether to move forward with a seller conversation about your {property}, ask this question: {question} Then make two notes: what you know and what you still need to learn. Your next step can answer the open question, not promise to list.",
+    takeaway: "One open question — {question} — can help you choose an informed next conversation without promising to list.",
+    caption: "You can gather information before making a decision. Follow for more calm questions for NYC homeowners.",
     suggestedNextStep: "Contact Shalinthia when you are ready to talk through this question and decide what information you still need.",
     videoConcept: "Question-led planning prompt for {property} owners that separates what they know from what they still want to learn.",
     suggestedScenes: [
       "Opening: use a calm title card with the supplied question.",
-      "Middle: show two handwritten headings: know and still want to learn.",
-      "Close: show a save reminder and an invitation to discuss the question without pressure."
+      "Middle: show two handwritten headings: know and still need to learn.",
+      "Close: invite the viewer to follow for more calm seller questions."
     ]
   }
 ]);
@@ -228,7 +229,10 @@ function createDraft(brief, topic, index) {
       .replace("{property}", propertyLabel)
       .replace("{audience}", audienceLabel)
       .replace("{question}", question),
-    takeaway: creativePackage.takeaway,
+    takeaway: creativePackage.takeaway
+      .replace("{property}", propertyLabel)
+      .replace("{audience}", audienceLabel)
+      .replace("{question}", question),
     videoConcept: creativePackage.videoConcept
       .replace("{property}", propertyLabel)
       .replace("{audience}", audienceLabel),
@@ -299,6 +303,10 @@ export function createContentDraft(brief) {
     audienceLabel: SUPPORTED_AUDIENCES[brief.audience] ?? null,
     researchBriefId: brief.id ?? null,
     drafts,
+    editorialQuality: evaluateDraftSetQuality(drafts, {
+      audienceLabel: SUPPORTED_AUDIENCES[brief.audience],
+      researchTopics: brief.topics.slice(0, REQUIRED_DRAFT_COUNT)
+    }),
     missingInformation: [
       ...missingInformation,
       ...drafts.flatMap((draft) =>
