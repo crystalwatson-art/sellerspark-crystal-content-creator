@@ -75,6 +75,19 @@ The automated tests cover both clearly labeled fictional briefs:
     fixtures/fictional-research-brief.json
     fixtures/fictional-brooklyn-townhouse-brief.json
 
+## Editorial quality checks
+
+Each generated set includes an `editorialQuality` review report with eight
+heuristic checks: hook strength, topic distinctiveness, homeowner relevance,
+natural spoken delivery, practical viewer value, reason to follow, credibility
+and source safety, and consultation next-step clarity. It also checks for three
+distinct angles, three distinct hooks, audience separation, and evidence that
+each package uses its assigned supplied topic. The score is a review aid only;
+it is not semantic judgment or a prediction of views, followers, leads, or
+sales. Human editorial review remains required.
+Warnings remain visible for human review, and the checks never invent facts or
+replace the research-verification gate.
+
 The output is draft-only. Every result requires human approval, and there is no
 publishing or customer-contact function. The structured handoff remains in the
 API response for a future Listing Optimizer; it is intentionally not shown as
@@ -136,34 +149,35 @@ OpenAI-compatible Chat Completions endpoint and strict JSON Schema Structured
 Outputs. A Groq `429` rate-limit response returns a safe `rate_limited` result
 and can trigger the optional backup chain described below.
 
-## Optional zero-cost backup writer
+## Verified free backup writer
 
-The optional backup is Google's Gemini Developer API using the default model
-`gemini-3.8-flash`. Google's current pricing page lists free input and output
-tokens for this model's Free tier, while its rate-limit page says limits vary
-by model and project and are not guaranteed. Treat that as a limited
-development tier, not a production capacity promise.
-
-The backup is disabled unless all of these server-only settings are supplied:
+Groq is the primary AI writer. The verified free backup is OpenRouter's free
+router, not a paid model or paid fallback. Configure the chain only on the
+server with:
 
     CONTENT_CREATOR_PROVIDER=groq
-    CONTENT_CREATOR_BACKUP_PROVIDER=gemini
-    GEMINI_MODEL=gemini-3.8-flash
-    GEMINI_API_KEY=<server-only secret>
+    GROQ_MODEL=openai/gpt-oss-120b
+    GROQ_API_KEY=<server-only secret>
+    CONTENT_CREATOR_BACKUP_PROVIDER=openrouter
+    OPENROUTER_MODEL=openrouter/free
+    OPENROUTER_API_KEY=<server-only secret>
 
-When enabled, Groq remains primary. A single backup attempt is made for safe
-provider-availability failures such as rate limits, timeouts, network errors,
-or configuration/authentication failures. If both AI writers fail, the
-existing offline template writer is used only when the same research brief
-passes the existing safety gate. The chain never switches because a model
-returned unsafe, malformed, unsupported, or repetitive content; those results
-remain stopped for review. Failover logs contain only provider names, safe
-status categories, and HTTP status metadata—never keys, headers, or response
-bodies. No provider is enabled in default template mode.
+OpenRouter is restricted in code to `openrouter/free` or an explicitly free
+model identifier ending in `:free`. When Groq has a safe availability failure
+such as a rate limit, timeout, network error, or configuration/authentication
+failure, the server makes one bounded OpenRouter backup attempt. If both AI
+writers fail, the existing offline template writer is used only when the same
+research brief passes the safety gate. Unsafe, malformed, unsupported, stale,
+or repetitive provider output is stopped for review rather than replaced.
 
-Gemini uses the documented Interactions API JSON response format and schema
-validation. No live Gemini or Groq request is made by the test suite or local
-demo.
+The Gemini adapter and earlier Gemini verification notes remain preserved as
+historical, optional code, but Gemini is not the current configured backup in
+this verified setup. Failover logs contain only provider names, safe status
+categories, and HTTP status metadata—never keys, headers, or response bodies.
+No provider is enabled in default template mode. No mode publishes content or
+contacts customers automatically, and human approval is always required.
+
+No live provider request is made by the test suite or local demo.
 
 Never put the API key in browser code or commit it to this folder. When the
 OpenAI writer is unavailable, returns malformed output, produces unsupported

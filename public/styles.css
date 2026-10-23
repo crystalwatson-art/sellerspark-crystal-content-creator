@@ -173,6 +173,10 @@ button:disabled { cursor: not-allowed; opacity: 0.4; }
 .modal-block { min-width: 0; }
 .modal-label { display: block; margin-bottom: 8px; color: var(--purple); font-size: 0.66rem; font-weight: 900; letter-spacing: 0.11em; text-transform: uppercase; }
 .modal-block p, .modal-feature p { margin: 0; color: var(--ink); font-size: 0.83rem; line-height: 1.58; }
+.editorial-quality-block { margin: 15px 0; }
+.editorial-quality-block h3 { margin: 0 0 7px; color: var(--ink); font-size: 0.94rem; }
+.editorial-quality-block p { color: var(--muted); }
+.quality-list { margin: 9px 0 0; padding-left: 18px; color: var(--muted); font-size: 0.78rem; line-height: 1.5; }
 .hook-copy { font-size: 1.02rem !important; font-weight: 750; line-height: 1.4 !important; }
 .hashtag-copy { color: var(--purple-deep) !important; font-weight: 700; }
 .cta-block { border-color: color-mix(in srgb, var(--purple) 35%, var(--line)); background: var(--purple-soft); }
