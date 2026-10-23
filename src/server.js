@@ -7,6 +7,7 @@ import { createContentDraft } from "./content-creator.js";
 import { createOpenAIWriter } from "./openai-writer.js";
 import { createGroqWriter, DEFAULT_GROQ_MODEL } from "./groq-writer.js";
 import { createGeminiWriter, DEFAULT_GEMINI_MODEL } from "./gemini-writer.js";
+import { createOpenRouterWriter, DEFAULT_OPENROUTER_MODEL } from "./openrouter-writer.js";
 import { createDraftHistory } from "./draft-history.js";
 import { adaptContentResultToListingReview, applyListingReviewAction } from "./listing-optimizer.js";
 import { generateWithFailover } from "./provider-failover.js";
@@ -94,7 +95,8 @@ export function createServer({
   providerMode = process.env.CONTENT_CREATOR_PROVIDER || "template",
   openAIWriter = null,
   groqWriter = null,
-  geminiWriter = null
+  geminiWriter = null,
+  openRouterWriter = null
 } = {}) {
   if (!reviewStore) throw new Error("createServer requires a ReviewStore.");
 
@@ -123,7 +125,10 @@ export function createServer({
       return generateWithFailover({
         brief,
         primaryWriter: groqWriter,
-        backupWriter: geminiWriter,
+        backupWriters: [
+          { writer: openRouterWriter, label: "OpenRouter" },
+          { writer: geminiWriter, label: "Gemini" }
+        ],
         primaryLabel: "Groq",
         backupLabel: "Gemini",
         logger: logProviderFailure
@@ -272,18 +277,21 @@ export async function startServer({ port = Number(process.env.PORT || 3000) } = 
   const groqWriter = providerMode === "groq"
     ? createGroqWriter({ apiKey: process.env.GROQ_API_KEY, model: process.env.GROQ_MODEL || DEFAULT_GROQ_MODEL, history: draftHistory })
     : null;
-  const geminiWriter = providerMode === "groq" && backupProvider === "gemini"
+  const geminiWriter = providerMode === "groq" && (backupProvider === "gemini" || backupProvider === "openrouter")
     ? createGeminiWriter({ apiKey: process.env.GEMINI_API_KEY, model: process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL, history: draftHistory })
+    : null;
+  const openRouterWriter = providerMode === "groq" && backupProvider === "openrouter"
+    ? createOpenRouterWriter({ apiKey: process.env.OPENROUTER_API_KEY, model: process.env.OPENROUTER_MODEL || DEFAULT_OPENROUTER_MODEL, history: draftHistory })
     : null;
   const dataDir = process.env.SELLERSPARK_DATA_DIR || path.join(os.homedir(), ".sellerspark");
   const filePath = process.env.SELLERSPARK_REVIEW_STORE_PATH || path.join(dataDir, "listing-review-store.json");
   const reviewStore = await new ReviewStore({ filePath }).init();
   const revisionGenerator = providerMode === "groq" && groqWriter
-    ? createRevisionGenerator({ primaryWriter: groqWriter, backupWriter: geminiWriter, logger: logProviderFailure })
+    ? createRevisionGenerator({ primaryWriter: groqWriter, backupWriter: openRouterWriter || geminiWriter, logger: logProviderFailure })
     : providerMode === "openai" && openAIWriter
       ? createRevisionGenerator({ primaryWriter: openAIWriter, logger: logProviderFailure })
       : null;
-  const server = createServer({ reviewStore, revisionGenerator, providerMode, openAIWriter, groqWriter, geminiWriter });
+  const server = createServer({ reviewStore, revisionGenerator, providerMode, openAIWriter, groqWriter, geminiWriter, openRouterWriter });
   await new Promise((resolve) => server.listen(port, "127.0.0.1", resolve));
   console.log("SellerSpark Content Creator demo: http://127.0.0.1:" + port);
   return server;

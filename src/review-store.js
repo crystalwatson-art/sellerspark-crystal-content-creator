@@ -7,7 +7,6 @@ export const REVIEW_STORE_VERSION = 1;
 function clone(value) {
   return value === undefined ? null : JSON.parse(JSON.stringify(value));
 }
-
 function safeArray(value) {
   return Array.isArray(value) ? value : [];
 }

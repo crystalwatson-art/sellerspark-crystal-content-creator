@@ -13,7 +13,6 @@ const REVISION_FIELDS = Object.freeze([
 function clone(value) {
   return value === undefined ? null : JSON.parse(JSON.stringify(value));
 }
-
 function changeList(original, proposed) {
   return REVISION_FIELDS
     .filter(([field]) => JSON.stringify(original?.[field]) !== JSON.stringify(proposed?.[field]))

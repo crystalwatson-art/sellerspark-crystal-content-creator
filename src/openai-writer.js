@@ -42,6 +42,20 @@ export function classifyProviderError(error) {
     };
   }
 
+  if (error?.code === "truncated_response" || error?.code === "parse_failure") {
+    const category = error.code;
+    return {
+      category,
+      writerStatus: "invalid_response",
+      explanation: category === "truncated_response"
+        ? "The provider response was cut off before the required JSON was complete."
+        : "The provider returned content that was not valid JSON for the required response.",
+      nextStep: "Retry with the verified free-model settings; no draft was approved.",
+      httpStatus: null,
+      statusClass: null
+    };
+  }
+
   if (!Number.isInteger(error?.httpStatus) && !error?.code) {
     return {
       category: "network_error",
@@ -98,7 +112,7 @@ const UNSUPPORTED_PROMISE_LANGUAGE = [
   /\b\d+(?:\.\d+)?%/i
 ];
 
-const MODEL_OUTPUT_SCHEMA = {
+export const MODEL_OUTPUT_SCHEMA = {
   type: "object",
   additionalProperties: false,
   properties: {
@@ -322,6 +336,19 @@ function validateModelOutput(output, brief, baseline) {
   return null;
 }
 
+function validationReasonCode(message) {
+  if (/exactly three drafts/i.test(message)) return "draft_count";
+  if (/unexpected creative angle/i.test(message)) return "creative_angle";
+  if (/incomplete draft/i.test(message)) return "required_field";
+  if (/invalid hashtags/i.test(message)) return "hashtags";
+  if (/incomplete scene suggestions/i.test(message)) return "suggested_scenes";
+  if (/invalid claim references/i.test(message)) return "claim_reference_shape";
+  if (/unsupported claim/i.test(message)) return "unsupported_claim_reference";
+  if (/unsupported or internal viewer language/i.test(message)) return "unsafe_viewer_language";
+  if (/mixed the audience/i.test(message)) return "audience_mismatch";
+  return "output_rejected";
+}
+
 function mergeModelDrafts(brief, baseline, output) {
   return output.drafts.map((modelDraft, index) => {
     const original = baseline.drafts[index];
@@ -469,10 +496,23 @@ export function createStructuredWriter({
       let output;
       try {
         output = parseResponse(response);
-      } catch {
+      } catch (error) {
+        const diagnostic = error?.diagnostic
+          ? { ...classifyProviderError(error), ...error.diagnostic }
+          : error?.code
+            ? classifyProviderError(error)
+            : {
+              category: "parse_failure",
+              writerStatus: "invalid_response",
+              explanation: writerLabel + " returned an unreadable structured response.",
+              nextStep: "Review the response format and retry after the adapter is verified.",
+              httpStatus: null,
+              statusClass: null
+            };
         return providerResult(baselineWithWriter, {
           status: "invalid_response",
-          message: writerLabel + " returned an unreadable structured response; no draft was approved.",
+          message: diagnostic.explanation + " No draft was approved.",
+          diagnostic,
           attempts,
           rewriteAttempts: attempts - 1,
           historyStorage: history.storage
@@ -484,6 +524,16 @@ export function createStructuredWriter({
         return providerResult(baselineWithWriter, {
           status: "invalid_response",
           message: validationError + "; no draft was approved.",
+          diagnostic: {
+            category: "validation_failure",
+            responseFormat: "structured_drafts",
+            reasonCode: validationReasonCode(validationError),
+            reason: validationError,
+            httpStatus: null,
+            statusClass: null,
+            explanation: "The provider returned JSON, but the drafts failed SellerSpark's safety or completeness checks.",
+            nextStep: "Review the model output against the required draft fields and research boundaries; no draft was approved."
+          },
           attempts,
           rewriteAttempts: attempts - 1,
           historyStorage: history.storage
@@ -559,4 +609,4 @@ export function createOpenAIWriter(options = {}) {
   });
 }
 
-export { MODEL_OUTPUT_SCHEMA, CREATIVE_ANGLES };
+export { CREATIVE_ANGLES };

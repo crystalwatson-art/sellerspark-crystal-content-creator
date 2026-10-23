@@ -70,6 +70,7 @@ export async function generateWithFailover({
   brief,
   primaryWriter,
   backupWriter = null,
+  backupWriters = null,
   primaryLabel = "primary writer",
   backupLabel = "backup writer",
   templateFallback = true,
@@ -95,26 +96,29 @@ export async function generateWithFailover({
   };
 
   let lastFailureResult = primaryResult;
-  if (backupWriter) {
+  const backups = Array.isArray(backupWriters) ? backupWriters : backupWriter ? [{ writer: backupWriter, label: backupLabel }] : [];
+  for (const { writer: nextWriter, label: nextLabel } of backups) {
+    if (!nextWriter) continue;
     let backupResult;
     try {
-      backupResult = await backupWriter.generate(brief);
+      backupResult = await nextWriter.generate(brief);
     } catch {
-      backupResult = safeResult("backup", backupLabel);
+      backupResult = safeResult("backup", nextLabel);
     }
 
     if (backupResult.status === "ready_for_review") {
       return annotate(backupResult, {
         ...baseFailover,
-        backup: { writer: backupResult.writer ?? backupLabel, writerStatus: "generated" },
+        backup: { writer: backupResult.writer ?? nextLabel, writerStatus: "generated" },
         outcome: "backup_succeeded"
       });
     }
 
     lastFailureResult = backupResult;
     const backupFailure = safeFailure(backupResult);
-    logger({ event: "provider_failure", provider: backupLabel, ...backupFailure });
+    logger({ event: "provider_failure", provider: nextLabel, ...backupFailure });
     baseFailover.backup = backupFailure;
+    baseFailover.attempts = [...(baseFailover.attempts ?? []), backupFailure];
 
     // A backup that rejects its output for quality, evidence, or safety reasons
     // is not an unavailable provider. Preserve that result instead of quietly

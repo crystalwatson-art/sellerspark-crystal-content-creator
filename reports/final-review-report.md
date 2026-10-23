@@ -14,6 +14,14 @@ or implemented here. The research gate accepts the agreed handoff shape and
 requires upstream verification records, source URLs, dates, and claim evidence;
 it does not fetch or claim to verify live sources.
 
+## Preservation addendum — 2026-10-23
+
+This report began as an uncommitted local review record. The current package is
+being preserved separately for private-repository review. The latest complete
+local suite passed 94 tests with 0 failures. Crystal's latest reported
+controlled live check also passed Groq failure to live OpenRouter failover with
+three review-ready drafts; Codex did not repeat that live request here.
+
 ## Verification
 
 - Automated suite: PASS — 83 passed, 0 failed, 0 skipped.
