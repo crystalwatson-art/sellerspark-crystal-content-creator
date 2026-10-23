@@ -4,7 +4,10 @@ Date: 2026-10-23
 
 ## Final result
 
-PASS — 83 tests passed, 0 failed, 0 skipped.
+PASS — 84 tests passed, 0 failed, 0 skipped.
+
+The preserved review package baseline had 83 passing tests. The additional
+test covers the documented Gemini Interactions REST response shape.
 
 Command:
 

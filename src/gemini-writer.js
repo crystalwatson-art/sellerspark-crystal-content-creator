@@ -32,8 +32,13 @@ export function parseGeminiResponse(response) {
   const textOutput = typeof response?.output_text === "string"
     ? response.output_text
     : response?.outputs?.find?.((item) => item?.type === "text")?.text;
+  const interactionStepOutput = Array.isArray(response?.steps)
+    ? response.steps
+      .flatMap((step) => Array.isArray(step?.content) ? step.content : [])
+      .find((item) => item?.type === "text" && typeof item?.text === "string")?.text
+    : null;
   const legacyOutput = response?.candidates?.[0]?.content?.parts?.find?.((part) => typeof part?.text === "string")?.text;
-  const content = textOutput ?? legacyOutput;
+  const content = textOutput ?? interactionStepOutput ?? legacyOutput;
   if (typeof content !== "string" || !content.trim()) {
     throw new Error("structured response was empty");
   }

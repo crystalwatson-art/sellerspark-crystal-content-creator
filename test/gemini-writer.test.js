@@ -6,7 +6,8 @@ import {
   createGeminiWriter,
   DEFAULT_GEMINI_MODEL,
   GEMINI_INTERACTIONS_ENDPOINT,
-  GEMINI_WRITER
+  GEMINI_WRITER,
+  parseGeminiResponse
 } from "../src/gemini-writer.js";
 
 function geminiDrafts(prefix = "Fresh fictional Gemini") {
@@ -79,6 +80,28 @@ test("Gemini writer returns three structured drafts through the mocked response"
   assert.equal(requests[0].response_format.type, "text");
   assert.equal(requests[0].response_format.mime_type, "application/json");
   assert.equal(requests[0].response_format.schema.additionalProperties, false);
+});
+
+test("Gemini writer parses the documented Interactions REST response steps", async () => {
+  const writer = createGeminiWriter({
+    apiKey: "mock-gemini-key",
+    model: DEFAULT_GEMINI_MODEL,
+    request: async () => ({
+      steps: [{
+        type: "model_output",
+        content: [{ type: "text", text: JSON.stringify({ drafts: geminiDrafts("Documented REST") }) }]
+      }]
+    })
+  });
+
+  const result = await writer.generate(fictionalBrief);
+
+  assert.equal(result.status, "ready_for_review");
+  assert.equal(result.drafts.length, 3);
+  assert.match(result.drafts[0].hook, /Documented REST/);
+  assert.deepEqual(parseGeminiResponse({
+    steps: [{ type: "model_output", content: [{ type: "text", text: "{\"drafts\":[]}" }] }]
+  }), { drafts: [] });
 });
 
 test("Gemini request keeps credentials out of the payload and uses the documented endpoint shape", () => {
