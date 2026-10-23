@@ -4,7 +4,7 @@ Date: 2026-10-23
 
 ## Final result
 
-PASS — 84 tests passed, 0 failed, 0 skipped.
+PASS — 94 tests passed, 0 failed, 0 skipped.
 
 The preserved review package baseline had 83 passing tests. The additional
 test covers the documented Gemini Interactions REST response shape.
@@ -253,6 +253,42 @@ The fixture is explicitly fictional and not verified real-world research.
 
 The failover tests use only fictional briefs and mocked provider responses.
 They do not verify live Gemini availability or quota behavior.
+
+## OpenRouter repair addendum — 2026-10-23
+
+The OpenRouter adapter now records safe failure categories that distinguish
+response parsing, truncated output, and strict draft validation. It accepts
+only a single outer JSON fence or text parts from the documented chat
+completion response; it does not accept arbitrary prose or bypass the
+existing source, claim, audience, safety, or three-draft checks. The output
+budget is 8,000 tokens to reduce incomplete three-draft responses, while the
+prompt asks for concise, professional seller-facing copy.
+
+OpenRouter-focused tests: 10 passed, 0 failed.
+Full suite: 94 passed, 0 failed, 0 skipped, with temporary localhost listeners
+allowed for the four HTTP tests.
+
+Validation diagnostics now include a stable rule code such as `required_field`,
+`creative_angle`, `claim_reference_shape`, or `unsafe_viewer_language` without
+including model-generated text. The latest live report preserved only the
+generic `validation_failure` category, so its exact violated rule cannot be
+reconstructed from that run.
+
+The OpenRouter prompt now requires hashtags as a 3–5 item array of short
+strings beginning with `#`; the validator still rejects malformed shapes.
+The prompt also caps each field and requires exactly three short scenes per
+draft. The free-model output budget is 8,000 tokens after the live failover
+reported a confirmed 5,000-token truncation.
+
+The default is restored to `openrouter/free` after the pinned Apodex endpoint
+returned `endpoint_or_model_not_found` in both live checks. The existing strict
+schema remains in `response_format`; local tests confirm the schema is present.
+
+The live OpenRouter key was absent from the Codex process, so no live request
+was made during this repair. The earlier HTTP 200 basic test does not prove
+that the full writer now produces three accepted drafts. A controlled live
+writer test and Groq-failure to OpenRouter test remain pending in Crystal's
+authenticated terminal.
 
 ## AI-provider test safety
 
