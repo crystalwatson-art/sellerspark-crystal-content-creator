@@ -132,3 +132,32 @@ for (const rejectedStatus of ["invalid_response", "unsafe_output", "stale_output
     assert.equal(result.automaticallyPublished, false);
   });
 }
+
+
+test("both exhausted with fallback disabled reports final provider and safe outcome", async () => {
+  const result = await generateWithFailover({
+    brief: fictionalBrief,
+    primaryWriter: { generate: async () => failureResult("groq", "rate_limited") },
+    backupWriter: { generate: async () => failureResult("gemini", "rate_limited") },
+    templateFallback: false
+  });
+  assert.equal(result.writer, "gemini");
+  assert.equal(result.writerStatus, "rate_limited");
+  assert.equal(result.failover.outcome, "all_providers_unavailable");
+  assert.equal(result.status, "needs_more_research");
+  assert.equal(result.drafts.length, 0);
+  assert.equal(result.humanApprovalRequired, true);
+});
+
+test("unsafe brief plus two provider outages cannot turn into template content", async () => {
+  const result = await generateWithFailover({
+    brief: { ...fictionalBrief, researchMode: "verified", sources: [] },
+    primaryWriter: { generate: async () => failureResult("groq", "provider_unavailable") },
+    backupWriter: { generate: async () => failureResult("gemini", "rate_limited") }
+  });
+  assert.equal(result.writer, "gemini");
+  assert.equal(result.failover.outcome, "all_providers_unavailable");
+  assert.notEqual(result.status, "ready_for_review");
+  assert.equal(result.drafts.length, 0);
+  assert.equal(result.automaticallyPublished, false);
+});

@@ -94,6 +94,7 @@ export async function generateWithFailover({
     outcome: "primary_failed"
   };
 
+  let lastFailureResult = primaryResult;
   if (backupWriter) {
     let backupResult;
     try {
@@ -110,6 +111,7 @@ export async function generateWithFailover({
       });
     }
 
+    lastFailureResult = backupResult;
     const backupFailure = safeFailure(backupResult);
     logger({ event: "provider_failure", provider: backupLabel, ...backupFailure });
     baseFailover.backup = backupFailure;
@@ -139,5 +141,8 @@ export async function generateWithFailover({
     }
   }
 
-  return annotate(primaryResult, baseFailover);
+  return annotate(lastFailureResult, {
+    ...baseFailover,
+    outcome: "all_providers_unavailable"
+  });
 }
