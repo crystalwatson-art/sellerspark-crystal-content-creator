@@ -77,3 +77,44 @@ test("server accepts the separate fictional Brooklyn handoff without changing au
   assert.equal(result.audienceLabel, "Brooklyn townhouse owners");
   assert.ok(result.listingReview.reviews.every((review) => review.audienceLabel === "Brooklyn townhouse owners"));
 });
+
+// Verify automatic provider selection through the real HTTP route, not only the helper.
+test("HTTP content endpoint quietly switches from exhausted Groq to Gemini", async (t) => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "sellerspark-routing-"));
+  const store = await new ReviewStore({ filePath: path.join(directory, "reviews.json") }).init();
+  const calls = [];
+  const { createContentDraft } = await import("../src/content-creator.js");
+  const running = await start(store, {
+    providerMode: "groq",
+    groqWriter: { generate: async () => { calls.push("groq"); return { writer: "groq", writerStatus: "rate_limited", status: "needs_more_research", drafts: [], humanApprovalRequired: true, automaticallyPublished: false }; } },
+    geminiWriter: { generate: async (brief) => { calls.push("gemini"); return { ...createContentDraft(brief), writer: "gemini", writerStatus: "generated" }; } }
+  });
+  t.after(() => running.server.close());
+  const response = await fetch(running.base + "/api/content", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(fictionalLicBrief) });
+  const result = await response.json();
+  assert.equal(response.status, 200);
+  assert.deepEqual(calls, ["groq", "gemini"]);
+  assert.equal(result.writer, "gemini");
+  assert.equal(result.failover.outcome, "backup_succeeded");
+  assert.equal(result.listingReview.reviews.length, 3);
+  assert.equal(result.humanApprovalRequired, true);
+  assert.equal(result.automaticallyPublished, false);
+});
+
+test("HTTP content endpoint never substitutes offline drafts for rejected Gemini output", async (t) => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "sellerspark-routing-"));
+  const store = await new ReviewStore({ filePath: path.join(directory, "reviews.json") }).init();
+  const running = await start(store, {
+    providerMode: "groq",
+    groqWriter: { generate: async () => ({ writer: "groq", writerStatus: "rate_limited", status: "needs_more_research", drafts: [] }) },
+    geminiWriter: { generate: async () => ({ writer: "gemini", writerStatus: "unsupported_claims", status: "needs_more_research", drafts: [], humanApprovalRequired: true, automaticallyPublished: false }) }
+  });
+  t.after(() => running.server.close());
+  const response = await fetch(running.base + "/api/content", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(fictionalLicBrief) });
+  const result = await response.json();
+  assert.equal(result.writer, "gemini");
+  assert.equal(result.failover.outcome, "backup_rejected");
+  assert.equal(result.drafts.length, 0);
+  assert.equal(result.listingReview.reviews.length, 0);
+  assert.equal(result.automaticallyPublished, false);
+});
