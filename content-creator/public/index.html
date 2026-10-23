@@ -3,15 +3,15 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SellerSpark AI · Crystal's Content Creator</title>
+    <title>SellerSpark · Crystal's Content Creator</title>
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
     <div class="app-shell">
       <header class="topbar">
-        <a class="brand" href="/" aria-label="SellerSpark AI Content Creator home">
+        <a class="brand" href="/" aria-label="SellerSpark Content Creator home">
           <span class="brand-mark">S</span>
-          <span>SellerSpark AI</span>
+          <span>SellerSpark</span>
           <span class="brand-divider">/</span>
           <span class="brand-muted">Content Creator</span>
         </a>
@@ -29,7 +29,7 @@
         <section class="hero" aria-labelledby="page-title">
           <div class="hero-copy">
             <p class="eyebrow">CRYSTAL'S COMPONENT · TIKTOK WORKSPACE</p>
-            <h1 id="page-title">Turn seller research into <span>content worth reviewing.</span></h1>
+            <h1 id="page-title">Turn TikTok Attention Into <span>Listing Opportunities.</span></h1>
             <p class="intro">
               Three focused TikTok directions for the right homeowner audience,
               grounded in the supplied brief and held for human approval.
@@ -86,11 +86,19 @@
             <strong>Your draft queue is ready</strong>
             <span>Run the fictional test mode above to see three distinct TikTok angles.</span>
           </div>
+          <div id="reset-confirmation" class="reset-confirmation" role="dialog" aria-modal="true" aria-labelledby="reset-confirmation-title" hidden>
+            <strong id="reset-confirmation-title">Reset the active review?</strong>
+            <span>The active view will clear. Saved review history will remain on this browser.</span>
+            <div class="reset-confirmation-actions">
+              <button id="reset-cancel" class="secondary-button" type="button">Keep review</button>
+              <button id="reset-confirm" class="review-reject" type="button">Reset active view</button>
+            </div>
+          </div>
         </section>
       </main>
 
       <footer class="footer">
-        <span>SellerSpark AI · Crystal's Content Creator</span>
+        <span>SellerSpark · Crystal's Content Creator</span>
         <span>No research gathering, optimizer actions, publishing, or customer contact.</span>
       </footer>
     </div>
@@ -160,6 +168,56 @@
               <ul id="modal-warnings" class="warning-list"></ul>
             </section>
           </div>
+
+          <section id="modal-quality" class="modal-block editorial-quality-block" aria-labelledby="modal-quality-heading" hidden>
+            <span class="modal-label">Editorial checks</span>
+            <h3 id="modal-quality-heading">Review quality signals</h3>
+            <p id="modal-quality-summary"></p>
+            <ul id="modal-quality-list" class="quality-list"></ul>
+          </section>
+
+          <section id="optimizer-review" class="optimizer-review" aria-labelledby="optimizer-review-heading">
+            <div class="optimizer-review-heading">
+              <div>
+                <span class="modal-label">Listing Optimizer review</span>
+                <h3 id="optimizer-review-heading">Original content beside a proposed revision</h3>
+              </div>
+              <span id="optimizer-review-status" class="review-status">Pending</span>
+            </div>
+            <div class="optimizer-review-columns">
+              <section class="review-panel original-panel">
+                <span class="modal-label">Original draft</span>
+                <div id="optimizer-original" class="comparison-content"></div>
+              </section>
+              <section class="review-panel">
+                <span class="modal-label">Proposed revision</span>
+                <div id="optimizer-proposed" class="comparison-content"></div>
+              </section>
+            </div>
+            <section class="review-panel">
+              <span class="modal-label">What changed and why</span>
+              <ul id="optimizer-changes" class="review-list"></ul>
+            </section>
+            <section class="review-panel">
+              <span class="modal-label">Review notes</span>
+              <ul id="optimizer-suggestions" class="review-list"></ul>
+            </section>
+            <section id="optimizer-warnings-block" class="review-panel review-warning" hidden>
+              <span class="modal-label">Factual support and missing evidence</span>
+              <ul id="optimizer-warnings" class="review-list"></ul>
+            </section>
+            <section id="optimizer-history-block" class="review-panel" hidden>
+              <span class="modal-label">Review history</span>
+              <ul id="optimizer-history" class="review-list"></ul>
+            </section>
+            <div class="optimizer-actions" aria-label="Human review actions">
+              <button id="optimizer-accept" class="review-accept" type="button">Accept</button>
+              <button id="optimizer-reject" class="review-reject" type="button">Reject</button>
+              <button id="optimizer-revision" class="review-revision" type="button">Request revision</button>
+              <button id="optimizer-restore" class="review-restore" type="button">Restore original</button>
+            </div>
+            <p id="optimizer-approval-note" class="review-note">Human approval is required. Accepting a revision changes the working draft only; these controls do not publish content or contact customers.</p>
+          </section>
         </div>
 
         <footer class="modal-footer">

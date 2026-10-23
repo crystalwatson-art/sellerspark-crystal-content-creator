@@ -1,4 +1,4 @@
-# SellerSpark AI — Crystal's Content Creator
+# SellerSpark — Crystal's Content Creator
 
 This local Content Creator component accepts a structured research brief and
 turns it into exactly three TikTok draft packages for:
@@ -9,10 +9,55 @@ turns it into exactly three TikTok draft packages for:
 It creates hooks, short scripts, clear viewer takeaways, written video
 concepts, suggested scenes, captions, hashtags, and specific next steps. It
 preserves supplied source references, source dates, and warnings. It does not
-gather, validate, score, or fact-check research.
+gather or live-check research, but it now requires a verification record before
+using factual research for public-facing drafts.
 
 The fixture and tests use clearly labeled fictional data. Nothing in them is
 verified real-world research.
+
+## Research verification gate
+
+Public-facing drafts require `researchMode: "verified"`. Each topic must have
+source references shaped like this:
+
+    {
+      "id": "source-1",
+      "title": "Source title",
+      "url": "<real HTTPS URL checked by the Research Agent>",
+      "date": "YYYY-MM-DD",
+      "verification": {
+        "status": "verified",
+        "checkedAt": "ISO timestamp"
+      }
+    }
+
+Each factual claim must include `sourceId`, non-empty `text`, and:
+
+    {
+      "verification": {"status": "verified", "checkedAt": "ISO timestamp"},
+      "evidence": {"quote": "Exact supporting excerpt", "locator": "Section or page"}
+    }
+
+The gate rejects reserved or malformed URLs, missing dates, stale sources,
+missing verification records, and claims that only carry `supported: true`.
+Its response separates `verifiedClaims`, `unsupportedClaims`, `warnings`, and
+`missingEvidence`. It does not perform live URL checks, so the `verified`
+status is an upstream Research Agent record, not a claim that this component
+or an automated test checked the web.
+
+`researchMode: "fictional"` is reserved for the labeled offline fixtures and
+automated tests. It is never treated as verified research and is not allowed
+for public-facing use.
+
+### Research Agent handoff contract
+
+Sha's Research Agent should provide the brief fields above without changing
+this component. The minimum handoff is `researchMode`, `audience`, three
+distinct `topics`, each topic's `sourceRefs`, and each claim's `sourceId`,
+verification record, and evidence record. The Content Creator returns the
+verification result and preserves the original source records for later human
+review. Coordination is required before connecting the agents; this project
+does not modify or call Sha's implementation.
 
 ## Run
 
@@ -30,10 +75,65 @@ The automated tests cover both clearly labeled fictional briefs:
     fixtures/fictional-research-brief.json
     fixtures/fictional-brooklyn-townhouse-brief.json
 
+## Editorial quality checks
+
+Each generated set includes an `editorialQuality` review report with eight
+heuristic checks: hook strength, topic distinctiveness, homeowner relevance,
+natural spoken delivery, practical viewer value, reason to follow, credibility
+and source safety, and consultation next-step clarity. It also checks for three
+distinct angles, three distinct hooks, audience separation, and evidence that
+each package uses its assigned supplied topic. The score is a review aid only;
+it is not semantic judgment or a prediction of views, followers, leads, or
+sales. Human editorial review remains required.
+Warnings remain visible for human review, and the checks never invent facts or
+replace the research-verification gate.
+
 The output is draft-only. Every result requires human approval, and there is no
 publishing or customer-contact function. The structured handoff remains in the
 API response for a future Listing Optimizer; it is intentionally not shown as
 raw JSON in the everyday interface.
+
+## Listing Optimizer review adapter
+
+The server adds a `listingReview` object to each Content Creator API response.
+It preserves each draft's original hook, script, takeaway, concept, caption,
+hashtags, and suggested next step, then adds review suggestions, reasons,
+factual-support warnings, missing evidence, and a per-draft review history.
+For clearly labeled fictional test briefs, the adapter also creates a
+deterministic local proposed revision that uses only the supplied audience and
+question-led meaning. It records field-level changes and reasons. The local
+popup compares original and proposed content, and Accept, Reject, Request
+revision, and Restore original update the selected working draft only. These
+controls never publish or contact a customer. Request revision is capped at
+the existing two automatic attempts. For verified research, a configured
+revision provider must return a safe structured result; otherwise the adapter
+reports that a revision is unavailable instead of inventing copy.
+
+The evaluator is intentionally modular and limited to handoff hygiene. Sha's
+future real-estate evaluation rules can be injected through `evaluateDraft`
+without overwriting this contract. Review records are stored locally by the
+server in a small JSON file outside the project directory (by default
+`~/.sellerspark/listing-review-store.json`). Records have stable IDs, versions,
+atomic writes, and stale-update protection. A corrupt store is reported safely
+and is not overwritten. The browser keeps a convenience copy and archive, but
+the server record is the source used by review controls. Reset clears only the
+active browser view and does not delete the server archive.
+
+The server exposes `GET /api/reviews/:id` and `POST /api/reviews/:id/actions`
+for the dashboard. Request Revision uses the configured AI provider boundary
+for verified research, preserving original audience, citations, evidence, and
+warnings. The existing fictional test mode continues to use its deterministic
+local candidate and never calls an AI provider.
+
+## Vercel preview
+
+The `api/index.js` entry point reuses the same request handler for a Vercel
+preview. Set the Vercel project root to `content-creator/` in the team
+repository. The preview defaults to template mode and fictional data; it does
+not require provider keys. Review records use Vercel's temporary writable
+`/tmp` storage, so they are suitable for a demonstration but are not durable
+across cold starts or deployments. Do not treat the preview as production
+storage or enable publishing from it.
 
 ## Optional AI writer
 
@@ -57,7 +157,37 @@ server-only key:
 The selected Groq model is `openai/gpt-oss-120b`. Its adapter uses Groq's
 OpenAI-compatible Chat Completions endpoint and strict JSON Schema Structured
 Outputs. A Groq `429` rate-limit response returns a safe `rate_limited` result
-with no drafts; it does not switch to OpenAI, templates, or any paid provider.
+and can trigger the optional backup chain described below.
+
+## Verified free backup writer
+
+Groq is the primary AI writer. The verified free backup is OpenRouter's free
+router, not a paid model or paid fallback. Configure the chain only on the
+server with:
+
+    CONTENT_CREATOR_PROVIDER=groq
+    GROQ_MODEL=openai/gpt-oss-120b
+    GROQ_API_KEY=<server-only secret>
+    CONTENT_CREATOR_BACKUP_PROVIDER=openrouter
+    OPENROUTER_MODEL=openrouter/free
+    OPENROUTER_API_KEY=<server-only secret>
+
+OpenRouter is restricted in code to `openrouter/free` or an explicitly free
+model identifier ending in `:free`. When Groq has a safe availability failure
+such as a rate limit, timeout, network error, or configuration/authentication
+failure, the server makes one bounded OpenRouter backup attempt. If both AI
+writers fail, the existing offline template writer is used only when the same
+research brief passes the safety gate. Unsafe, malformed, unsupported, stale,
+or repetitive provider output is stopped for review rather than replaced.
+
+The Gemini adapter and earlier Gemini verification notes remain preserved as
+historical, optional code, but Gemini is not the current configured backup in
+this verified setup. Failover logs contain only provider names, safe status
+categories, and HTTP status metadata—never keys, headers, or response bodies.
+No provider is enabled in default template mode. No mode publishes content or
+contacts customers automatically, and human approval is always required.
+
+No live provider request is made by the test suite or local demo.
 
 Never put the API key in browser code or commit it to this folder. When the
 OpenAI writer is unavailable, returns malformed output, produces unsupported

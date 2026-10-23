@@ -4,35 +4,73 @@ import { readFile } from "node:fs/promises";
 
 const htmlPath = new URL("../public/index.html", import.meta.url);
 const appPath = new URL("../public/app.js", import.meta.url);
+const stylesPath = new URL("../public/styles.css", import.meta.url);
 
 test("dashboard exposes fictional mode and popup controls without a JSON editor", async () => {
   const html = await readFile(htmlPath, "utf8");
 
   assert.match(html, /id="run-fictional-test"/);
   assert.match(html, /id="reset-button"/);
+  assert.match(html, /id="reset-confirmation"/);
+  assert.match(html, /id="reset-confirm"/);
+  assert.match(html, /id="reset-cancel"/);
   assert.match(html, /id="theme-toggle"/);
   assert.match(html, /id="draft-modal"/);
   assert.match(html, /id="modal-prev"/);
   assert.match(html, /id="modal-next"/);
   assert.match(html, /id="modal-copy"/);
   assert.match(html, /id="modal-takeaway"/);
+  assert.match(html, /id="modal-quality"/);
+  assert.match(html, /id="modal-quality-summary"/);
   assert.match(html, /id="result-diagnostic"/);
   assert.match(html, /id="writer-status-value"/);
   assert.match(html, /id="writer-explanation"/);
   assert.match(html, /id="writer-next-step"/);
+  assert.match(html, /id="optimizer-review"/);
+  assert.match(html, /id="optimizer-review-status"/);
+  assert.match(html, /id="optimizer-original"/);
+  assert.match(html, /id="optimizer-proposed"/);
+  assert.match(html, /id="optimizer-changes"/);
+  assert.match(html, /id="optimizer-suggestions"/);
+  assert.match(html, /id="optimizer-warnings"/);
+  assert.match(html, /id="optimizer-history"/);
+  assert.match(html, /id="optimizer-accept"/);
+  assert.match(html, /id="optimizer-reject"/);
+  assert.match(html, /id="optimizer-revision"/);
+  assert.match(html, /id="optimizer-restore"/);
+  assert.match(html, /Human approval is required/);
+  assert.match(html, /Human approval is required/);
   assert.doesNotMatch(html, /Structured research brief/);
   assert.doesNotMatch(html, /Brief JSON/);
   assert.doesNotMatch(html, /<textarea\b/);
   assert.doesNotMatch(html, /Show structured handoff JSON/);
+  assert.doesNotMatch(html, /SellerSpark AI/);
+  assert.match(html, /Turn TikTok Attention Into/);
 });
 
 test("client wiring includes reset, theme, popup navigation, and contained close behavior", async () => {
   const app = await readFile(appPath, "utf8");
 
   assert.match(app, /function resetWorkspace\(\)/);
+  assert.match(app, /WORKSPACE_STORAGE_KEY/);
+  assert.match(app, /REVIEW_ARCHIVE_STORAGE_KEY/);
+  assert.match(app, /function persistWorkspace\(\)/);
+  assert.match(app, /function restoreWorkspace\(\)/);
+  assert.match(app, /function requestReset\(\)/);
+  assert.match(app, /resetConfirmation\.hidden = false/);
+  assert.match(app, /resetConfirm\.addEventListener/);
+  assert.match(app, /AbortController/);
+  assert.match(app, /requestSequence/);
+  assert.match(app, /if \(activeRequestController\) return/);
+  assert.match(app, /if \(requestId !== requestSequence\) return/);
+  assert.match(app, /activeRequestController\?\.abort\(\)/);
   assert.match(app, /result\.writerLabel/);
   assert.match(app, /result\.writerStatus/);
+  assert.match(app, /Research verification needed/);
+  assert.match(app, /HTTPS source link, source date/);
   assert.match(app, /modalTakeaway\.textContent = typeof draft\.takeaway === "string"/);
+  assert.match(app, /function renderEditorialQuality\(\)/);
+  assert.match(app, /not semantic judgment or a prediction of performance/);
   assert.match(app, /Takeaway unavailable\. This draft needs review before approval\./);
   assert.match(app, /"\\nTakeaway: " \+ draft\.takeaway/);
   assert.match(app, /function renderWriterDiagnostic\(result\)/);
@@ -44,8 +82,27 @@ test("client wiring includes reset, theme, popup navigation, and contained close
   assert.match(app, /modalPrevious\.addEventListener/);
   assert.match(app, /modalNext\.addEventListener/);
   assert.match(app, /modalCopy\.addEventListener/);
+  assert.match(app, /function renderOptimizerReview\(\)/);
+  assert.match(app, /optimizerProposed/);
+  assert.match(app, /optimizerChanges/);
+  assert.match(app, /optimizerRestore\.addEventListener/);
+  assert.match(app, /currentListingReview/);
+  assert.match(app, /currentReviewId/);
+  assert.match(app, /runReviewAction/);
+  assert.match(app, /\/api\/reviews\//);
+  assert.match(app, /expectedVersion/);
+  assert.match(app, /automaticRevisionAttempts/);
+  assert.match(app, /optimizerAccept\.addEventListener/);
+  assert.match(app, /optimizerReject\.addEventListener/);
+  assert.match(app, /optimizerRevision\.addEventListener/);
   assert.match(app, /resetButton\.addEventListener/);
   assert.match(app, /themeToggle\.addEventListener/);
   assert.match(app, /document\.body\.classList\.add\("modal-open"\)/);
   assert.match(app, /document\.body\.classList\.remove\("modal-open"\)/);
+});
+
+test("mobile audience status remains fully readable at the compact breakpoint", async () => {
+  const styles = await readFile(stylesPath, "utf8");
+
+  assert.match(styles, /\.workspace-stat:nth-child\(2\) strong \{ white-space: normal; line-height: 1\.25; \}/);
 });

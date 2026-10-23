@@ -16,13 +16,21 @@ For every supplied topic, create:
 - a suggested next step
 
 Keep the topic's source references attached to the draft. Use only claims that
-already have a source reference in the brief. If a claim is unsupported,
-missing a reference, or marked unsupported, omit it from the copy and report it
-as a warning. Preserve source dates exactly as supplied; do not verify or score
-them.
+pass the research verification gate. A `supported: true` flag is not proof.
+Every factual claim must point to a supplied source with an HTTPS URL, a source
+date, a Research Agent verification record, and claim-level evidence containing
+an excerpt and locator. Unsupported claims, stale sources, missing evidence,
+bad URLs, and missing verification records stop public-facing draft generation
+and are returned in separate `unsupportedClaims`, `warnings`, and
+`missingEvidence` fields.
+
+The Content Creator does not fetch or live-check URLs. `researchVerification:
+{status: "verified"}` means the upstream Research Agent supplied the required
+verification record; it does not mean this component independently checked the
+source. Preserve source dates exactly as supplied.
 
 If the brief or its topics are missing, return needs_more_research. Do not
-gather research, validate research, score research, or invent facts. Do not
+gather research, browse, score research, or invent facts. Do not
 promise results. Do not publish content, send messages, contact customers, or
 imply that a human has approved the draft.
 
@@ -51,3 +59,39 @@ approves the choice. The adapter sends the same bounded research payload and
 uses strict JSON Schema Structured Outputs. A rate limit returns
 `writerStatus: rate_limited` with no drafts and never selects another provider
 automatically.
+
+## Provider failover boundary
+
+Groq remains the primary AI writer when `CONTENT_CREATOR_PROVIDER=groq`. An
+optional Gemini backup is enabled only with
+`CONTENT_CREATOR_BACKUP_PROVIDER=gemini` and a server-only `GEMINI_API_KEY`.
+The backup uses `gemini-3.8-flash` and the documented JSON response format.
+
+The failover chain makes at most one backup attempt after a provider
+availability failure, timeout, rate limit, or configuration/authentication
+failure. It never bypasses research validation, semantic output validation,
+freshness checks, source attribution, or human approval. If both providers
+fail, offline templates are used only when the original brief independently
+passes the Content Creator gate. Logs contain safe categories and status
+metadata only. Default template mode remains offline and no provider is
+enabled by default.
+
+## Listing Optimizer boundary
+
+The Content Creator API also returns a `listingReview` adapter contract for a
+future review surface. It preserves original draft fields, source metadata,
+warnings, and missing evidence. The local review controls record Accept,
+Reject, Request revision, and Restore original actions, keep human approval
+mandatory, and never publish or contact customers. Clearly labeled fictional
+briefs receive deterministic local proposed revisions with field-level reasons;
+verified briefs require an injected revision provider. Automatic revision
+requests remain capped at two and never fabricate research or replacement
+facts.
+
+The adapter's evaluator checks only handoff hygiene. Real-estate-specific
+quality or evaluation rules must be injected later through the evaluator seam;
+do not add, overwrite, or assume Sha's Research Agent or Listing Optimizer
+rules in this component. The server adapter keeps session state in memory; the
+browser UI persists the active review and a small local archive so refreshes
+and ordinary server restarts do not erase the review record. Reset requires
+confirmation and clears only the active view.

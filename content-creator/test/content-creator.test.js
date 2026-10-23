@@ -195,15 +195,20 @@ test("output has a stable future-optimizer handoff shape", () => {
     "automaticallyPublished",
     "customerContacted",
     "drafts",
+    "editorialQuality",
     "handoff",
     "humanApprovalRequired",
     "missingInformation",
     "researchBriefId",
+    "researchVerification",
     "status",
     "unsupportedClaims",
     "writer",
     "writerLabel"
   ]);
+  assert.equal(result.editorialQuality.assessment, "editorial_review");
+  assert.match(result.editorialQuality.scoreMeaning, /not .*prediction/i);
+  assert.equal(result.editorialQuality.setChecks.distinctHooks, true);
   assert.deepEqual(Object.keys(draft).sort(), [
     "angle",
     "audience",

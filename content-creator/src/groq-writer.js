@@ -1,6 +1,6 @@
 import {
   buildResearchInput,
-  classifyHttpStatus,
+  createHttpJsonRequest,
   createStructuredWriter,
   MODEL_OUTPUT_SCHEMA,
   WRITER_INSTRUCTIONS
@@ -41,37 +41,14 @@ export function parseGroqResponse(response) {
   return JSON.parse(content);
 }
 
-function createGroqRequest({ apiKey, fetchImpl = globalThis.fetch }) {
-  if (!apiKey || typeof fetchImpl !== "function") return null;
-
-  return async (payload) => {
-    const response = await fetchImpl(GROQ_CHAT_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + apiKey
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      const error = new Error("Groq request failed with status " + String(response.status));
-      error.code = response.status === 429 ? "rate_limited" : "provider_error";
-      error.httpStatus = response.status;
-      error.statusClass = classifyHttpStatus(response.status).statusClass;
-      error.retryAfter = response.headers?.get?.("retry-after") ?? null;
-      throw error;
-    }
-    try {
-      return await response.json();
-    } catch {
-      const error = new Error("Groq response was not readable as JSON");
-      error.code = "invalid_response";
-      error.httpStatus = response.status;
-      error.statusClass = classifyHttpStatus(response.status).statusClass;
-      throw error;
-    }
-  };
+function createGroqRequest({ apiKey, fetchImpl = globalThis.fetch, timeoutMs }) {
+  return createHttpJsonRequest({
+    apiKey,
+    fetchImpl,
+    endpoint: GROQ_CHAT_ENDPOINT,
+    providerLabel: "Groq",
+    timeoutMs
+  });
 }
 
 export function createGroqWriter({
