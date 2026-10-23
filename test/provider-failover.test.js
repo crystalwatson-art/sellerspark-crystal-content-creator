@@ -113,3 +113,22 @@ test("provider failure logs never include credentials or raw provider text", asy
   assert.doesNotMatch(serialized, /API_KEY|Bearer|secret|token/i);
   assert.equal(logs[0].provider, "primary writer");
 });
+
+for (const rejectedStatus of ["invalid_response", "unsafe_output", "stale_output", "unsupported_claims"]) {
+  test(`backup ${rejectedStatus} blocks offline template substitution`, async () => {
+    let calls = 0;
+    const result = await generateWithFailover({
+      brief: fictionalBrief,
+      primaryWriter: { generate: async () => failureResult("groq", "rate_limited") },
+      backupWriter: { generate: async () => { calls++; return failureResult("gemini", rejectedStatus); } }
+    });
+    assert.equal(calls, 1);
+    assert.equal(result.writer, "gemini");
+    assert.equal(result.writerStatus, rejectedStatus);
+    assert.equal(result.status, "needs_more_research");
+    assert.equal(result.drafts.length, 0);
+    assert.equal(result.failover.outcome, "backup_rejected");
+    assert.equal(result.humanApprovalRequired, true);
+    assert.equal(result.automaticallyPublished, false);
+  });
+}

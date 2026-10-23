@@ -113,6 +113,16 @@ export async function generateWithFailover({
     const backupFailure = safeFailure(backupResult);
     logger({ event: "provider_failure", provider: backupLabel, ...backupFailure });
     baseFailover.backup = backupFailure;
+
+    // A backup that rejects its output for quality, evidence, or safety reasons
+    // is not an unavailable provider. Preserve that result instead of quietly
+    // replacing it with template content.
+    if (!isFailoverEligible(backupResult)) {
+      return annotate(backupResult, {
+        ...baseFailover,
+        outcome: "backup_rejected"
+      });
+    }
   }
 
   if (templateFallback) {
