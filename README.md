@@ -1,4 +1,4 @@
-# SellerSpark AI — Crystal's Content Creator
+# SellerSpark — Crystal's Content Creator
 
 This local Content Creator component accepts a structured research brief and
 turns it into exactly three TikTok draft packages for:

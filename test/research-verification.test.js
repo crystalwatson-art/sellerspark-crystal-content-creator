@@ -123,3 +123,25 @@ test("verified claims preserve exact source attribution", () => {
   assert.equal(result.handoff.researchVerificationStatus, "verified");
   assert.equal(result.handoff.publicDraftsAllowed, true);
 });
+
+test("conflicting source records with the same ID block verification", () => {
+  const brief = verifiedBrief();
+  brief.topics[1].sourceRefs[0].id = brief.topics[0].sourceRefs[0].id;
+  brief.topics[1].sourceRefs[0].url = "https://www.nyc.gov/other/source-1";
+
+  const result = verifyResearchBrief(brief, { today: new Date("2026-10-22T00:00:00Z") });
+
+  assert.equal(result.status, "needs_more_research");
+  assert.match(result.missingEvidence.join(" "), /conflicts with another source record/i);
+});
+
+test("conflicting claim records with the same ID are unsupported", () => {
+  const brief = verifiedBrief();
+  brief.topics[1].claims[0].id = brief.topics[0].claims[0].id;
+  brief.topics[1].claims[0].text = "A conflicting fictional claim says something different.";
+
+  const result = verifyResearchBrief(brief, { today: new Date("2026-10-22T00:00:00Z") });
+
+  assert.equal(result.status, "needs_more_research");
+  assert.match(result.unsupportedClaims.map((item) => item.reason).join(" "), /conflicts with another supplied claim/i);
+});

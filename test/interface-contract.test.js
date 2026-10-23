@@ -42,6 +42,8 @@ test("dashboard exposes fictional mode and popup controls without a JSON editor"
   assert.doesNotMatch(html, /Brief JSON/);
   assert.doesNotMatch(html, /<textarea\b/);
   assert.doesNotMatch(html, /Show structured handoff JSON/);
+  assert.doesNotMatch(html, /SellerSpark AI/);
+  assert.match(html, /Turn TikTok Attention Into/);
 });
 
 test("client wiring includes reset, theme, popup navigation, and contained close behavior", async () => {

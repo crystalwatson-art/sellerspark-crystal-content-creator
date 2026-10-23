@@ -231,3 +231,30 @@ test("Responses request treats the brief as data and uses strict structured outp
   assert.equal(request.text.format.type, "json_schema");
   assert.equal(request.text.format.strict, true);
 });
+
+test("provider research input preserves source URLs, dates, and claim evidence", () => {
+  const request = buildResponsesRequest({ model: "test-model", brief: {
+    ...fictionalBrief,
+    researchMode: "verified",
+    topics: fictionalBrief.topics.map((topic, index) => ({
+      ...topic,
+      sourceRefs: [{
+        ...topic.sourceRefs[0],
+        url: "https://www.nyc.gov/mock-sellerspark/source-" + String(index + 1),
+        verification: { status: "verified", checkedAt: "2026-10-21T12:00:00Z" }
+      }],
+      claims: [{
+        id: "claim-" + String(index + 1),
+        sourceId: topic.sourceRefs[0].id,
+        text: "Fictional claim text for provider input.",
+        verification: { status: "verified", checkedAt: "2026-10-21T12:00:00Z" },
+        evidence: { quote: "Fictional evidence quote with enough detail.", locator: "Fictional section 1" }
+      }]
+    }))
+  } });
+  const input = JSON.parse(request.input);
+
+  assert.match(input.topics[0].sourceRefs[0].url, /^https:\/\//);
+  assert.equal(input.topics[0].sourceRefs[0].date, "2026-10-20");
+  assert.equal(input.topics[0].supportedClaims[0].evidence.locator, "Fictional section 1");
+});

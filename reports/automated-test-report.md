@@ -1,10 +1,10 @@
 # Crystal's Content Creator — Automated Test Report
 
-Date: 2026-10-22
+Date: 2026-10-23
 
 ## Final result
 
-PASS — 72 tests passed, 0 failed, 0 skipped.
+PASS — 83 tests passed, 0 failed, 0 skipped.
 
 Command:
 
@@ -97,6 +97,12 @@ Coverage:
 71. The review API keeps the fictional Brooklyn audience separate.
 72. Verified research calls a configured revision provider instead of using an
     unavailable placeholder.
+73. Provider request input preserves source URLs, source dates, verification
+    records, and claim evidence.
+74. Conflicting source and claim records are blocked or separated instead of
+    being treated as verified facts.
+75. Customer-facing branding uses SellerSpark and the approved tagline without
+    changing the internal provider compatibility identifiers.
 
 ## Corrections made during verification
 
@@ -182,6 +188,31 @@ Coverage:
   mocked AI output is validated and research metadata is restored from the
   original draft. One backup attempt is permitted, and no safe proposal means
   no fabricated revision.
+- Provider request context now carries source URLs, dates, verification
+  records, and claim evidence so downstream writers cannot lose attribution.
+- The research gate now detects conflicting duplicate source or claim IDs and
+  refuses to treat those records as a clean verified brief.
+- Customer-facing dashboard and package documentation now use SellerSpark and
+  the approved tagline; internal provider compatibility identifiers remain
+  unchanged.
+
+## Independent 83-test verification addendum
+
+The extracted package was rerun on 2026-10-23. The eight additional cases
+covered by this package confirm that:
+
+- Invalid, unsafe, stale, or unsupported Gemini backup output never becomes
+  offline template content.
+- Exhausted providers report a safe final result when fallback is disabled.
+- An unsafe brief cannot become template content even when both providers are
+  unavailable.
+- The HTTP content endpoint switches from a mocked exhausted Groq provider to
+  mocked Gemini without interrupting the request.
+- The HTTP content endpoint refuses to substitute offline drafts for rejected
+  Gemini output.
+
+The suite output included only safe provider categories and statuses. It made
+no live Groq or Gemini request.
 
 ## Interim correction during this run
 

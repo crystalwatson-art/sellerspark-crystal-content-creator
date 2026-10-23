@@ -176,7 +176,9 @@ function sourceRefsFor(topic) {
   return refs.map((ref) => ({
     id: sourceId(ref),
     title: ref?.title ?? null,
-    date: ref?.date ?? null
+    date: ref?.date ?? ref?.publishedDate ?? ref?.publicationDate ?? null,
+    url: ref?.url ?? null,
+    verification: ref?.verification ?? null
   }));
 }
 
@@ -189,7 +191,9 @@ function supportedClaimsFor(topic) {
     })
     .map((claim) => ({
       id: claimId(claim),
-      text: claim?.text ?? ""
+      text: claim?.text ?? "",
+      verification: claim?.verification ?? null,
+      evidence: claim?.evidence ?? null
     }));
 }
 

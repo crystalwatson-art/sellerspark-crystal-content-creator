@@ -133,6 +133,14 @@ function warningValues(topic) {
     .filter(Boolean);
 }
 
+function normalizedClaimText(claim) {
+  return asText(claim?.text)?.toLowerCase().replace(/\s+/g, " ") ?? "";
+}
+
+function sameSourceIdentity(left, right) {
+  return left?.url === right?.url && sourceDate(left) === sourceDate(right);
+}
+
 function baseResult(status = "needs_more_research") {
   return {
     status,
@@ -173,6 +181,7 @@ export function verifyResearchBrief(brief, { today = new Date(), maxAgeDays = DE
   const now = parseDate(formatDate(today)) ?? today;
   const maxAge = Number.isFinite(maxAgeDays) && maxAgeDays >= 0 ? maxAgeDays : DEFAULT_MAX_AGE_DAYS;
   const sourceById = new Map();
+  const claimById = new Map();
 
   for (const [topicIndex, topic] of brief.topics.entries()) {
     result.warnings.push(...warningValues(topic).map((warning) => "topic " + String(topicIndex + 1) + ": " + warning));
@@ -190,7 +199,14 @@ export function verifyResearchBrief(brief, { today = new Date(), maxAgeDays = DE
       if (!url.ok) issues.push(label + ": " + url.reason);
       issues.push(...dateIssues(source, now, maxAge).map((issue) => label + ": " + issue));
       issues.push(...checkedAtIssues(verificationRecord(source?.verification), label));
-      if (id && !sourceById.has(id)) sourceById.set(id, { source, topicIndex, issues });
+      if (id && sourceById.has(id)) {
+        const previous = sourceById.get(id);
+        if (!sameSourceIdentity(previous.source, source)) {
+          result.missingEvidence.push(label + " conflicts with another source record using the same id");
+        }
+      } else if (id) {
+        sourceById.set(id, { source, topicIndex, issues });
+      }
       result.sourceRefsChecked += 1;
       result.missingEvidence.push(...issues);
     }
@@ -199,6 +215,18 @@ export function verifyResearchBrief(brief, { today = new Date(), maxAgeDays = DE
       result.claimsChecked += 1;
       const id = claimId(claim, "topic-" + String(topicIndex + 1) + "-claim-" + String(claimIndex + 1));
       const claimLabel = "claim " + String(id);
+      if (claimById.has(id)) {
+        const previous = claimById.get(id);
+        if (previous.text !== normalizedClaimText(claim) || previous.sourceId !== (claim?.sourceId ?? claim?.sourceRefId ?? claim?.referenceId)) {
+          result.unsupportedClaims.push({ claim: claim ?? null, reason: claimLabel + " conflicts with another supplied claim record" });
+          continue;
+        }
+      } else {
+        claimById.set(id, {
+          text: normalizedClaimText(claim),
+          sourceId: claim?.sourceId ?? claim?.sourceRefId ?? claim?.referenceId
+        });
+      }
       const explicitUnsupported = claim?.supported === false || claim?.status === "unsupported" || claim?.verification?.status === "unsupported";
       if (explicitUnsupported) {
         result.unsupportedClaims.push({ claim: claim ?? null, reason: claimLabel + " is marked unsupported" });

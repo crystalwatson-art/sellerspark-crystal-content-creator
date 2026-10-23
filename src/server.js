@@ -285,7 +285,7 @@ export async function startServer({ port = Number(process.env.PORT || 3000) } = 
       : null;
   const server = createServer({ reviewStore, revisionGenerator, providerMode, openAIWriter, groqWriter, geminiWriter });
   await new Promise((resolve) => server.listen(port, "127.0.0.1", resolve));
-  console.log("Crystal's Content Creator demo: http://127.0.0.1:" + port);
+  console.log("SellerSpark Content Creator demo: http://127.0.0.1:" + port);
   return server;
 }
 

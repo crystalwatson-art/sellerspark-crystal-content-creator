@@ -1,6 +1,6 @@
 # Crystal's Content Creator — Interface Test Report
 
-Date: 2026-10-22
+Date: 2026-10-23
 
 ## Local interface
 
@@ -11,6 +11,9 @@ Command:
 URL:
 
     http://127.0.0.1:4181
+
+The final pass used a separate offline-only preview on port 4182 so the
+existing local servers were not disturbed.
 
 ## Browser verification
 
@@ -91,6 +94,9 @@ Displayed-result checks:
 - The updated review API was exercised through the offline server: the fictional
   LIC workflow persisted a revision action, a stale version received a safe
   conflict, and the separate fictional Brooklyn handoff retained its audience.
+- The final pass confirmed the visible brand is SellerSpark, the main heading
+  uses “Turn TikTok Attention Into Listing Opportunities.”, and no customer-facing
+  “SellerSpark AI” label remains.
 
 ## External brief acceptance
 
@@ -115,9 +121,9 @@ PASS — the root interface asset returned HTTP 200 with HTML content.
 ## Environment note
 
 The original 4174 server process was left untouched. The updated files were
-verified through a separate offline-only local instance on port 4181; the
+verified through separate offline-only local instances on ports 4181 and 4182;
 earlier 4175, 4176, 4177, and 4178 instances were also left untouched. The
-4181 instance was stopped after verification.
+those verification instances were stopped after verification.
 
 The Groq provider was not enabled in the browser and no Groq or OpenAI API
 call was made.
