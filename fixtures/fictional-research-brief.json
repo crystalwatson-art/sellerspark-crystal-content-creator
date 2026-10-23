@@ -1,0 +1,50 @@
+{
+  "_fixtureNotice": "FICTIONAL TEST DATA — not verified real-world research.",
+  "researchMode": "fictional",
+  "id": "fictional-brief-crystal-001",
+  "audience": "lic_condo_owner",
+  "topics": [
+    {
+      "id": "fictional-topic-01",
+      "title": "Fictional LIC condo seller decision checklist",
+      "question": "What would I want to understand about timing before I invite a seller conversation?",
+      "sourceRefs": [
+        {
+          "id": "fictional-source-01",
+          "title": "Fictional LIC Condo Seller Question Notes",
+          "url": "https://fictional.example/sellerspark/source-01",
+          "date": "2026-10-20"
+        }
+      ],
+      "claims": []
+    },
+    {
+      "id": "fictional-topic-02",
+      "title": "Fictional LIC condo preparation notes",
+      "question": "Which building and unit details should I gather before asking for a listing conversation?",
+      "sourceRefs": [
+        {
+          "id": "fictional-source-02",
+          "title": "Fictional LIC Condo Planning Notes",
+          "url": "https://fictional.example/sellerspark/source-02",
+          "date": "2026-10-20"
+        }
+      ],
+      "claims": []
+    },
+    {
+      "id": "fictional-topic-03",
+      "title": "Fictional LIC condo consultation prompts",
+      "question": "What would make a first conversation about my condo feel useful and low-pressure?",
+      "sourceRefs": [
+        {
+          "id": "fictional-source-03",
+          "title": "Fictional LIC Condo Consultation Notes",
+          "url": "https://fictional.example/sellerspark/source-03",
+          "date": "2026-10-20"
+        }
+      ],
+      "claims": []
+    }
+  ]
+}
