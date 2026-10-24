@@ -35,7 +35,7 @@ async function startServer({ authFetch, dbFetch, serverOptions = {} }) {
   const demoStore = await new ReviewStore({ filePath: path.join(directory, "demo.json") }).init();
   const dbStore = await new SupabaseReviewStore({
     url: "https://sellerspark-development.supabase.co",
-    secretKey: "mock-server-only-secret",
+    anonKey: "mock-public-anon-key",
     fetchImpl: dbFetch
   }).init();
   const authVerifier = new SupabaseAuthVerifier({
