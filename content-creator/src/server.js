@@ -118,7 +118,7 @@ export function createServer({
 } = {}) {
   if (!reviewStore) throw new Error("createServer requires a ReviewStore.");
 
-  async function withListingReviewUsing(contentResult, brief, { store, actorId = null, persistenceStatus }) {
+  async function withListingReviewUsing(contentResult, brief, { store, actorId = null, actorToken = null, persistenceStatus }) {
     const listingReview = adaptContentResultToListingReview(contentResult);
     if (contentResult?.status !== "ready_for_review" || !listingReview.reviews.length) {
       return { ...contentResult, listingReview };
@@ -129,6 +129,7 @@ export function createServer({
       listingReview
     };
     if (actorId) createInput.actorId = actorId;
+    if (actorToken) createInput.actorToken = actorToken;
     const stored = await store.create(createInput);
     return {
       ...contentResult,
@@ -147,11 +148,11 @@ export function createServer({
   async function resolveReview(request, id) {
     if (demoReviewStore) {
       const demoRecord = await demoReviewStore.get(id);
-      if (demoRecord) return { store: demoReviewStore, record: demoRecord, actorId: null, persistenceStatus: "fictional_demo_store" };
+      if (demoRecord) return { store: demoReviewStore, record: demoRecord, actorId: null, actorToken: null, persistenceStatus: "fictional_demo_store" };
     }
-    const { userId } = await authenticate(request);
-    const record = await reviewStore.get(id, { actorId: userId });
-    return { store: reviewStore, record, actorId: userId, persistenceStatus: "supabase" };
+    const { userId, accessToken } = await authenticate(request);
+    const record = await reviewStore.get(id, { actorId: userId, actorToken: accessToken });
+    return { store: reviewStore, record, actorId: userId, actorToken: accessToken, persistenceStatus: "supabase" };
   }
 
   async function contentResultFor(brief) {
@@ -233,11 +234,12 @@ export function createServer({
             persistenceStatus: "fictional_demo_store"
           });
         } else {
-          const { userId } = await authenticate(request);
+          const { userId, accessToken } = await authenticate(request);
           result = await contentResultFor(brief);
           storedResult = await withListingReviewUsing(result, brief, {
             store: reviewStore,
             actorId: userId,
+            actorToken: accessToken,
             persistenceStatus: "supabase"
           });
         }
@@ -312,7 +314,7 @@ export function createServer({
         return;
       }
       try {
-        const updateOptions = context.actorId ? { actorId: context.actorId } : undefined;
+        const updateOptions = context.actorId ? { actorId: context.actorId, actorToken: context.actorToken } : undefined;
         const updated = await context.store.update(id, actionInput.expectedVersion, async (next) => {
           const result = await applyListingReviewAction(
             next.listingReview,
@@ -405,7 +407,7 @@ export async function createConfiguredRequestHandler() {
     const supabaseAnonKey = process.env.SELLERSPARK_SUPABASE_ANON_KEY;
     reviewStore = await new SupabaseReviewStore({
       url: supabaseUrl,
-      secretKey: process.env.SELLERSPARK_SUPABASE_SECRET_KEY
+      anonKey: supabaseAnonKey
     }).init();
     authVerifier = new SupabaseAuthVerifier({
       url: supabaseUrl,
