@@ -12,6 +12,8 @@ import { createDraftHistory } from "./draft-history.js";
 import { adaptContentResultToListingReview, applyListingReviewAction } from "./listing-optimizer.js";
 import { generateWithFailover } from "./provider-failover.js";
 import { ReviewStore } from "./review-store.js";
+import { SupabaseReviewStore } from "./supabase-review-store.js";
+import { SupabaseAuthVerifier } from "./supabase-auth.js";
 import { createRevisionGenerator } from "./revision-generator.js";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -23,6 +25,7 @@ const assets = new Map([
   ["/", { file: path.join(publicRoot, "index.html"), type: "text/html; charset=utf-8" }],
   ["/index.html", { file: path.join(publicRoot, "index.html"), type: "text/html; charset=utf-8" }],
   ["/app.js", { file: path.join(publicRoot, "app.js"), type: "text/javascript; charset=utf-8" }],
+  ["/supabase-auth.js", { file: path.join(publicRoot, "supabase-auth.js"), type: "text/javascript; charset=utf-8" }],
   ["/styles.css", { file: path.join(publicRoot, "styles.css"), type: "text/css; charset=utf-8" }],
   ["/fixtures/fictional-research-brief.json", { file: fixturePath, type: "application/json; charset=utf-8" }],
   ["/fixtures/fictional-brooklyn-townhouse-brief.json", { file: brooklynFixturePath, type: "application/json; charset=utf-8" }]
@@ -89,8 +92,23 @@ function safeActionMessage(reason) {
   return messages[reason] || "The review action could not be completed safely.";
 }
 
+function isFictionalDemoBrief(brief) {
+  return brief?.researchMode === "fictional"
+    && typeof brief?._fixtureNotice === "string"
+    && brief._fixtureNotice.toUpperCase().startsWith("FICTIONAL TEST DATA");
+}
+
+function authorizationError(code = "authorization_required") {
+  const error = new Error("Authentication is required for persistent review access.");
+  error.code = code;
+  return error;
+}
+
 export function createServer({
   reviewStore,
+  demoReviewStore = null,
+  authVerifier = null,
+  authConfig = { enabled: false },
   revisionGenerator = null,
   providerMode = process.env.CONTENT_CREATOR_PROVIDER || "template",
   openAIWriter = null,
@@ -100,23 +118,40 @@ export function createServer({
 } = {}) {
   if (!reviewStore) throw new Error("createServer requires a ReviewStore.");
 
-  async function withListingReview(contentResult, brief) {
+  async function withListingReviewUsing(contentResult, brief, { store, actorId = null, persistenceStatus }) {
     const listingReview = adaptContentResultToListingReview(contentResult);
     if (contentResult?.status !== "ready_for_review" || !listingReview.reviews.length) {
       return { ...contentResult, listingReview };
     }
-    const stored = await reviewStore.create({
+    const createInput = {
       brief,
       researchVerification: contentResult.researchVerification,
       listingReview
-    });
+    };
+    if (actorId) createInput.actorId = actorId;
+    const stored = await store.create(createInput);
     return {
       ...contentResult,
       listingReview: stored.listingReview,
       listingReviewId: stored.id,
       listingReviewVersion: stored.version,
-      persistenceStatus: reviewStore.status().persistent ? "local_server_store" : "unavailable"
+      persistenceStatus
     };
+  }
+
+  async function authenticate(request) {
+    if (!authVerifier) throw authorizationError();
+    return authVerifier.verify(request);
+  }
+
+  async function resolveReview(request, id) {
+    if (demoReviewStore) {
+      const demoRecord = await demoReviewStore.get(id);
+      if (demoRecord) return { store: demoReviewStore, record: demoRecord, actorId: null, persistenceStatus: "fictional_demo_store" };
+    }
+    const { userId } = await authenticate(request);
+    const record = await reviewStore.get(id, { actorId: userId });
+    return { store: reviewStore, record, actorId: userId, persistenceStatus: "supabase" };
   }
 
   async function contentResultFor(brief) {
@@ -162,6 +197,14 @@ export function createServer({
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/auth-config") {
+      const publicConfig = authConfig?.enabled
+        ? { enabled: true, url: authConfig.url, anonKey: authConfig.anonKey }
+        : { enabled: false };
+      sendJson(response, 200, publicConfig);
+      return;
+    }
+
     if (request.method === "POST" && url.pathname === "/api/content") {
       let brief;
       try {
@@ -176,14 +219,55 @@ export function createServer({
         return;
       }
 
-      const result = await contentResultFor(brief);
-      sendJson(response, 200, await withListingReview(result, brief));
+      let result;
+      let storedResult;
+      try {
+        if (isFictionalDemoBrief(brief)) {
+          if (!demoReviewStore) {
+            sendJson(response, 503, { status: "error", message: "The fictional demo is not configured safely." });
+            return;
+          }
+          result = await contentResultFor(brief);
+          storedResult = await withListingReviewUsing(result, brief, {
+            store: demoReviewStore,
+            persistenceStatus: "fictional_demo_store"
+          });
+        } else {
+          const { userId } = await authenticate(request);
+          result = await contentResultFor(brief);
+          storedResult = await withListingReviewUsing(result, brief, {
+            store: reviewStore,
+            actorId: userId,
+            persistenceStatus: "supabase"
+          });
+        }
+      } catch (error) {
+        if (["authorization_required", "authorization_failed", "auth_unavailable"].includes(error?.code)) {
+          sendJson(response, error.code === "auth_unavailable" ? 503 : 401, {
+            status: "error",
+            message: error.message
+          });
+          return;
+        }
+        throw error;
+      }
+      sendJson(response, 200, storedResult);
       return;
     }
 
     const reviewMatch = url.pathname.match(/^\/api\/reviews\/([^/]+)$/);
     if (reviewMatch && request.method === "GET") {
-      const record = await reviewStore.get(decodeURIComponent(reviewMatch[1]));
+      let context;
+      try {
+        context = await resolveReview(request, decodeURIComponent(reviewMatch[1]));
+      } catch (error) {
+        if (["authorization_required", "authorization_failed", "auth_unavailable"].includes(error?.code)) {
+          sendJson(response, error.code === "auth_unavailable" ? 503 : 401, { status: "error", message: error.message });
+          return;
+        }
+        throw error;
+      }
+      const record = context.record;
       if (!record) {
         sendJson(response, 404, { status: "error", message: "Review not found." });
         return;
@@ -193,7 +277,7 @@ export function createServer({
         listingReviewId: record.id,
         listingReviewVersion: record.version,
         listingReview: record.listingReview,
-        persistenceStatus: "local_server_store"
+        persistenceStatus: context.persistenceStatus
       });
       return;
     }
@@ -208,7 +292,17 @@ export function createServer({
         return;
       }
       const id = decodeURIComponent(actionMatch[1]);
-      const record = await reviewStore.get(id);
+      let context;
+      try {
+        context = await resolveReview(request, id);
+      } catch (error) {
+        if (["authorization_required", "authorization_failed", "auth_unavailable"].includes(error?.code)) {
+          sendJson(response, error.code === "auth_unavailable" ? 503 : 401, { status: "error", message: error.message });
+          return;
+        }
+        throw error;
+      }
+      const record = context.record;
       if (!record) {
         sendJson(response, 404, { status: "error", message: "Review not found." });
         return;
@@ -218,7 +312,8 @@ export function createServer({
         return;
       }
       try {
-        const updated = await reviewStore.update(id, actionInput.expectedVersion, async (next) => {
+        const updateOptions = context.actorId ? { actorId: context.actorId } : undefined;
+        const updated = await context.store.update(id, actionInput.expectedVersion, async (next) => {
           const result = await applyListingReviewAction(
             next.listingReview,
             { action: actionInput.action, draftId: actionInput.draftId, note: actionInput.note },
@@ -235,13 +330,13 @@ export function createServer({
             throw error;
           }
           next.listingReview = result.state;
-        });
+        }, updateOptions);
         sendJson(response, 200, {
           status: "ok",
           listingReviewId: updated.id,
           listingReviewVersion: updated.version,
           listingReview: updated.listingReview,
-          persistenceStatus: "local_server_store"
+          persistenceStatus: context.persistenceStatus
         });
       } catch (error) {
         if (error?.code === "conflict") {
@@ -253,8 +348,19 @@ export function createServer({
           });
           return;
         }
-        const status = error?.code === "not_found" ? 404 : error?.code === "store_corrupt" ? 503 : 422;
-        sendJson(response, status, { status: "error", message: error?.message || "The review action could not be completed safely." });
+        const status = error?.code === "not_found"
+          ? 404
+          : error?.code === "authorization_failed"
+            ? 401
+            : ["store_corrupt", "storage_unavailable", "auth_unavailable"].includes(error?.code)
+              ? 503
+              : 422;
+        const message = error?.code === "authorization_failed"
+          ? "Review access was not authorized."
+          : ["store_corrupt", "storage_unavailable", "auth_unavailable"].includes(error?.code)
+            ? "Review storage is temporarily unavailable."
+            : error?.message || "The review action could not be completed safely.";
+        sendJson(response, status, { status: "error", message });
       }
       return;
     }
@@ -290,13 +396,34 @@ export async function createConfiguredRequestHandler() {
     : null;
   const dataDir = process.env.SELLERSPARK_DATA_DIR || (process.env.VERCEL ? "/tmp/sellerspark" : path.join(os.homedir(), ".sellerspark"));
   const filePath = process.env.SELLERSPARK_REVIEW_STORE_PATH || path.join(dataDir, "listing-review-store.json");
-  const reviewStore = await new ReviewStore({ filePath }).init();
+  const storageMode = process.env.SELLERSPARK_REVIEW_STORAGE || "local";
+  let reviewStore;
+  let authVerifier = null;
+  let authConfig = { enabled: false };
+  if (storageMode === "supabase") {
+    const supabaseUrl = process.env.SELLERSPARK_SUPABASE_URL;
+    const supabaseAnonKey = process.env.SELLERSPARK_SUPABASE_ANON_KEY;
+    reviewStore = await new SupabaseReviewStore({
+      url: supabaseUrl,
+      secretKey: process.env.SELLERSPARK_SUPABASE_SECRET_KEY
+    }).init();
+    authVerifier = new SupabaseAuthVerifier({
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey
+    });
+    authConfig = { enabled: true, url: supabaseUrl, anonKey: supabaseAnonKey };
+  } else if (storageMode === "local") {
+    reviewStore = await new ReviewStore({ filePath }).init();
+  } else {
+    throw new Error("SELLERSPARK_REVIEW_STORAGE must be local or supabase.");
+  }
+  const demoReviewStore = await new ReviewStore({ filePath: path.join(dataDir, "fictional-demo-review-store.json") }).init();
   const revisionGenerator = providerMode === "groq" && groqWriter
     ? createRevisionGenerator({ primaryWriter: groqWriter, backupWriter: openRouterWriter || geminiWriter, logger: logProviderFailure })
     : providerMode === "openai" && openAIWriter
       ? createRevisionGenerator({ primaryWriter: openAIWriter, logger: logProviderFailure })
       : null;
-  return createRequestHandler({ reviewStore, revisionGenerator, providerMode, openAIWriter, groqWriter, geminiWriter, openRouterWriter });
+  return createRequestHandler({ reviewStore, demoReviewStore, authVerifier, authConfig, revisionGenerator, providerMode, openAIWriter, groqWriter, geminiWriter, openRouterWriter });
 }
 
 export async function startServer({ port = Number(process.env.PORT || 3000) } = {}) {

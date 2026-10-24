@@ -21,6 +21,18 @@
             <span class="theme-icon" aria-hidden="true">◐</span>
             <span class="theme-label">Dark mode</span>
           </button>
+          <div id="auth-panel" class="auth-panel" aria-live="polite">
+            <span id="auth-status" class="auth-status">Fictional demo available without sign-in</span>
+            <form id="auth-form" class="auth-form" hidden>
+              <label class="sr-only" for="auth-email">Email</label>
+              <input id="auth-email" name="email" type="email" autocomplete="email" placeholder="Email">
+              <label class="sr-only" for="auth-password">Password</label>
+              <input id="auth-password" name="password" type="password" autocomplete="current-password" placeholder="Password">
+              <button id="auth-sign-in" class="secondary-button" type="submit">Sign in</button>
+              <button id="auth-sign-out" class="secondary-button" type="button" hidden>Sign out</button>
+            </form>
+            <p id="auth-error" class="auth-error" role="alert" hidden></p>
+          </div>
           <button id="reset-button" class="reset-button" type="button">Reset</button>
         </div>
       </header>

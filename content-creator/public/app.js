@@ -1,3 +1,5 @@
+import { BrowserSupabaseAuth, authClientErrorMessage } from "./supabase-auth.js";
+
 const demoError = document.querySelector("#demo-error");
 const statusValue = document.querySelector("#status-value");
 const audienceValue = document.querySelector("#audience-value");
@@ -15,6 +17,13 @@ const resetCancel = document.querySelector("#reset-cancel");
 const resetConfirm = document.querySelector("#reset-confirm");
 const themeToggle = document.querySelector("#theme-toggle");
 const resetButton = document.querySelector("#reset-button");
+const authStatus = document.querySelector("#auth-status");
+const authForm = document.querySelector("#auth-form");
+const authEmail = document.querySelector("#auth-email");
+const authPassword = document.querySelector("#auth-password");
+const authSignIn = document.querySelector("#auth-sign-in");
+const authSignOut = document.querySelector("#auth-sign-out");
+const authError = document.querySelector("#auth-error");
 const modal = document.querySelector("#draft-modal");
 const modalNumber = document.querySelector("#modal-number");
 const modalAngle = document.querySelector("#modal-angle");
@@ -57,11 +66,13 @@ let currentEditorialQuality = null;
 let currentListingReview = null;
 let currentReviewId = null;
 let currentReviewVersion = null;
+let currentPersistenceStatus = "fictional_demo_store";
 let activeDraftIndex = 0;
 let previouslyFocusedElement = null;
 let activeRequestController = null;
 let requestSequence = 0;
 let reviewActionInFlight = false;
+const authClient = new BrowserSupabaseAuth();
 
 const WORKSPACE_STORAGE_KEY = "sellerspark-listing-review-workspace-v1";
 const REVIEW_ARCHIVE_STORAGE_KEY = "sellerspark-listing-review-archive-v1";
@@ -153,6 +164,72 @@ function setDemoError(message = "") {
   demoError.hidden = !message;
 }
 
+function setAuthError(message = "") {
+  authError.textContent = message;
+  authError.hidden = !message;
+}
+
+function renderAuthState(session = authClient.session) {
+  if (!authClient.enabled) {
+    authForm.hidden = true;
+    authSignOut.hidden = true;
+    authStatus.textContent = "Fictional demo available without sign-in";
+    return;
+  }
+  authForm.hidden = false;
+  const signedIn = Boolean(session?.accessToken);
+  authEmail.hidden = signedIn;
+  authPassword.hidden = signedIn;
+  authSignIn.hidden = signedIn;
+  authSignOut.hidden = !signedIn;
+  authStatus.textContent = signedIn
+    ? "Signed in · saved reviews use your account"
+    : "Sign in to save and review persistent records";
+}
+
+async function initializeAuth() {
+  try {
+    const response = await fetch("/api/auth-config", { cache: "no-store" });
+    const config = await response.json();
+    if (config?.enabled && config.url && config.anonKey) {
+      authClient.configure({ url: config.url, anonKey: config.anonKey });
+      const session = await authClient.getSession();
+      renderAuthState(session);
+    } else {
+      authClient.configure({ url: "", anonKey: "" });
+      authClient.saveSession(null);
+      renderAuthState(null);
+    }
+  } catch {
+    authStatus.textContent = "Fictional demo available without sign-in";
+    authForm.hidden = true;
+  }
+}
+
+function reviewFetch(url, options = {}) {
+  return currentPersistenceStatus === "supabase"
+    ? authClient.authorizedFetch(url, options)
+    : fetch(url, options);
+}
+
+function isFictionalBrief(brief) {
+  return brief?.researchMode === "fictional"
+    && typeof brief?._fixtureNotice === "string"
+    && brief._fixtureNotice.toUpperCase().startsWith("FICTIONAL TEST DATA");
+}
+
+async function requestContentBrief(brief, signal) {
+  const options = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(brief),
+    signal
+  };
+  return isFictionalBrief(brief)
+    ? fetch("/api/content", options)
+    : authClient.authorizedFetch("/api/content", options);
+}
+
 function setStatus(text, kind = "muted") {
   statusValue.textContent = text === "ready_for_review" ? "Ready for review" : text;
   statusValue.className = "status-badge " + kind;
@@ -222,7 +299,7 @@ function renderComparison(parent, content) {
 }
 
 function persistWorkspace() {
-  if (!currentDrafts.length || !currentListingReview) return;
+  if (currentPersistenceStatus === "supabase" || !currentDrafts.length || !currentListingReview) return;
   try {
     localStorage.setItem(WORKSPACE_STORAGE_KEY, JSON.stringify({
       drafts: clone(currentDrafts),
@@ -230,6 +307,7 @@ function persistWorkspace() {
       listingReview: clone(currentListingReview),
       listingReviewId: currentReviewId,
       listingReviewVersion: currentReviewVersion,
+      persistenceStatus: currentPersistenceStatus,
       audience: audienceValue.textContent,
       audiencePill: audiencePill.textContent,
       summary: summary.textContent,
@@ -242,7 +320,7 @@ function persistWorkspace() {
 }
 
 function archiveWorkspace() {
-  if (!currentListingReview) return;
+  if (currentPersistenceStatus === "supabase" || !currentListingReview) return;
   try {
     const existing = JSON.parse(localStorage.getItem(REVIEW_ARCHIVE_STORAGE_KEY) || "[]");
     const archive = Array.isArray(existing) ? existing : [];
@@ -262,11 +340,16 @@ function restoreWorkspace() {
   try {
     const saved = JSON.parse(localStorage.getItem(WORKSPACE_STORAGE_KEY) || "null");
     if (!saved || !Array.isArray(saved.drafts) || !saved.listingReview) return;
+    if (saved.persistenceStatus === "supabase") {
+      localStorage.removeItem(WORKSPACE_STORAGE_KEY);
+      return;
+    }
     currentDrafts = saved.drafts;
     currentEditorialQuality = saved.editorialQuality || null;
     currentListingReview = saved.listingReview;
     currentReviewId = saved.listingReviewId || null;
     currentReviewVersion = Number.isInteger(saved.listingReviewVersion) ? saved.listingReviewVersion : null;
+    currentPersistenceStatus = saved.persistenceStatus || "fictional_demo_store";
     emptyState.hidden = currentDrafts.length > 0;
     audienceValue.textContent = saved.audience || currentListingReview.audienceLabel || "Audience needs review";
     audiencePill.textContent = saved.audiencePill || currentListingReview.audienceLabel || "Audience needs review";
@@ -354,6 +437,7 @@ function renderResult(result) {
     : null;
   currentReviewId = result.listingReviewId || null;
   currentReviewVersion = Number.isInteger(result.listingReviewVersion) ? result.listingReviewVersion : null;
+  currentPersistenceStatus = result.persistenceStatus || "fictional_demo_store";
   emptyState.hidden = currentDrafts.length > 0;
   setDemoError();
 
@@ -566,6 +650,7 @@ function resetWorkspace() {
   currentListingReview = null;
   currentReviewId = null;
   currentReviewVersion = null;
+  currentPersistenceStatus = "fictional_demo_store";
   drafts.replaceChildren();
   emptyState.hidden = false;
   audienceValue.textContent = "Awaiting brief";
@@ -584,6 +669,7 @@ function applyReviewServerState(payload) {
   currentReviewVersion = Number.isInteger(payload.listingReviewVersion)
     ? payload.listingReviewVersion
     : currentReviewVersion;
+  currentPersistenceStatus = payload.persistenceStatus || currentPersistenceStatus;
   currentListingReview.reviews.forEach((review, index) => {
     if (currentDrafts[index] && review.working) currentDrafts[index] = { ...currentDrafts[index], ...clone(review.working) };
   });
@@ -594,12 +680,12 @@ function applyReviewServerState(payload) {
 async function refreshReviewFromServer() {
   if (!currentReviewId) return;
   try {
-    const response = await fetch("/api/reviews/" + encodeURIComponent(currentReviewId), { cache: "no-store" });
+    const response = await reviewFetch("/api/reviews/" + encodeURIComponent(currentReviewId), { cache: "no-store" });
     if (!response.ok) return;
     applyReviewServerState(await response.json());
     if (!modal.hidden) renderModal();
-  } catch {
-    // The browser copy remains available if the local server is temporarily unavailable.
+  } catch (error) {
+    if (currentPersistenceStatus === "supabase") setDemoError(authClientErrorMessage(error));
   }
 }
 
@@ -613,7 +699,7 @@ async function runReviewAction(action, note = "Human reviewer requested this act
   reviewActionInFlight = true;
   renderOptimizerReview();
   try {
-    const response = await fetch("/api/reviews/" + encodeURIComponent(currentReviewId) + "/actions", {
+    const response = await reviewFetch("/api/reviews/" + encodeURIComponent(currentReviewId) + "/actions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action, draftId: review.draftId, note, expectedVersion: currentReviewVersion })
@@ -627,8 +713,10 @@ async function runReviewAction(action, note = "Human reviewer requested this act
     setDemoError();
     applyReviewServerState(payload);
     renderModal();
-  } catch {
-    setDemoError("The local review store is not reachable. Your current browser copy was not changed.");
+  } catch (error) {
+    setDemoError(currentPersistenceStatus === "supabase"
+      ? authClientErrorMessage(error)
+      : "The local review store is not reachable. Your current browser copy was not changed.");
   } finally {
     reviewActionInFlight = false;
     renderOptimizerReview();
@@ -648,12 +736,7 @@ async function runFictionalTest() {
     const briefResponse = await fetch("/fixtures/fictional-research-brief.json", { signal: activeRequestController.signal });
     if (!briefResponse.ok) throw new Error("fictional fixture unavailable");
     const brief = await briefResponse.json();
-    const response = await fetch("/api/content", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(brief),
-      signal: activeRequestController.signal
-    });
+    const response = await requestContentBrief(brief, activeRequestController.signal);
     const result = await response.json();
     if (requestId !== requestSequence) return;
     if (!response.ok) {
@@ -683,6 +766,28 @@ resetCancel.addEventListener("click", () => {
   resetButton.focus();
 });
 resetConfirm.addEventListener("click", resetWorkspace);
+authForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  setAuthError();
+  authSignIn.disabled = true;
+  try {
+    await authClient.signIn(authEmail.value, authPassword.value);
+    authPassword.value = "";
+    renderAuthState(authClient.session);
+    if (currentPersistenceStatus === "supabase" && currentReviewId) await refreshReviewFromServer();
+  } catch (error) {
+    setAuthError(authClientErrorMessage(error));
+  } finally {
+    authSignIn.disabled = false;
+  }
+});
+authSignOut.addEventListener("click", async () => {
+  await authClient.signOut();
+  renderAuthState(null);
+  if (currentPersistenceStatus === "supabase") setDemoError("You are signed out. Sign in again to continue this saved review.");
+});
+
+window.SellerSparkContentCreator = Object.freeze({ requestBrief: requestContentBrief });
 runTestButton.addEventListener("click", runFictionalTest);
 document.querySelector("#modal-close").addEventListener("click", closeDraft);
 document.querySelector("#modal-close-footer").addEventListener("click", closeDraft);
@@ -710,3 +815,5 @@ document.addEventListener("keydown", (event) => {
 
 initializeTheme();
 restoreWorkspace();
+authClient.onAuthStateChange((session) => renderAuthState(session));
+void initializeAuth();

@@ -9,7 +9,7 @@ import fictionalLicBrief from "../fixtures/fictional-research-brief.json" with {
 import fictionalBrooklynBrief from "../fixtures/fictional-brooklyn-townhouse-brief.json" with { type: "json" };
 
 async function start(store, options = {}) {
-  const server = createServer({ reviewStore: store, providerMode: "template", ...options });
+  const server = createServer({ reviewStore: store, demoReviewStore: store, providerMode: "template", ...options });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
   return { server, base: `http://127.0.0.1:${address.port}` };
@@ -31,7 +31,7 @@ test("server persists fictional LIC review actions and rejects stale versions", 
   assert.equal(createdResponse.status, 200);
   assert.equal(created.listingReviewVersion, 1);
   assert.equal(created.listingReview.reviews.length, 3);
-  assert.equal(created.persistenceStatus, "local_server_store");
+  assert.equal(created.persistenceStatus, "fictional_demo_store");
 
   const acceptedResponse = await fetch(running.base + `/api/reviews/${encodeURIComponent(created.listingReviewId)}/actions`, {
     method: "POST",
