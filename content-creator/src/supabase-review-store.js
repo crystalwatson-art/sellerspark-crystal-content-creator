@@ -176,7 +176,7 @@ export class SupabaseReviewStore {
     url.searchParams.set("version", "eq." + current.version);
     const rows = await this.request(url, {
       method: "PATCH",
-      headers: this.headers({ Prefer: "return=representation" }),
+      headers: this.headers(actorToken, { Prefer: "return=representation" }),
       body: JSON.stringify({
         version: next.version,
         updated_at: next.updatedAt,
