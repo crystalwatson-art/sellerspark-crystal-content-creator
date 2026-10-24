@@ -15,6 +15,14 @@ import { ReviewStore } from "./review-store.js";
 import { SupabaseReviewStore } from "./supabase-review-store.js";
 import { SupabaseAuthVerifier } from "./supabase-auth.js";
 import { createRevisionGenerator } from "./revision-generator.js";
+import { createGrowthPilot, createCampaignMetadata } from "./growth-pilot.js";
+import { getTikTokConnectionPlan } from "./tiktok-connection.js";
+import {
+  createTikTokIntegration,
+  createTokenCipher,
+  safeTikTokError,
+  SupabaseTikTokConnectionStore
+} from "./tiktok-oauth.js";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const publicRoot = path.join(projectRoot, "public");
@@ -25,18 +33,37 @@ const assets = new Map([
   ["/", { file: path.join(publicRoot, "index.html"), type: "text/html; charset=utf-8" }],
   ["/index.html", { file: path.join(publicRoot, "index.html"), type: "text/html; charset=utf-8" }],
   ["/app.js", { file: path.join(publicRoot, "app.js"), type: "text/javascript; charset=utf-8" }],
+  ["/growth-pilot.js", { file: path.join(publicRoot, "growth-pilot.js"), type: "text/javascript; charset=utf-8" }],
   ["/supabase-auth.js", { file: path.join(publicRoot, "supabase-auth.js"), type: "text/javascript; charset=utf-8" }],
   ["/styles.css", { file: path.join(publicRoot, "styles.css"), type: "text/css; charset=utf-8" }],
   ["/fixtures/fictional-research-brief.json", { file: fixturePath, type: "application/json; charset=utf-8" }],
   ["/fixtures/fictional-brooklyn-townhouse-brief.json", { file: brooklynFixturePath, type: "application/json; charset=utf-8" }]
 ]);
 
-function sendJson(response, status, body) {
+function sendJson(response, status, body, headers = {}) {
   response.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
-    "Cache-Control": "no-store"
+    "Cache-Control": "no-store",
+    ...headers
   });
   response.end(JSON.stringify(body));
+}
+
+function readCookie(request, name) {
+  const header = request.headers?.cookie;
+  if (typeof header !== "string") return null;
+  const entry = header.split(";").map((item) => item.trim()).find((item) => item.startsWith(name + "="));
+  return entry ? decodeURIComponent(entry.slice(name.length + 1)) : null;
+}
+
+const TIKTOK_STATE_COOKIE = "sellerspark_tiktok_oauth_state";
+
+function tiktokStateCookie(value) {
+  return TIKTOK_STATE_COOKIE + "=" + encodeURIComponent(value) + "; Max-Age=600; Path=/api/tiktok/oauth/callback; HttpOnly; Secure; SameSite=Lax";
+}
+
+function clearTikTokStateCookie() {
+  return TIKTOK_STATE_COOKIE + "=; Max-Age=0; Path=/api/tiktok/oauth/callback; HttpOnly; Secure; SameSite=Lax";
 }
 
 function logProviderFailure(event) {
@@ -104,6 +131,19 @@ function authorizationError(code = "authorization_required") {
   return error;
 }
 
+function decorateCampaignResult(result, brief) {
+  const metadata = createCampaignMetadata(brief);
+  return {
+    ...result,
+    ...metadata,
+    growthPilot: createGrowthPilot({
+      audienceMode: metadata.campaignAudienceMode,
+      startingFollowers: brief.startingFollowers,
+      currentFollowers: brief.currentFollowers
+    })
+  };
+}
+
 export function createServer({
   reviewStore,
   demoReviewStore = null,
@@ -114,7 +154,8 @@ export function createServer({
   openAIWriter = null,
   groqWriter = null,
   geminiWriter = null,
-  openRouterWriter = null
+  openRouterWriter = null,
+  tiktokIntegration = null
 } = {}) {
   if (!reviewStore) throw new Error("createServer requires a ReviewStore.");
 
@@ -156,9 +197,9 @@ export function createServer({
   }
 
   async function contentResultFor(brief) {
-    if (providerMode === "template") return createContentDraft(brief);
+    if (providerMode === "template") return decorateCampaignResult(createContentDraft(brief), brief);
     if (providerMode === "groq" && groqWriter) {
-      return generateWithFailover({
+      return decorateCampaignResult(await generateWithFailover({
         brief,
         primaryWriter: groqWriter,
         backupWriters: [
@@ -168,10 +209,10 @@ export function createServer({
         primaryLabel: "Groq",
         backupLabel: "Gemini",
         logger: logProviderFailure
-      });
+      }), brief);
     }
-    if (providerMode === "openai" && openAIWriter) return openAIWriter.generate(brief);
-    return {
+    if (providerMode === "openai" && openAIWriter) return decorateCampaignResult(await openAIWriter.generate(brief), brief);
+    return decorateCampaignResult({
       agent: "content_creator",
       writer: providerMode,
       writerLabel: "Unconfigured Content Creator writer",
@@ -183,7 +224,7 @@ export function createServer({
       humanApprovalRequired: true,
       automaticallyPublished: false,
       customerContacted: false
-    };
+    }, brief);
   }
 
   const server = http.createServer(async (request, response) => {
@@ -203,6 +244,133 @@ export function createServer({
         ? { enabled: true, url: authConfig.url, anonKey: authConfig.anonKey }
         : { enabled: false };
       sendJson(response, 200, publicConfig);
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/tiktok/status") {
+      const plan = getTikTokConnectionPlan();
+      if (!tiktokIntegration) {
+        sendJson(response, 200, { ...plan, status: "not_configured", connected: false, scopes: [] });
+        return;
+      }
+      try {
+        const { userId, accessToken } = await authenticate(request);
+        const connectionStatus = await tiktokIntegration.status({ userId, supabaseAccessToken: accessToken });
+        sendJson(response, 200, { ...plan, ...connectionStatus, connected: connectionStatus.status === "connected" });
+      } catch (error) {
+        if (["authorization_required", "authorization_failed", "auth_unavailable"].includes(error?.code)) {
+          sendJson(response, error.code === "auth_unavailable" ? 503 : 401, { status: "error", message: error.message });
+          return;
+        }
+        const safe = safeTikTokError(error);
+        sendJson(response, 503, { status: "error", message: safe.message });
+      }
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/tiktok/oauth/start") {
+      try {
+        const { userId, accessToken } = await authenticate(request);
+        if (!tiktokIntegration) throw Object.assign(new Error("TikTok connection is not configured for this environment."), { code: "not_configured" });
+        const outcome = await tiktokIntegration.startAuthorization({ userId, supabaseAccessToken: accessToken });
+        const { stateCookie, ...publicOutcome } = outcome;
+        sendJson(response, 200, publicOutcome, stateCookie ? { "Set-Cookie": tiktokStateCookie(stateCookie) } : {});
+      } catch (error) {
+        if (["authorization_required", "authorization_failed", "auth_unavailable"].includes(error?.code)) {
+          sendJson(response, error.code === "auth_unavailable" ? 503 : 401, { status: "error", message: error.message });
+          return;
+        }
+        const safe = safeTikTokError(error);
+        sendJson(response, safe.code === "not_configured" ? 503 : 422, { status: "error", message: safe.message });
+      }
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/tiktok/oauth/callback") {
+      const wantsJson = request.headers.accept?.includes("application/json");
+      try {
+        if (!tiktokIntegration) throw Object.assign(new Error("TikTok connection is not configured for this environment."), { code: "not_configured" });
+        const outcome = await tiktokIntegration.completeAuthorization({
+          code: url.searchParams.get("code"),
+          state: url.searchParams.get("state"),
+          stateCookie: readCookie(request, TIKTOK_STATE_COOKIE),
+          error: url.searchParams.get("error")
+        });
+        if (wantsJson) sendJson(response, 200, outcome, { "Set-Cookie": clearTikTokStateCookie() });
+        else {
+          response.writeHead(303, { Location: "/?tiktok=connected", "Cache-Control": "no-store", "Set-Cookie": clearTikTokStateCookie() });
+          response.end();
+        }
+      } catch (error) {
+        const safe = safeTikTokError(error);
+        if (wantsJson) {
+          sendJson(response, safe.code === "not_configured" ? 503 : 422, { status: "error", message: safe.message }, { "Set-Cookie": clearTikTokStateCookie() });
+        } else {
+          response.writeHead(303, { Location: "/?tiktok=error", "Cache-Control": "no-store", "Set-Cookie": clearTikTokStateCookie() });
+          response.end();
+        }
+      }
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/tiktok/follower-count") {
+      try {
+        const { userId, accessToken } = await authenticate(request);
+        if (!tiktokIntegration) throw Object.assign(new Error("TikTok connection is not configured for this environment."), { code: "not_configured" });
+        sendJson(response, 200, await tiktokIntegration.followerCount({ userId, supabaseAccessToken: accessToken }));
+      } catch (error) {
+        if (["authorization_required", "authorization_failed", "auth_unavailable"].includes(error?.code)) {
+          sendJson(response, error.code === "auth_unavailable" ? 503 : 401, { status: "error", message: error.message });
+          return;
+        }
+        const safe = safeTikTokError(error);
+        sendJson(response, safe.code === "not_configured" ? 503 : 422, { status: "error", message: safe.message });
+      }
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/tiktok/draft-upload") {
+      let input;
+      try {
+        input = JSON.parse(await readBody(request, 64 * 1024));
+      } catch {
+        sendJson(response, 400, { status: "error", message: "TikTok draft handoff must be valid JSON." });
+        return;
+      }
+      try {
+        const { userId, accessToken } = await authenticate(request);
+        if (!tiktokIntegration) throw Object.assign(new Error("TikTok connection is not configured for this environment."), { code: "not_configured" });
+        sendJson(response, 200, await tiktokIntegration.uploadDraft({
+          userId,
+          supabaseAccessToken: accessToken,
+          videoUrl: input.videoUrl,
+          caption: input.caption,
+          humanApproved: input.humanApproved
+        }));
+      } catch (error) {
+        if (["authorization_required", "authorization_failed", "auth_unavailable"].includes(error?.code)) {
+          sendJson(response, error.code === "auth_unavailable" ? 503 : 401, { status: "error", message: error.message });
+          return;
+        }
+        const safe = safeTikTokError(error);
+        sendJson(response, safe.code === "not_configured" ? 503 : 422, { status: "error", message: safe.message });
+      }
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/tiktok/disconnect") {
+      try {
+        const { userId, accessToken } = await authenticate(request);
+        if (!tiktokIntegration) throw Object.assign(new Error("TikTok connection is not configured for this environment."), { code: "not_configured" });
+        sendJson(response, 200, await tiktokIntegration.disconnect({ userId, supabaseAccessToken: accessToken }));
+      } catch (error) {
+        if (["authorization_required", "authorization_failed", "auth_unavailable"].includes(error?.code)) {
+          sendJson(response, error.code === "auth_unavailable" ? 503 : 401, { status: "error", message: error.message });
+          return;
+        }
+        const safe = safeTikTokError(error);
+        sendJson(response, safe.code === "not_configured" ? 503 : 422, { status: "error", message: safe.message });
+      }
       return;
     }
 
@@ -400,6 +568,7 @@ export async function createConfiguredRequestHandler() {
   const filePath = process.env.SELLERSPARK_REVIEW_STORE_PATH || path.join(dataDir, "listing-review-store.json");
   const storageMode = process.env.SELLERSPARK_REVIEW_STORAGE || "local";
   let reviewStore;
+  let tiktokIntegration = null;
   let authVerifier = null;
   let authConfig = { enabled: false };
   if (storageMode === "supabase") {
@@ -414,6 +583,27 @@ export async function createConfiguredRequestHandler() {
       anonKey: supabaseAnonKey
     });
     authConfig = { enabled: true, url: supabaseUrl, anonKey: supabaseAnonKey };
+    const tiktokConfig = {
+      clientKey: process.env.TIKTOK_CLIENT_KEY,
+      clientSecret: process.env.TIKTOK_CLIENT_SECRET,
+      redirectUri: process.env.TIKTOK_REDIRECT_URI,
+      encryptionKey: process.env.TIKTOK_TOKEN_ENCRYPTION_KEY
+    };
+    if (tiktokConfig.clientKey && tiktokConfig.clientSecret && tiktokConfig.redirectUri && tiktokConfig.encryptionKey) {
+      const tokenCipher = createTokenCipher(tiktokConfig.encryptionKey);
+      const tokenStore = new SupabaseTikTokConnectionStore({
+        url: supabaseUrl,
+        anonKey: supabaseAnonKey,
+        cipher: tokenCipher
+      });
+      tiktokIntegration = createTikTokIntegration({
+        clientKey: tiktokConfig.clientKey,
+        clientSecret: tiktokConfig.clientSecret,
+        redirectUri: tiktokConfig.redirectUri,
+        tokenStore,
+        stateCookieCipher: tokenCipher
+      });
+    }
   } else if (storageMode === "local") {
     reviewStore = await new ReviewStore({ filePath }).init();
   } else {
@@ -425,7 +615,7 @@ export async function createConfiguredRequestHandler() {
     : providerMode === "openai" && openAIWriter
       ? createRevisionGenerator({ primaryWriter: openAIWriter, logger: logProviderFailure })
       : null;
-  return createRequestHandler({ reviewStore, demoReviewStore, authVerifier, authConfig, revisionGenerator, providerMode, openAIWriter, groqWriter, geminiWriter, openRouterWriter });
+  return createRequestHandler({ reviewStore, demoReviewStore, authVerifier, authConfig, revisionGenerator, providerMode, openAIWriter, groqWriter, geminiWriter, openRouterWriter, tiktokIntegration });
 }
 
 export async function startServer({ port = Number(process.env.PORT || 3000) } = {}) {

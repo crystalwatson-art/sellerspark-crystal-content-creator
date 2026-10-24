@@ -14,6 +14,7 @@ const REVIEWABLE_FIELDS = Object.freeze([
   "videoConcept",
   "caption",
   "hashtags",
+  "reasonToFollow",
   "suggestedNextStep"
 ]);
 
@@ -24,6 +25,7 @@ const REVIEWABLE_FIELD_LABELS = Object.freeze({
   videoConcept: "Video concept",
   caption: "Caption",
   hashtags: "Hashtags",
+  reasonToFollow: "Reason to follow",
   suggestedNextStep: "Suggested call to action"
 });
 

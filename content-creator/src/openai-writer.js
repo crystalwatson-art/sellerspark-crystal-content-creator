@@ -130,6 +130,7 @@ export const MODEL_OUTPUT_SCHEMA = {
           caption: { type: "string" },
           hashtags: { type: "array", items: { type: "string" } },
           suggestedNextStep: { type: "string" },
+          reasonToFollow: { type: "string" },
           videoConcept: { type: "string" },
           suggestedScenes: { type: "array", items: { type: "string" } },
           supportingClaimIds: { type: "array", items: { type: "string" } }
@@ -171,7 +172,8 @@ export const WRITER_INSTRUCTIONS = [
   "Do not invent statistics, prices, market conditions, property details, building features, legal advice, trends, guarantees, or results.",
   "Do not mention the brief, research input, fictional data, model, approval, or internal workflow in hook, script, or caption.",
   "Use supportingClaimIds only when the draft actually relies on that supplied supported claim.",
-  "Suggest a respectful next step for a potential seller conversation without promising an outcome."
+  "Suggest a respectful next step for a potential seller conversation without promising an outcome.",
+  "When supplied, include a concise reasonToFollow that explains what practical homeowner guidance the viewer can expect from following; never promise growth or results."
 ].join(" ");
 
 function safeCopy(value) {
@@ -231,6 +233,10 @@ export function buildResearchInput(brief, recentDrafts = [], rewriteContext = nu
       supportedClaims: supportedClaimsFor(topic),
       uncertaintyWarnings: topic?.uncertaintyWarnings ?? topic?.uncertainties ?? []
     })),
+    campaignAudienceMode: brief.campaignAudienceMode ?? "sellers",
+    audienceQuestions: Array.isArray(brief.audienceQuestions) ? brief.audienceQuestions : [],
+    realEstateTrends: Array.isArray(brief.realEstateTrends) ? brief.realEstateTrends : [],
+    followerAttractionOpportunities: Array.isArray(brief.followerAttractionOpportunities) ? brief.followerAttractionOpportunities : [],
     recentDrafts: recentDrafts.map((draft) => ({ hook: draft.hook, script: draft.script })),
     rewriteContext: rewriteContext ?? null
   };
@@ -368,6 +374,9 @@ function mergeModelDrafts(brief, baseline, output) {
       caption: modelDraft.caption.trim(),
       hashtags: modelDraft.hashtags.map((tag) => tag.trim()),
       suggestedNextStep: modelDraft.suggestedNextStep.trim(),
+      reasonToFollow: typeof modelDraft.reasonToFollow === "string" && modelDraft.reasonToFollow.trim()
+        ? modelDraft.reasonToFollow.trim()
+        : original.reasonToFollow || "",
       videoConcept: modelDraft.videoConcept.trim(),
       suggestedScenes: modelDraft.suggestedScenes.map((scene) => scene.trim()),
       claimsUsed

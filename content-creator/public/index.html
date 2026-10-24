@@ -74,6 +74,71 @@
           </div>
         </section>
 
+        <section class="campaign-section" aria-labelledby="campaign-heading">
+          <div class="campaign-heading">
+            <div>
+              <p class="eyebrow">14-DAY TIKTOK GROWTH PILOT</p>
+              <h2 id="campaign-heading">Plan the conversation, measure the count</h2>
+              <p class="campaign-intro">A draft-only planning layer for genuine audience growth. It does not publish, follow, comment, message, or promise results.</p>
+            </div>
+            <span class="status-badge muted">Manual approval only</span>
+          </div>
+
+          <div class="campaign-controls">
+            <label class="campaign-field" for="campaign-audience-mode">
+              <span>Campaign audience</span>
+              <select id="campaign-audience-mode">
+                <option value="sellers" selected>Sellers</option>
+                <option value="buyers">Buyers</option>
+                <option value="both">Both</option>
+              </select>
+            </label>
+            <label class="campaign-field" for="starting-followers">
+              <span>Starting followers <small>(optional)</small></span>
+              <input id="starting-followers" type="number" min="0" step="1" inputmode="numeric" placeholder="Unknown">
+            </label>
+            <label class="campaign-field" for="current-followers">
+              <span>Current followers <small>(optional)</small></span>
+              <input id="current-followers" type="number" min="0" step="1" inputmode="numeric" placeholder="Unknown">
+            </label>
+            <button id="update-growth-pilot" class="secondary-button" type="button">Update plan</button>
+          </div>
+
+          <div class="campaign-summary" aria-live="polite">
+            <div><span class="stat-label">Goal</span><strong id="growth-goal">100 total followers</strong></div>
+            <div><span class="stat-label">Progress</span><strong id="growth-progress">Count needed</strong></div>
+            <div><span class="stat-label">Change</span><strong id="growth-change">Not available</strong></div>
+            <p id="growth-note">Enter the current follower count to measure progress. SellerSpark does not assume a starting count or promise growth.</p>
+          </div>
+
+          <div class="tiktok-connection" aria-labelledby="tiktok-connection-heading">
+            <div>
+              <span class="modal-label">TikTok connection</span>
+              <h3 id="tiktok-connection-heading">Not connected</h3>
+              <p id="tiktok-connection-note">Official API setup is required before follower statistics can be read. No account connection is attempted in this local pilot.</p>
+              <div class="tiktok-actions">
+                <button id="connect-tiktok" class="secondary-button" type="button" hidden>Connect TikTok</button>
+                <button id="sync-tiktok-followers" class="secondary-button" type="button" hidden>Sync follower count</button>
+              </div>
+            </div>
+            <ul id="tiktok-permissions" class="permission-list">
+              <li>Read-only follower count: user.info.stats</li>
+              <li>Account identity: user.info.basic</li>
+              <li>Future draft handoff: video.upload with user consent</li>
+              <li>Direct publishing: disabled</li>
+            </ul>
+          </div>
+
+          <div class="calendar-heading">
+            <div>
+              <span class="modal-label">14-day content calendar</span>
+              <p id="calendar-note">Draft prompts only. Choose a mode, then update the plan.</p>
+            </div>
+            <span class="status-badge muted">No auto-scheduling</span>
+          </div>
+          <div id="campaign-calendar" class="campaign-calendar"></div>
+        </section>
+
         <section class="drafts-section" aria-labelledby="drafts-heading">
           <div class="section-heading">
             <div>
@@ -168,6 +233,11 @@
           <section class="modal-feature cta-block">
             <span class="modal-label">Suggested call to action</span>
             <p id="modal-cta"></p>
+          </section>
+
+          <section class="modal-feature follow-reason-block">
+            <span class="modal-label">Why viewers may follow</span>
+            <p id="modal-follow-reason"></p>
           </section>
 
           <div class="modal-columns final-blocks">

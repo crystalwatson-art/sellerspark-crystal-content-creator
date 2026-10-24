@@ -129,6 +129,35 @@ test("server accepts the separate fictional Brooklyn handoff without changing au
   assert.ok(result.listingReview.reviews.every((review) => review.audienceLabel === "Brooklyn townhouse owners"));
 });
 
+test("content API returns the growth pilot and extended research handoff metadata", async (t) => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "sellerspark-growth-pilot-"));
+  const store = await new ReviewStore({ filePath: path.join(directory, "reviews.json") }).init();
+  const running = await start(store);
+  t.after(() => running.server.close());
+  const brief = {
+    ...fictionalLicBrief,
+    campaignAudienceMode: "both",
+    startingFollowers: 12,
+    currentFollowers: 37,
+    audienceQuestions: ["Fictional audience question"],
+    realEstateTrends: [{ topic: "Fictional trend" }],
+    followerAttractionOpportunities: ["Fictional save-worthy prompt"]
+  };
+  const response = await fetch(running.base + "/api/content", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(brief)
+  });
+  const result = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(result.campaignAudienceMode, "both");
+  assert.equal(result.growthPilot.calendar.length, 14);
+  assert.equal(result.growthPilot.tracker.netChange, 25);
+  assert.equal(result.growthPilot.safety.humanApprovalRequired, true);
+  assert.equal(result.growthResearchHandoff.liveResearchPerformed, false);
+  assert.deepEqual(result.growthResearchHandoff.audienceQuestions, brief.audienceQuestions);
+});
+
 // Verify automatic provider selection through the real HTTP route, not only the helper.
 test("HTTP content endpoint quietly switches from exhausted Groq to Gemini", async (t) => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "sellerspark-routing-"));

@@ -1,4 +1,5 @@
 import { BrowserSupabaseAuth, authClientErrorMessage } from "./supabase-auth.js";
+import { createGrowthPilotView } from "./growth-pilot.js";
 
 const demoError = document.querySelector("#demo-error");
 const statusValue = document.querySelector("#status-value");
@@ -17,6 +18,20 @@ const resetCancel = document.querySelector("#reset-cancel");
 const resetConfirm = document.querySelector("#reset-confirm");
 const themeToggle = document.querySelector("#theme-toggle");
 const resetButton = document.querySelector("#reset-button");
+const campaignAudienceMode = document.querySelector("#campaign-audience-mode");
+const startingFollowers = document.querySelector("#starting-followers");
+const currentFollowers = document.querySelector("#current-followers");
+const updateGrowthPilot = document.querySelector("#update-growth-pilot");
+const growthGoal = document.querySelector("#growth-goal");
+const growthProgress = document.querySelector("#growth-progress");
+const growthChange = document.querySelector("#growth-change");
+const growthNote = document.querySelector("#growth-note");
+const campaignCalendar = document.querySelector("#campaign-calendar");
+const calendarNote = document.querySelector("#calendar-note");
+const tiktokConnectionHeading = document.querySelector("#tiktok-connection-heading");
+const tiktokConnectionNote = document.querySelector("#tiktok-connection-note");
+const connectTikTok = document.querySelector("#connect-tiktok");
+const syncTikTokFollowers = document.querySelector("#sync-tiktok-followers");
 const authStatus = document.querySelector("#auth-status");
 const authForm = document.querySelector("#auth-form");
 const authEmail = document.querySelector("#auth-email");
@@ -37,6 +52,7 @@ const modalScenes = document.querySelector("#modal-scenes");
 const modalCaption = document.querySelector("#modal-caption");
 const modalHashtags = document.querySelector("#modal-hashtags");
 const modalCta = document.querySelector("#modal-cta");
+const modalFollowReason = document.querySelector("#modal-follow-reason");
 const modalReferences = document.querySelector("#modal-references");
 const modalWarningsBlock = document.querySelector("#modal-warnings-block");
 const modalWarnings = document.querySelector("#modal-warnings");
@@ -76,6 +92,7 @@ const authClient = new BrowserSupabaseAuth();
 
 const WORKSPACE_STORAGE_KEY = "sellerspark-listing-review-workspace-v1";
 const REVIEW_ARCHIVE_STORAGE_KEY = "sellerspark-listing-review-archive-v1";
+const GROWTH_PILOT_STORAGE_KEY = "sellerspark-growth-pilot-v1";
 const REVIEWABLE_FIELDS = Object.freeze([
   ["hook", "Hook"],
   ["script", "Script"],
@@ -83,6 +100,7 @@ const REVIEWABLE_FIELDS = Object.freeze([
   ["videoConcept", "Video concept"],
   ["caption", "Caption"],
   ["hashtags", "Hashtags"],
+  ["reasonToFollow", "Reason to follow"],
   ["suggestedNextStep", "Suggested call to action"]
 ]);
 
@@ -195,14 +213,96 @@ async function initializeAuth() {
       authClient.configure({ url: config.url, anonKey: config.anonKey });
       const session = await authClient.getSession();
       renderAuthState(session);
+      void refreshTikTokStatus();
     } else {
       authClient.configure({ url: "", anonKey: "" });
       authClient.saveSession(null);
       renderAuthState(null);
+      renderTikTokStatus({ status: "not_configured", scopes: [] });
     }
   } catch {
     authStatus.textContent = "Fictional demo available without sign-in";
     authForm.hidden = true;
+    renderTikTokStatus({ status: "not_configured", scopes: [] });
+  }
+}
+
+function renderTikTokStatus(status = {}) {
+  const state = status.status || "not_configured";
+  const connected = state === "connected";
+  const configured = state !== "not_configured";
+  tiktokConnectionHeading.textContent = connected ? "Connected" : configured ? "Not connected" : "Not configured";
+  if (connected) {
+    const scopes = Array.isArray(status.scopes) ? status.scopes.join(", ") : "approved permissions";
+    tiktokConnectionNote.textContent = "Follower statistics are available through the authorized TikTok account. Permissions: " + scopes + ".";
+  } else if (configured && authClient.session) {
+    tiktokConnectionNote.textContent = "Connect a TikTok account to read follower statistics. The authorization request stays server-side and direct publishing remains disabled.";
+  } else if (configured) {
+    tiktokConnectionNote.textContent = "Sign in to SellerSpark, then connect TikTok with explicit account consent. No follower data is read without authorization.";
+  } else {
+    tiktokConnectionNote.textContent = "Official API setup is not configured for this environment. The fictional demo remains available without sign-in.";
+  }
+  connectTikTok.hidden = !configured || !authClient.session || connected;
+  syncTikTokFollowers.hidden = !connected;
+}
+
+async function refreshTikTokStatus() {
+  if (!authClient.enabled) {
+    renderTikTokStatus({ status: "not_configured", scopes: [] });
+    return;
+  }
+  const session = await authClient.getSession();
+  if (!session) {
+    renderTikTokStatus({ status: "not_connected", scopes: [] });
+    return;
+  }
+  try {
+    const response = await authClient.authorizedFetch("/api/tiktok/status", { cache: "no-store" });
+    const payload = await response.json();
+    if (response.ok) renderTikTokStatus(payload);
+    else tiktokConnectionNote.textContent = payload.message || "TikTok connection status is unavailable.";
+  } catch {
+    tiktokConnectionNote.textContent = "TikTok connection status is unavailable. The fictional demo is still usable.";
+  }
+}
+
+async function startTikTokAuthorization() {
+  if (!authClient.session) {
+    setAuthError("Sign in before connecting TikTok.");
+    return;
+  }
+  connectTikTok.disabled = true;
+  try {
+    const response = await authClient.authorizedFetch("/api/tiktok/oauth/start", { method: "POST" });
+    const payload = await response.json();
+    if (!response.ok || typeof payload.authorizationUrl !== "string") {
+      tiktokConnectionNote.textContent = payload.message || "TikTok authorization could not be started safely.";
+      return;
+    }
+    window.location.assign(payload.authorizationUrl);
+  } catch (error) {
+    tiktokConnectionNote.textContent = authClientErrorMessage(error);
+  } finally {
+    connectTikTok.disabled = false;
+  }
+}
+
+async function syncTikTokFollowerCount() {
+  syncTikTokFollowers.disabled = true;
+  try {
+    const response = await authClient.authorizedFetch("/api/tiktok/follower-count", { cache: "no-store" });
+    const payload = await response.json();
+    if (!response.ok || !Number.isInteger(payload.followerCount)) {
+      tiktokConnectionNote.textContent = payload.message || "Follower statistics could not be read safely.";
+      return;
+    }
+    currentFollowers.value = String(payload.followerCount);
+    renderGrowthPilot();
+    growthNote.textContent = "Follower count synced from TikTok at " + new Date(payload.observedAt).toLocaleString() + ". This measures progress; it does not predict growth.";
+  } catch (error) {
+    tiktokConnectionNote.textContent = authClientErrorMessage(error);
+  } finally {
+    syncTikTokFollowers.disabled = false;
   }
 }
 
@@ -275,6 +375,69 @@ function initializeTheme() {
   const savedTheme = localStorage.getItem("sellerspark-theme");
   const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
   setTheme(savedTheme || (prefersDark ? "dark" : "light"));
+}
+
+function renderGrowthCalendar(calendar) {
+  campaignCalendar.replaceChildren();
+  calendar.forEach((item) => {
+    const card = document.createElement("article");
+    card.className = "calendar-card";
+    const day = document.createElement("span");
+    day.className = "calendar-day";
+    day.textContent = "Day " + String(item.day).padStart(2, "0");
+    const focus = document.createElement("strong");
+    focus.textContent = item.focus;
+    const format = document.createElement("span");
+    format.textContent = item.format + " · Draft only";
+    card.append(day, focus, format);
+    campaignCalendar.append(card);
+  });
+}
+
+function persistGrowthPilot() {
+  try {
+    localStorage.setItem(GROWTH_PILOT_STORAGE_KEY, JSON.stringify({
+      audienceMode: campaignAudienceMode.value,
+      startingFollowers: startingFollowers.value,
+      currentFollowers: currentFollowers.value
+    }));
+  } catch {
+    // Campaign planning remains usable when browser storage is unavailable.
+  }
+}
+
+function renderGrowthPilot(values = {}) {
+  const plan = createGrowthPilotView({
+    audienceMode: values.audienceMode ?? campaignAudienceMode.value,
+    startingFollowers: values.startingFollowers ?? startingFollowers.value,
+    currentFollowers: values.currentFollowers ?? currentFollowers.value
+  });
+  campaignAudienceMode.value = plan.audienceMode;
+  if (values.startingFollowers !== undefined) startingFollowers.value = values.startingFollowers ?? "";
+  if (values.currentFollowers !== undefined) currentFollowers.value = values.currentFollowers ?? "";
+  growthGoal.textContent = String(plan.tracker.goal) + " total followers";
+  growthProgress.textContent = plan.tracker.progressPercent === null
+    ? "Count needed"
+    : String(plan.tracker.progressPercent) + "% of goal" + (plan.tracker.goalReached ? " · reached" : "");
+  growthChange.textContent = plan.tracker.netChange === null
+    ? "Not available"
+    : (plan.tracker.netChange >= 0 ? "+" : "") + String(plan.tracker.netChange);
+  growthNote.textContent = plan.tracker.errors?.length
+    ? plan.tracker.errors.join(" ")
+    : plan.tracker.note;
+  calendarNote.textContent = "Planning for " + plan.audienceMode + " · draft prompts only. No auto-scheduling.";
+  renderGrowthCalendar(plan.calendar);
+  persistGrowthPilot();
+  return plan;
+}
+
+function restoreGrowthPilot() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(GROWTH_PILOT_STORAGE_KEY) || "null");
+    renderGrowthPilot(saved || {});
+  } catch {
+    renderGrowthPilot({});
+  }
 }
 
 function clone(value) {
@@ -443,12 +606,19 @@ function renderResult(result) {
 
   const writerLabel = result.writerLabel || result.writer || "Unidentified writer";
   summary.textContent = result.status === "ready_for_review"
-    ? "Three distinct draft packages are ready for a future reviewer. Human approval is still required. Generated by " + writerLabel + "."
+    ? "Three distinct draft packages are ready for a future reviewer. Human approval is still required. Generated by " + writerLabel + ". Campaign mode: " + (result.campaignAudienceLabel || "Sellers") + "."
     : "The Content Creator stopped with information to resolve before review. Writer: " + writerLabel + ".";
   setStatus(result.status, result.status === "ready_for_review" ? "success" : "warning");
   renderWriterDiagnostic(result);
   audienceValue.textContent = result.audienceLabel || "Audience needs review";
   audiencePill.textContent = result.audienceLabel || "Audience needs review";
+  if (result.growthPilot?.tracker) {
+    renderGrowthPilot({
+      audienceMode: result.campaignAudienceMode || campaignAudienceMode.value,
+      startingFollowers: result.growthPilot.tracker.startingFollowers ?? startingFollowers.value,
+      currentFollowers: result.growthPilot.tracker.currentFollowers ?? currentFollowers.value
+    });
+  }
   renderDraftCards();
   persistWorkspace();
 }
@@ -574,6 +744,9 @@ function renderModal() {
   modalCaption.textContent = draft.caption;
   modalHashtags.textContent = draft.hashtags.join(" ");
   modalCta.textContent = draft.suggestedNextStep;
+  modalFollowReason.textContent = typeof draft.reasonToFollow === "string" && draft.reasonToFollow.trim()
+    ? draft.reasonToFollow
+    : "Follow reason not supplied; keep this draft in human review.";
   renderList(modalReferences, draft.sourceRefs.map(referenceLabel), "No source references supplied.");
   renderList(modalWarnings, draft.warnings, "No warnings.");
   modalWarningsBlock.hidden = draft.warnings.length === 0;
@@ -615,6 +788,7 @@ function copyActiveDraft() {
     "\nScenes:\n- " + draft.suggestedScenes.join("\n- "),
     "\nCaption: " + draft.caption,
     "\nHashtags: " + draft.hashtags.join(" "),
+    "\nWhy viewers may follow: " + (draft.reasonToFollow || "Not supplied"),
     "\nSuggested call to action: " + draft.suggestedNextStep
   ].join("\n");
 
@@ -795,6 +969,9 @@ async function runFictionalTest() {
     const briefResponse = await fetch("/fixtures/fictional-research-brief.json", { signal: activeRequestController.signal });
     if (!briefResponse.ok) throw new Error("fictional fixture unavailable");
     const brief = await briefResponse.json();
+    brief.campaignAudienceMode = campaignAudienceMode.value;
+    brief.startingFollowers = startingFollowers.value === "" ? null : Number(startingFollowers.value);
+    brief.currentFollowers = currentFollowers.value === "" ? null : Number(currentFollowers.value);
     const response = await requestContentBrief(brief, activeRequestController.signal);
     const result = await response.json();
     if (requestId !== requestSequence) return;
@@ -825,6 +1002,10 @@ resetCancel.addEventListener("click", () => {
   resetButton.focus();
 });
 resetConfirm.addEventListener("click", resetWorkspace);
+updateGrowthPilot.addEventListener("click", () => renderGrowthPilot());
+campaignAudienceMode.addEventListener("change", () => renderGrowthPilot());
+startingFollowers.addEventListener("change", () => renderGrowthPilot());
+currentFollowers.addEventListener("change", () => renderGrowthPilot());
 authForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   setAuthError();
@@ -844,7 +1025,10 @@ authSignOut.addEventListener("click", async () => {
   await authClient.signOut();
   renderAuthState(null);
   if (currentPersistenceStatus === "supabase") setDemoError("You are signed out. Sign in again to continue this saved review.");
+  renderTikTokStatus({ status: "not_connected", scopes: [] });
 });
+connectTikTok.addEventListener("click", startTikTokAuthorization);
+syncTikTokFollowers.addEventListener("click", syncTikTokFollowerCount);
 
 window.SellerSparkContentCreator = Object.freeze({ requestBrief: requestContentBrief });
 runTestButton.addEventListener("click", runFictionalTest);
@@ -873,6 +1057,8 @@ document.addEventListener("keydown", (event) => {
 });
 
 initializeTheme();
+restoreGrowthPilot();
 restoreWorkspace();
 authClient.onAuthStateChange((session) => renderAuthState(session));
+authClient.onAuthStateChange(() => void refreshTikTokStatus());
 void initializeAuth();

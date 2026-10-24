@@ -1,5 +1,6 @@
 import { verifyResearchBrief } from "./research-verification.js";
 import { evaluateDraftSetQuality } from "./editorial-quality.js";
+import { createCampaignMetadata } from "./growth-pilot.js";
 
 export const REQUIRED_DRAFT_COUNT = 3;
 
@@ -15,6 +16,7 @@ const CREATIVE_ANGLES = Object.freeze([
     script: "If selling your {property} is on your mind, start with the question you want answered: {question} Write one sentence about why that answer matters to you, then bring it to a conversation. That turns a broad concern into one useful thing to discuss.",
     takeaway: "Writing the exact question — {question} — and why its answer matters can make a broad seller concern easier to discuss.",
     caption: "The first step can be a question, not a commitment. Follow for more practical NYC seller guidance.",
+    reasonToFollow: "Follow for more practical NYC seller questions you can bring to a future conversation.",
     suggestedNextStep: "Contact Shalinthia with this question when you are ready for a respectful seller conversation about your home.",
     videoConcept: "Direct-to-camera explainer for {property} owners that turns one supplied question into a focused first conversation.",
     suggestedScenes: [
@@ -29,6 +31,7 @@ const CREATIVE_ANGLES = Object.freeze([
     script: "A practical seller mistake for {property} owners is bringing a broad goal but no details to discuss. Use this question as a checklist prompt: {question} Note the one building, unit, or home detail you want explained, so the conversation has a clear starting point.",
     takeaway: "Pair the supplied seller question — {question} — with one property detail you want explained before the conversation.",
     caption: "A question becomes more useful when you pair it with one detail you want explained. Follow for more NYC seller prompts.",
+    reasonToFollow: "Follow for more NYC seller prompts that turn broad concerns into useful questions.",
     suggestedNextStep: "Contact Shalinthia with the question you wrote down if you want help sorting out what to ask next.",
     videoConcept: "Checklist-style short for {property} owners that shows how one written question can prevent a rushed conversation.",
     suggestedScenes: [
@@ -43,6 +46,7 @@ const CREATIVE_ANGLES = Object.freeze([
     script: "Before deciding whether to move forward with a seller conversation about your {property}, ask this question: {question} Then make two notes: what you know and what you still need to learn. Your next step can answer the open question, not promise to list.",
     takeaway: "One open question — {question} — can help you choose an informed next conversation without promising to list.",
     caption: "You can gather information before making a decision. Follow for more calm questions for NYC homeowners.",
+    reasonToFollow: "Follow for more calm NYC homeowner questions before making a selling decision.",
     suggestedNextStep: "Contact Shalinthia when you are ready to talk through this question and decide what information you still need.",
     videoConcept: "Question-led planning prompt for {property} owners that separates what they know from what they still want to learn.",
     suggestedScenes: [
@@ -240,6 +244,9 @@ function createDraft(brief, topic, index) {
     caption: creativePackage.caption
       .replace("{property}", propertyLabel)
       .replace("{audience}", audienceLabel),
+    reasonToFollow: creativePackage.reasonToFollow
+      .replace("{property}", propertyLabel)
+      .replace("{audience}", audienceLabel),
     hashtags: [
       "#NYCRealEstate",
       "#HomeSelling",
@@ -259,6 +266,7 @@ function createDraft(brief, topic, index) {
 }
 
 export function createContentDraft(brief) {
+  const campaignMetadata = createCampaignMetadata(brief);
   const missingInformation = missingBriefInformation(brief);
   const researchVerification = verifyResearchBrief(brief);
   const verificationMissing = researchVerification.missingEvidence.map((item) => "research verification: " + item);
@@ -282,6 +290,7 @@ export function createContentDraft(brief) {
       missingInformation: [...missingInformation, ...verificationMissing],
       unsupportedClaims: verificationUnsupported,
       researchVerification,
+      ...campaignMetadata,
       humanApprovalRequired: true,
       automaticallyPublished: false,
       customerContacted: false
@@ -317,6 +326,7 @@ export function createContentDraft(brief) {
     ],
     unsupportedClaims,
     researchVerification,
+    ...campaignMetadata,
     handoff: {
       reviewStatus: hasWarnings ? "needs_more_research" : "ready_for_review",
       sourceRefsPreserved: true,

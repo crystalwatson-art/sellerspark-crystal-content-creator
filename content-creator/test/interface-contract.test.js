@@ -10,6 +10,16 @@ test("dashboard exposes fictional mode and popup controls without a JSON editor"
   const html = await readFile(htmlPath, "utf8");
 
   assert.match(html, /id="run-fictional-test"/);
+  assert.match(html, /id="campaign-audience-mode"/);
+  assert.match(html, /id="starting-followers"/);
+  assert.match(html, /id="current-followers"/);
+  assert.match(html, /id="campaign-calendar"/);
+  assert.match(html, /id="tiktok-permissions"/);
+  assert.match(html, /id="connect-tiktok"/);
+  assert.match(html, /id="sync-tiktok-followers"/);
+  assert.match(html, /id="modal-follow-reason"/);
+  assert.match(html, /100 total followers/);
+  assert.match(html, /Manual approval only/);
   assert.match(html, /id="reset-button"/);
   assert.match(html, /id="reset-confirmation"/);
   assert.match(html, /id="reset-confirm"/);
@@ -74,6 +84,16 @@ test("client wiring includes reset, theme, popup navigation, and contained close
   assert.match(app, /Takeaway unavailable\. This draft needs review before approval\./);
   assert.match(app, /"\\nTakeaway: " \+ draft\.takeaway/);
   assert.match(app, /function renderWriterDiagnostic\(result\)/);
+  assert.match(app, /createGrowthPilotView/);
+  assert.match(app, /refreshTikTokStatus/);
+  assert.match(app, /startTikTokAuthorization/);
+  assert.match(app, /syncTikTokFollowerCount/);
+  assert.match(app, /\/api\/tiktok\/oauth\/start/);
+  assert.match(app, /\/api\/tiktok\/follower-count/);
+  assert.match(app, /function renderGrowthPilot\(values = \{\}\)/);
+  assert.match(app, /GROWTH_PILOT_STORAGE_KEY/);
+  assert.match(app, /campaignAudienceMode/);
+  assert.match(app, /modalFollowReason\.textContent/);
   assert.match(app, /The AI provider is temporarily rate-limited\./);
   assert.match(app, /The Content Creator stopped before producing drafts\./);
   assert.match(app, /The app will not switch providers automatically\./);

@@ -93,6 +93,58 @@ publishing or customer-contact function. The structured handoff remains in the
 API response for a future Listing Optimizer; it is intentionally not shown as
 raw JSON in the everyday interface.
 
+## 14-day TikTok growth pilot
+
+The dashboard includes a planning-only 14-day pilot with Buyers, Sellers, and
+Both audience modes. It creates fourteen written prompts, accepts optional
+starting and current follower counts, and measures progress toward 100 without
+assuming an unknown starting count or promising growth. The tracker and
+calendar are browser-local planning data; they do not schedule posts or
+replace human review. The existing seller research brief still controls the
+audience of generated drafts, so buyer-facing content requires an appropriate
+Research Agent brief before it can be generated.
+
+The research handoff preserves optional `audienceQuestions`,
+`realEstateTrends`, and `followerAttractionOpportunities` fields. They are
+upstream inputs only: this component does not gather, verify, or invent those
+facts. Each draft also exposes a separate reason a viewer may follow, while
+keeping the existing source, warning, and approval safeguards.
+
+### TikTok connection status
+
+The server now contains a mockable, opt-in official TikTok connection flow.
+Login Kit requests `user.info.basic`, `user.info.stats`, and `video.upload`; the
+server exchanges the authorization code and keeps TikTok tokens encrypted at
+rest in the prepared owner-scoped Supabase table. Browser requests use the
+verified Supabase bearer identity; no browser-supplied user ID is trusted.
+
+The dashboard can start authorization and sync a follower count when the
+integration is configured. The fictional demo remains usable without sign-in.
+Draft handoff requires an explicit human-approved HTTPS video URL and returns a
+TikTok draft request only. Direct posting via `video.publish`, automatic
+follows, unsolicited comments, messaging, and artificial engagement are
+disabled. The migration is prepared but not applied, and no OAuth or TikTok API
+call was made during local testing.
+
+Activation requires a TikTok developer app, approved scopes, an HTTPS redirect
+URI, the prepared migration, and server-only values:
+
+    TIKTOK_CLIENT_KEY=<server-only configuration>
+    TIKTOK_CLIENT_SECRET=<server-only secret>
+    TIKTOK_REDIRECT_URI=https://<approved-host>/api/tiktok/oauth/callback
+    TIKTOK_TOKEN_ENCRYPTION_KEY=<64-hex-character server-only secret>
+
+The server routes are `POST /api/tiktok/oauth/start`, `GET
+/api/tiktok/oauth/callback`, `GET /api/tiktok/status`, `GET
+/api/tiktok/follower-count`, `POST /api/tiktok/draft-upload`, and `POST
+/api/tiktok/disconnect`. Authenticated routes require a verified Supabase
+bearer token. OAuth state is short-lived, consumed when retained by the server,
+and carried in an encrypted, HttpOnly, Secure, SameSite cookie; the callback
+never accepts a browser-supplied owner ID. A durable state table is still needed
+before multi-instance production activation so replay protection survives a
+serverless cold start. The prepared migration enforces owner-scoped RLS and
+grants no table access to `anon`.
+
 ## Listing Optimizer review adapter
 
 The server adds a `listingReview` object to each Content Creator API response.
