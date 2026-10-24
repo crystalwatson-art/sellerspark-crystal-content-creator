@@ -72,50 +72,82 @@ function unavailableRevision(reason = "No configured revision provider is availa
 function localRevision(draft, attempt = 0) {
   const property = propertyLabel(draft?.audienceLabel);
   const source = clone(draft);
-  const variants = [
-    {
-      hook: "Before you list your " + property + ", what is the one question you want answered first?",
-      script: "Before you list your " + property + ", write down the one question you want answered first. Bring it to the opening conversation, listen for a clear response, and keep the note so you can decide what you still need to understand.",
-      caption: "A focused first question can make a seller conversation easier to follow. Save yours before you list.",
-      suggestedNextStep: "Write down one question and bring it to a respectful seller conversation when you are ready."
-    },
-    {
-      hook: "Selling your " + property + "? Start with the question you do not want to leave unanswered.",
-      script: "If you are thinking about selling your " + property + ", start with the question you do not want to leave unanswered. Say it clearly at the beginning of the conversation, then note what was explained and what you want to ask next.",
-      caption: "You do not need every answer before the first conversation. Start by naming the one you need most.",
-      suggestedNextStep: "Keep your unanswered question handy and use it to guide a future seller conversation."
-    },
-    {
-      hook: "One useful step before listing your " + property + ": write the question that will guide your conversation.",
-      script: "Before listing your " + property + ", take a minute to write the question that will guide your conversation. A written question gives you a simple way to stay focused, compare what you learn, and decide what deserves a follow-up.",
-      caption: "Good seller conversations begin with clarity. Write the question first, then bring it with you.",
-      suggestedNextStep: "Save your question and ask for a clear explanation before you choose your next step."
-    }
-  ];
-  const variant = variants[Math.min(Math.max(Number(attempt) || 0, 0), variants.length - 1)];
-  const proposed = {
-    ...source,
-    hook: variant.hook,
-    script: variant.script,
-    caption: variant.caption,
-    suggestedNextStep: variant.suggestedNextStep
+  const angle = asText(draft?.angle);
+  const alternatives = {
+    "Seller education": [
+      {
+        hook: "Thinking of selling your " + property + "? Start with your timing, not a deadline.",
+        script: "If selling your " + property + " is on your mind, you can start gathering information before you commit. Think about your ideal timing and the questions you would need answered. Bring those questions to an initial conversation when you are ready.",
+        caption: "Thinking about timing is a first step, not a promise to list.",
+        suggestedNextStep: "Make a short list of timing questions to discuss when you feel ready."
+      },
+      {
+        hook: "You can explore selling your " + property + " without deciding today.",
+        script: "Start with the timeline that works for you. What would you need to learn before choosing a date? Write down your questions and use a first conversation to explore possible next steps without committing.",
+        caption: "Take your time. Information comes before a listing decision.",
+        suggestedNextStep: "Write down your ideal timeline and one thing you need clarified."
+      },
+      {
+        hook: "When might you sell your " + property + "? Begin with a plan.",
+        script: "You don't need a firm listing date to start planning. Note what matters to your timing, list what you still need to know, and take your questions to a seller consultation when it feels useful.",
+        caption: "A little planning can make the first conversation clearer.",
+        suggestedNextStep: "Save your timing questions for a future conversation."
+      }
+    ],
+    "Common seller mistakes": [
+      {
+        hook: "One seller prep mistake: showing up without your " + property + " details.",
+        script: "Before discussing a possible sale, make a simple checklist of the property details you know and the ones you want clarified. For a condo, that could mean questions about the building or unit. The point is to arrive prepared, not to know every answer.",
+        caption: "Bring a property checklist, not just a general goal.",
+        suggestedNextStep: "List three property details to confirm before your first seller conversation."
+      },
+      {
+        hook: "Before discussing your " + property + ", gather these basics.",
+        script: "Don't rush into a seller conversation with only a general goal. Collect the basic details about your home and make a note of anything unclear. That gives you a practical starting point for a more focused conversation.",
+        caption: "A few notes can make your next conversation more useful.",
+        suggestedNextStep: "Create a short home-details checklist you can bring with you."
+      },
+      {
+        hook: "Preparing to discuss your " + property + "? Skip the guesswork.",
+        script: "Write down the home details you can confirm, and mark the questions you still have. Use that checklist when you speak with a real estate professional. You don't need to fill in the blanks by guessing.",
+        caption: "Know what you know, and ask about the rest.",
+        suggestedNextStep: "Check your property notes and flag anything that needs an answer."
+      }
+    ],
+    "Decision-making questions": [
+      {
+        hook: "Not ready to list your " + property + "? That's a valid next step.",
+        script: "You can have an information-gathering conversation without committing to sell. Ask yourself what would make that first discussion useful and low-pressure. Separate what you already know from what you'd like to learn, then decide whether a conversation would help.",
+        caption: "Getting answers and making a listing decision are two different things.",
+        suggestedNextStep: "Write down what would make an initial conversation feel useful to you."
+      },
+      {
+        hook: "Unsure about your " + property + "? Find clarity before commitment.",
+        script: "Make two short lists: what you know and what you're still unsure about. A seller conversation can help answer those questions. You remain free to decide later whether listing is right for you.",
+        caption: "The first conversation can be about learning, not listing.",
+        suggestedNextStep: "Choose one unanswered question for a low-pressure consultation."
+      },
+      {
+        hook: "Your " + property + " decision can wait while you gather facts.",
+        script: "Before you commit to any next step, think about the information that would help you feel prepared. Ask those questions first, take notes on the answers, and decide what happens next on your own timeline.",
+        caption: "Clarity first. The decision stays yours.",
+        suggestedNextStep: "Keep a list of outstanding questions and revisit your decision when ready."
+      }
+    ]
   };
+  const variants = alternatives[angle] || alternatives["Seller education"];
+  const variant = variants[Math.min(Math.max(Number(attempt) || 0, 0), variants.length - 1)];
+  const proposed = { ...source, ...variant };
   const reasons = {
-    hook: "Makes the seller's first question clear in the opening seconds without adding a market claim.",
-    script: "Uses the supplied question-led idea in a shorter, spoken sequence with one practical action.",
-    caption: "Adds context for saving the post instead of repeating the spoken script.",
-    suggestedNextStep: "Keeps the next step respectful and specific while leaving the decision with the homeowner."
+    hook: "Makes this draft's particular angle clear without inventing market facts.",
+    script: "Uses a natural spoken sequence that differs from the other draft angles.",
+    caption: "Complements the spoken message with a separate takeaway.",
+    suggestedNextStep: "Offers a specific, low-pressure step while leaving the choice with the homeowner."
   };
   const changes = ["hook", "script", "caption", "suggestedNextStep"]
     .filter((field) => JSON.stringify(source[field]) !== JSON.stringify(proposed[field]))
     .map((field) => revisionChange(field, source[field], proposed[field], reasons[field]));
-
-  return {
-    status: changes.length ? "available" : "no_change_needed",
-    source: "local_fictional_demo",
-    draft: proposed,
-    changes
-  };
+  return { status: changes.length ? "available" : "no_change_needed", source: "local_fictional_demo", draft: proposed, changes };
 }
 
 function revisionProposal(draft, contentResult, options = {}, attempt = 0) {
