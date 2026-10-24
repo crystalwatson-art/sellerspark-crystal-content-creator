@@ -133,17 +133,21 @@ URI, the prepared migration, and server-only values:
     TIKTOK_CLIENT_SECRET=<server-only secret>
     TIKTOK_REDIRECT_URI=https://<approved-host>/api/tiktok/oauth/callback
     TIKTOK_TOKEN_ENCRYPTION_KEY=<64-hex-character server-only secret>
+    SELLERSPARK_SUPABASE_SERVICE_ROLE_KEY=<server-only secret>
 
 The server routes are `POST /api/tiktok/oauth/start`, `GET
 /api/tiktok/oauth/callback`, `GET /api/tiktok/status`, `GET
 /api/tiktok/follower-count`, `POST /api/tiktok/draft-upload`, and `POST
 /api/tiktok/disconnect`. Authenticated routes require a verified Supabase
-bearer token. OAuth state is short-lived, consumed when retained by the server,
-and carried in an encrypted, HttpOnly, Secure, SameSite cookie; the callback
-never accepts a browser-supplied owner ID. A durable state table is still needed
-before multi-instance production activation so replay protection survives a
-serverless cold start. The prepared migration enforces owner-scoped RLS and
-grants no table access to `anon`.
+bearer token. OAuth state is short-lived, stored only as a SHA-256 hash in the
+prepared `sellerspark_tiktok_oauth_states` table, and consumed atomically once;
+no Supabase access token or OAuth state is placed in browser cookies. The
+server-side adapter uses the dedicated Supabase service-role key only from
+server configuration, while ordinary `anon` and `authenticated` clients have
+no table grants for TikTok token or OAuth-state records. The callback never
+accepts a browser-supplied owner ID, and the durable state table makes replay
+protection work across Vercel instances after the prepared migration is
+applied.
 
 ## Listing Optimizer review adapter
 

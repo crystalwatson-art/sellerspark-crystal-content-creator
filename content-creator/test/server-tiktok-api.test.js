@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { ReviewStore } from "../src/review-store.js";
 import { createServer } from "../src/server.js";
-import { createTikTokIntegration, createTokenCipher, MemoryTikTokConnectionStore, TIKTOK_SCOPES } from "../src/tiktok-oauth.js";
+import { createTikTokIntegration, MemoryTikTokConnectionStore, MemoryTikTokOAuthStateStore, TIKTOK_SCOPES } from "../src/tiktok-oauth.js";
 import fictionalLicBrief from "../fixtures/fictional-research-brief.json" with { type: "json" };
 
 const userId = "11111111-1111-4111-8111-111111111111";
@@ -19,7 +19,7 @@ async function startServerForTest() {
   const directory = await mkdtemp(path.join(os.tmpdir(), "sellerspark-tiktok-api-"));
   const store = await new ReviewStore({ filePath: path.join(directory, "reviews.json") }).init();
   const tokenStore = new MemoryTikTokConnectionStore();
-  await tokenStore.save(userId, supabaseToken, {
+  await tokenStore.save(userId, {
     accessToken: "fictional-tiktok-access",
     refreshToken: "fictional-tiktok-refresh",
     accessTokenExpiresAt: Date.now() + 3600000,
@@ -31,7 +31,7 @@ async function startServerForTest() {
     clientSecret: "test-client-secret",
     redirectUri: "https://example.test/api/tiktok/oauth/callback",
     tokenStore,
-    stateCookieCipher: createTokenCipher("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+    stateStore: new MemoryTikTokOAuthStateStore(),
     fetchImpl: async (url) => {
       if (String(url).includes("/user/info/")) return jsonResponse({ data: { user: { follower_count: 37 } } });
       return jsonResponse({ data: { publish_id: "fictional-draft-id" } });
@@ -114,6 +114,5 @@ test("TikTok OAuth start uses the verified bearer identity and never accepts a b
   assert.equal(response.status, 200);
   assert.match(body.authorizationUrl, /tiktok\.com\/v2\/auth\/authorize/);
   assert.doesNotMatch(body.authorizationUrl, /test-client-secret|supabase-token-a/);
-  assert.match(response.headers.get("set-cookie") || "", /HttpOnly/);
-  assert.match(response.headers.get("set-cookie") || "", /SameSite=Lax/);
+  assert.equal(response.headers.get("set-cookie"), null);
 });

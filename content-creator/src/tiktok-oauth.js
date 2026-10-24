@@ -1,6 +1,7 @@
 import {
   createCipheriv,
   createDecipheriv,
+  createHash,
   randomBytes,
   randomUUID
 } from "node:crypto";
@@ -11,6 +12,7 @@ export const TIKTOK_TOKEN_URL = "https://open.tiktokapis.com/v2/oauth/token/";
 export const TIKTOK_USER_INFO_URL = "https://open.tiktokapis.com/v2/user/info/";
 export const TIKTOK_DRAFT_UPLOAD_URL = "https://open.tiktokapis.com/v2/post/publish/inbox/video/init/";
 export const TIKTOK_CONNECTION_TABLE = "sellerspark_tiktok_connections";
+export const TIKTOK_OAUTH_STATE_TABLE = "sellerspark_tiktok_oauth_states";
 
 export const TIKTOK_SCOPES = Object.freeze({
   identity: "user.info.basic",
@@ -19,6 +21,7 @@ export const TIKTOK_SCOPES = Object.freeze({
 });
 
 const STATE_TTL_MS = 10 * 60 * 1000;
+
 function tiktokError(code, message) {
   const error = new Error(message);
   error.code = code;
@@ -32,11 +35,25 @@ function requireUser(userId) {
   return userId;
 }
 
-function requireSupabaseToken(accessToken) {
-  if (typeof accessToken !== "string" || !accessToken.trim()) {
-    throw tiktokError("authorization_required", "A verified signed-in user is required.");
+function requireServerKey(serverKey) {
+  if (typeof serverKey !== "string" || !serverKey.trim()) {
+    throw new Error("TikTok storage requires a server-only Supabase key.");
   }
-  return accessToken;
+  return serverKey;
+}
+
+function hashState(state) {
+  return createHash("sha256").update(state, "utf8").digest("hex");
+}
+
+function serviceHeaders(serverKey, extra = {}) {
+  const key = requireServerKey(serverKey);
+  return {
+    apikey: key,
+    Authorization: "Bearer " + key,
+    "Content-Type": "application/json",
+    ...extra
+  };
 }
 
 function scopesFrom(value) {
@@ -119,32 +136,27 @@ function safeStorageError(response) {
 }
 
 export class SupabaseTikTokConnectionStore {
-  constructor({ url, anonKey, cipher, fetchImpl = globalThis.fetch } = {}) {
+  constructor({ url, serverKey, cipher, fetchImpl = globalThis.fetch } = {}) {
     if (typeof url !== "string" || !/^https:\/\/[^/]+/.test(url)) throw new Error("TikTok store requires a Supabase HTTPS URL.");
-    if (typeof anonKey !== "string" || !anonKey.trim()) throw new Error("TikTok store requires a Supabase public API key.");
+    requireServerKey(serverKey);
     if (!cipher || typeof cipher.encrypt !== "function" || typeof cipher.decrypt !== "function") throw new Error("TikTok store requires a token cipher.");
     if (typeof fetchImpl !== "function") throw new Error("TikTok store requires fetch.");
     this.endpoint = url.replace(/\/+$/, "") + "/rest/v1/" + TIKTOK_CONNECTION_TABLE;
-    this.anonKey = anonKey;
+    this.serverKey = serverKey;
     this.cipher = cipher;
     this.fetchImpl = fetchImpl;
   }
 
-  headers(supabaseAccessToken, extra = {}) {
-    return {
-      apikey: this.anonKey,
-      Authorization: "Bearer " + requireSupabaseToken(supabaseAccessToken),
-      "Content-Type": "application/json",
-      ...extra
-    };
+  headers(extra = {}) {
+    return serviceHeaders(this.serverKey, extra);
   }
 
-  async get(userId, supabaseAccessToken) {
+  async get(userId) {
     const ownerId = requireUser(userId);
     const url = new URL(this.endpoint);
     url.searchParams.set("select", "token_blob,granted_scopes,expires_at");
     url.searchParams.set("owner_id", "eq." + ownerId);
-    const response = await this.fetchImpl(url, { headers: this.headers(supabaseAccessToken) });
+    const response = await this.fetchImpl(url, { headers: this.headers() });
     if (!response?.ok) return safeStorageError(response);
     const rows = await response.json();
     if (!Array.isArray(rows) || !rows[0]) return null;
@@ -156,11 +168,11 @@ export class SupabaseTikTokConnectionStore {
     };
   }
 
-  async save(userId, supabaseAccessToken, token) {
+  async save(userId, token) {
     const ownerId = requireUser(userId);
     const response = await this.fetchImpl(this.endpoint, {
       method: "POST",
-      headers: this.headers(supabaseAccessToken, {
+      headers: this.headers({
         Prefer: "resolution=merge-duplicates,return=representation"
       }),
       body: JSON.stringify({
@@ -175,16 +187,83 @@ export class SupabaseTikTokConnectionStore {
     return { connected: true, grantedScopes: token.grantedScopes, accessTokenExpiresAt: token.accessTokenExpiresAt };
   }
 
-  async remove(userId, supabaseAccessToken) {
+  async remove(userId) {
     const ownerId = requireUser(userId);
     const url = new URL(this.endpoint);
     url.searchParams.set("owner_id", "eq." + ownerId);
     const response = await this.fetchImpl(url, {
       method: "DELETE",
-      headers: this.headers(supabaseAccessToken)
+      headers: this.headers()
     });
     if (!response?.ok) return safeStorageError(response);
     return { connected: false };
+  }
+}
+
+export class SupabaseTikTokOAuthStateStore {
+  constructor({ url, serverKey, fetchImpl = globalThis.fetch } = {}) {
+    if (typeof url !== "string" || !/^https:\/\/[^/]+/.test(url)) throw new Error("TikTok state storage requires a Supabase HTTPS URL.");
+    requireServerKey(serverKey);
+    if (typeof fetchImpl !== "function") throw new Error("TikTok state storage requires fetch.");
+    this.endpoint = url.replace(/\/+$/, "") + "/rest/v1/" + TIKTOK_OAUTH_STATE_TABLE;
+    this.serverKey = serverKey;
+    this.fetchImpl = fetchImpl;
+  }
+
+  headers(extra = {}) {
+    return serviceHeaders(this.serverKey, extra);
+  }
+
+  async create({ state, ownerId, expiresAt }) {
+    const verifiedOwnerId = requireUser(ownerId);
+    if (typeof state !== "string" || !state) throw new Error("TikTok OAuth state is required.");
+    const expires = new Date(expiresAt).toISOString();
+    const response = await this.fetchImpl(this.endpoint, {
+      method: "POST",
+      headers: this.headers({ Prefer: "return=minimal" }),
+      body: JSON.stringify({
+        state_hash: hashState(state),
+        owner_id: verifiedOwnerId,
+        expires_at: expires
+      })
+    });
+    if (!response?.ok) return safeStorageError(response);
+  }
+
+  async consume(state) {
+    if (typeof state !== "string" || !state) return null;
+    const url = new URL(this.endpoint);
+    url.searchParams.set("state_hash", "eq." + hashState(state));
+    url.searchParams.set("consumed_at", "is.null");
+    url.searchParams.set("expires_at", "gt." + new Date().toISOString());
+    const consumedAt = new Date().toISOString();
+    const response = await this.fetchImpl(url, {
+      method: "PATCH",
+      headers: this.headers({ Prefer: "return=representation" }),
+      body: JSON.stringify({ consumed_at: consumedAt })
+    });
+    if (!response?.ok) return safeStorageError(response);
+    const rows = await response.json();
+    if (!Array.isArray(rows) || !rows[0]) return null;
+    return { ownerId: requireUser(rows[0].owner_id) };
+  }
+}
+
+export class MemoryTikTokOAuthStateStore {
+  constructor({ clock = () => Date.now() } = {}) {
+    this.clock = clock;
+    this.records = new Map();
+  }
+
+  async create({ state, ownerId, expiresAt }) {
+    this.records.set(state, { ownerId: requireUser(ownerId), expiresAt });
+  }
+
+  async consume(state) {
+    const record = this.records.get(state);
+    this.records.delete(state);
+    if (!record || record.expiresAt <= this.clock()) return null;
+    return { ownerId: record.ownerId };
   }
 }
 
@@ -193,22 +272,19 @@ export class MemoryTikTokConnectionStore {
     this.records = new Map();
   }
 
-  async get(userId, supabaseAccessToken) {
+  async get(userId) {
     requireUser(userId);
-    requireSupabaseToken(supabaseAccessToken);
     return this.records.get(userId) || null;
   }
 
-  async save(userId, supabaseAccessToken, token) {
+  async save(userId, token) {
     requireUser(userId);
-    requireSupabaseToken(supabaseAccessToken);
     this.records.set(userId, token);
     return { connected: true, grantedScopes: token.grantedScopes, accessTokenExpiresAt: token.accessTokenExpiresAt };
   }
 
-  async remove(userId, supabaseAccessToken) {
+  async remove(userId) {
     requireUser(userId);
-    requireSupabaseToken(supabaseAccessToken);
     this.records.delete(userId);
     return { connected: false };
   }
@@ -221,11 +297,13 @@ export function createTikTokIntegration({
   tokenStore,
   fetchImpl = globalThis.fetch,
   clock = () => Date.now(),
-  stateStore = new Map(),
-  stateCookieCipher = null
+  stateStore
 } = {}) {
   if (!tokenStore) throw new Error("TikTok integration requires a token store.");
   if (typeof fetchImpl !== "function") throw new Error("TikTok integration requires fetch.");
+  if (!stateStore || typeof stateStore.create !== "function" || typeof stateStore.consume !== "function") {
+    throw new Error("TikTok integration requires a server-side OAuth state store.");
+  }
 
   const configured = Boolean(clientKey && clientSecret && redirectUri && /^https:\/\//.test(redirectUri));
 
@@ -233,19 +311,11 @@ export function createTikTokIntegration({
     if (!configured) throw tiktokError("not_configured", "TikTok connection is not configured for this environment.");
   }
 
-  function cleanupStates() {
-    for (const [state, value] of stateStore) {
-      if (value.expiresAt <= clock()) stateStore.delete(state);
-    }
-  }
-
-  async function startAuthorization({ userId, supabaseAccessToken }) {
+  async function startAuthorization({ userId }) {
     requireConfigured();
     const ownerId = requireUser(userId);
-    const ownerToken = requireSupabaseToken(supabaseAccessToken);
-    cleanupStates();
     const state = randomUUID();
-    stateStore.set(state, { ownerId, ownerToken, expiresAt: clock() + STATE_TTL_MS });
+    await stateStore.create({ state, ownerId, expiresAt: clock() + STATE_TTL_MS });
     const params = new URLSearchParams({
       client_key: clientKey,
       response_type: "code",
@@ -256,27 +326,14 @@ export function createTikTokIntegration({
     return {
       status: "authorization_required",
       authorizationUrl: TIKTOK_AUTHORIZATION_URL + "?" + params.toString(),
-      scopes: [TIKTOK_SCOPES.identity, TIKTOK_SCOPES.followerStats, TIKTOK_SCOPES.draftUpload],
-      stateCookie: stateCookieCipher
-        ? stateCookieCipher.encrypt({ state, ownerId, ownerToken, expiresAt: clock() + STATE_TTL_MS })
-        : null
+      scopes: [TIKTOK_SCOPES.identity, TIKTOK_SCOPES.followerStats, TIKTOK_SCOPES.draftUpload]
     };
   }
 
-  async function completeAuthorization({ code, state, stateCookie, error } = {}) {
+  async function completeAuthorization({ code, state, error } = {}) {
     requireConfigured();
-    cleanupStates();
-    let pending = typeof state === "string" ? stateStore.get(state) : null;
-    if (!pending && stateCookie && stateCookieCipher) {
-      try {
-        const decoded = stateCookieCipher.decrypt(stateCookie);
-        if (decoded?.state === state && decoded.expiresAt > clock()) pending = decoded;
-      } catch {
-        pending = null;
-      }
-    }
-    if (!pending || pending.expiresAt <= clock()) throw tiktokError("authorization_state_invalid", "TikTok authorization expired. Start again.");
-    stateStore.delete(state);
+    const pending = await stateStore.consume(state);
+    if (!pending) throw tiktokError("authorization_state_invalid", "TikTok authorization expired. Start again.");
     if (error) throw tiktokError("authorization_denied", "TikTok authorization was not completed.");
     if (typeof code !== "string" || !code) throw tiktokError("authorization_code_missing", "TikTok authorization did not return a code.");
     let response;
@@ -303,7 +360,7 @@ export function createTikTokIntegration({
       throw tiktokError("provider_invalid_response", "TikTok authorization returned an invalid response.");
     }
     const token = normalizeTokenPayload(payload);
-    await tokenStore.save(pending.ownerId, pending.ownerToken, token);
+    await tokenStore.save(pending.ownerId, token);
     return {
       status: "connected",
       userId: pending.ownerId,
@@ -312,9 +369,9 @@ export function createTikTokIntegration({
     };
   }
 
-  async function status({ userId, supabaseAccessToken }) {
+  async function status({ userId }) {
     const ownerId = requireUser(userId);
-    const record = await tokenStore.get(ownerId, supabaseAccessToken);
+    const record = await tokenStore.get(ownerId);
     return {
       status: record ? "connected" : "not_connected",
       scopes: record?.grantedScopes || [],
@@ -324,8 +381,8 @@ export function createTikTokIntegration({
     };
   }
 
-  async function accessTokenFor(ownerId, supabaseAccessToken) {
-    const record = await tokenStore.get(ownerId, supabaseAccessToken);
+  async function accessTokenFor(ownerId) {
+    const record = await tokenStore.get(ownerId);
     if (!record) throw tiktokError("not_connected", "Connect TikTok before using this feature.");
     if (record.accessTokenExpiresAt > clock() + 60_000) return record;
     let response;
@@ -350,13 +407,13 @@ export function createTikTokIntegration({
       throw tiktokError("provider_invalid_response", "TikTok authorization renewal returned an invalid response.");
     }
     const refreshed = normalizeTokenPayload(payload, record);
-    await tokenStore.save(ownerId, supabaseAccessToken, refreshed);
+    await tokenStore.save(ownerId, refreshed);
     return refreshed;
   }
 
-  async function followerCount({ userId, supabaseAccessToken }) {
+  async function followerCount({ userId }) {
     const ownerId = requireUser(userId);
-    const record = await accessTokenFor(ownerId, supabaseAccessToken);
+    const record = await accessTokenFor(ownerId);
     if (!record.grantedScopes.includes(TIKTOK_SCOPES.followerStats)) {
       throw tiktokError("scope_missing", "TikTok follower statistics permission was not granted.");
     }
@@ -380,7 +437,7 @@ export function createTikTokIntegration({
     return { followerCount: count, observedAt: new Date(clock()).toISOString(), source: "TikTok User Info API" };
   }
 
-  async function uploadDraft({ userId, supabaseAccessToken, videoUrl, caption = "", humanApproved = false } = {}) {
+  async function uploadDraft({ userId, videoUrl, caption = "", humanApproved = false } = {}) {
     const ownerId = requireUser(userId);
     if (humanApproved !== true) throw tiktokError("human_approval_required", "Human approval is required before a TikTok draft handoff.");
     let parsedUrl;
@@ -392,7 +449,7 @@ export function createTikTokIntegration({
     if (parsedUrl.protocol !== "https:" || parsedUrl.username || parsedUrl.password) {
       throw tiktokError("invalid_video_url", "A public HTTPS video URL is required for draft handoff.");
     }
-    const record = await accessTokenFor(ownerId, supabaseAccessToken);
+    const record = await accessTokenFor(ownerId);
     if (!record.grantedScopes.includes(TIKTOK_SCOPES.draftUpload)) {
       throw tiktokError("scope_missing", "TikTok draft-upload permission was not granted.");
     }
@@ -431,8 +488,8 @@ export function createTikTokIntegration({
     };
   }
 
-  async function disconnect({ userId, supabaseAccessToken }) {
-    return tokenStore.remove(requireUser(userId), supabaseAccessToken);
+  async function disconnect({ userId }) {
+    return tokenStore.remove(requireUser(userId));
   }
 
   return Object.freeze({

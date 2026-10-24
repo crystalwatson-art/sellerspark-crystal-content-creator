@@ -12,8 +12,8 @@ export const TIKTOK_CONNECTION_PLAN = Object.freeze({
   tokenHandling: "server_only_encrypted_at_rest",
   oauthFlow: "server_started_authorization_code_exchange",
   userInitiatedActionsOnly: true,
-  requiredConfiguration: ["TIKTOK_CLIENT_KEY", "TIKTOK_CLIENT_SECRET", "TIKTOK_REDIRECT_URI", "TIKTOK_TOKEN_ENCRYPTION_KEY"],
-  blocker: "Crystal must register and authorize a TikTok developer app, apply the prepared connection migration, and configure server-only values before account connection or follower-stat reads can be tested."
+  requiredConfiguration: ["TIKTOK_CLIENT_KEY", "TIKTOK_CLIENT_SECRET", "TIKTOK_REDIRECT_URI", "TIKTOK_TOKEN_ENCRYPTION_KEY", "SELLERSPARK_SUPABASE_SERVICE_ROLE_KEY"],
+  blocker: "Crystal must register and authorize a TikTok developer app, apply the prepared connection and OAuth-state migration, and configure server-only values before account connection or follower-stat reads can be tested."
 });
 
 export function getTikTokConnectionPlan() {
@@ -26,6 +26,8 @@ export function isTikTokConnectionReady(config = {}) {
     && config.clientSecret
     && /^https:\/\//.test(config.redirectUri || "")
     && /^[0-9a-f]{64}$/i.test(config.encryptionKey || "")
+    && typeof config.serverKey === "string"
+    && config.serverKey.trim()
     && config.authorizedScopes?.includes("user.info.stats")
   );
 }

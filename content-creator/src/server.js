@@ -21,7 +21,8 @@ import {
   createTikTokIntegration,
   createTokenCipher,
   safeTikTokError,
-  SupabaseTikTokConnectionStore
+  SupabaseTikTokConnectionStore,
+  SupabaseTikTokOAuthStateStore
 } from "./tiktok-oauth.js";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -47,23 +48,6 @@ function sendJson(response, status, body, headers = {}) {
     ...headers
   });
   response.end(JSON.stringify(body));
-}
-
-function readCookie(request, name) {
-  const header = request.headers?.cookie;
-  if (typeof header !== "string") return null;
-  const entry = header.split(";").map((item) => item.trim()).find((item) => item.startsWith(name + "="));
-  return entry ? decodeURIComponent(entry.slice(name.length + 1)) : null;
-}
-
-const TIKTOK_STATE_COOKIE = "sellerspark_tiktok_oauth_state";
-
-function tiktokStateCookie(value) {
-  return TIKTOK_STATE_COOKIE + "=" + encodeURIComponent(value) + "; Max-Age=600; Path=/api/tiktok/oauth/callback; HttpOnly; Secure; SameSite=Lax";
-}
-
-function clearTikTokStateCookie() {
-  return TIKTOK_STATE_COOKIE + "=; Max-Age=0; Path=/api/tiktok/oauth/callback; HttpOnly; Secure; SameSite=Lax";
 }
 
 function logProviderFailure(event) {
@@ -254,8 +238,8 @@ export function createServer({
         return;
       }
       try {
-        const { userId, accessToken } = await authenticate(request);
-        const connectionStatus = await tiktokIntegration.status({ userId, supabaseAccessToken: accessToken });
+        const { userId } = await authenticate(request);
+        const connectionStatus = await tiktokIntegration.status({ userId });
         sendJson(response, 200, { ...plan, ...connectionStatus, connected: connectionStatus.status === "connected" });
       } catch (error) {
         if (["authorization_required", "authorization_failed", "auth_unavailable"].includes(error?.code)) {
@@ -270,11 +254,10 @@ export function createServer({
 
     if (request.method === "POST" && url.pathname === "/api/tiktok/oauth/start") {
       try {
-        const { userId, accessToken } = await authenticate(request);
+        const { userId } = await authenticate(request);
         if (!tiktokIntegration) throw Object.assign(new Error("TikTok connection is not configured for this environment."), { code: "not_configured" });
-        const outcome = await tiktokIntegration.startAuthorization({ userId, supabaseAccessToken: accessToken });
-        const { stateCookie, ...publicOutcome } = outcome;
-        sendJson(response, 200, publicOutcome, stateCookie ? { "Set-Cookie": tiktokStateCookie(stateCookie) } : {});
+        const outcome = await tiktokIntegration.startAuthorization({ userId });
+        sendJson(response, 200, outcome);
       } catch (error) {
         if (["authorization_required", "authorization_failed", "auth_unavailable"].includes(error?.code)) {
           sendJson(response, error.code === "auth_unavailable" ? 503 : 401, { status: "error", message: error.message });
@@ -293,20 +276,19 @@ export function createServer({
         const outcome = await tiktokIntegration.completeAuthorization({
           code: url.searchParams.get("code"),
           state: url.searchParams.get("state"),
-          stateCookie: readCookie(request, TIKTOK_STATE_COOKIE),
           error: url.searchParams.get("error")
         });
-        if (wantsJson) sendJson(response, 200, outcome, { "Set-Cookie": clearTikTokStateCookie() });
+        if (wantsJson) sendJson(response, 200, outcome);
         else {
-          response.writeHead(303, { Location: "/?tiktok=connected", "Cache-Control": "no-store", "Set-Cookie": clearTikTokStateCookie() });
+          response.writeHead(303, { Location: "/?tiktok=connected", "Cache-Control": "no-store" });
           response.end();
         }
       } catch (error) {
         const safe = safeTikTokError(error);
         if (wantsJson) {
-          sendJson(response, safe.code === "not_configured" ? 503 : 422, { status: "error", message: safe.message }, { "Set-Cookie": clearTikTokStateCookie() });
+          sendJson(response, safe.code === "not_configured" ? 503 : 422, { status: "error", message: safe.message });
         } else {
-          response.writeHead(303, { Location: "/?tiktok=error", "Cache-Control": "no-store", "Set-Cookie": clearTikTokStateCookie() });
+          response.writeHead(303, { Location: "/?tiktok=error", "Cache-Control": "no-store" });
           response.end();
         }
       }
@@ -315,9 +297,9 @@ export function createServer({
 
     if (request.method === "GET" && url.pathname === "/api/tiktok/follower-count") {
       try {
-        const { userId, accessToken } = await authenticate(request);
+        const { userId } = await authenticate(request);
         if (!tiktokIntegration) throw Object.assign(new Error("TikTok connection is not configured for this environment."), { code: "not_configured" });
-        sendJson(response, 200, await tiktokIntegration.followerCount({ userId, supabaseAccessToken: accessToken }));
+        sendJson(response, 200, await tiktokIntegration.followerCount({ userId }));
       } catch (error) {
         if (["authorization_required", "authorization_failed", "auth_unavailable"].includes(error?.code)) {
           sendJson(response, error.code === "auth_unavailable" ? 503 : 401, { status: "error", message: error.message });
@@ -338,11 +320,10 @@ export function createServer({
         return;
       }
       try {
-        const { userId, accessToken } = await authenticate(request);
+        const { userId } = await authenticate(request);
         if (!tiktokIntegration) throw Object.assign(new Error("TikTok connection is not configured for this environment."), { code: "not_configured" });
         sendJson(response, 200, await tiktokIntegration.uploadDraft({
           userId,
-          supabaseAccessToken: accessToken,
           videoUrl: input.videoUrl,
           caption: input.caption,
           humanApproved: input.humanApproved
@@ -360,9 +341,9 @@ export function createServer({
 
     if (request.method === "POST" && url.pathname === "/api/tiktok/disconnect") {
       try {
-        const { userId, accessToken } = await authenticate(request);
+        const { userId } = await authenticate(request);
         if (!tiktokIntegration) throw Object.assign(new Error("TikTok connection is not configured for this environment."), { code: "not_configured" });
-        sendJson(response, 200, await tiktokIntegration.disconnect({ userId, supabaseAccessToken: accessToken }));
+        sendJson(response, 200, await tiktokIntegration.disconnect({ userId }));
       } catch (error) {
         if (["authorization_required", "authorization_failed", "auth_unavailable"].includes(error?.code)) {
           sendJson(response, error.code === "auth_unavailable" ? 503 : 401, { status: "error", message: error.message });
@@ -589,19 +570,24 @@ export async function createConfiguredRequestHandler() {
       redirectUri: process.env.TIKTOK_REDIRECT_URI,
       encryptionKey: process.env.TIKTOK_TOKEN_ENCRYPTION_KEY
     };
-    if (tiktokConfig.clientKey && tiktokConfig.clientSecret && tiktokConfig.redirectUri && tiktokConfig.encryptionKey) {
+    const supabaseServerKey = process.env.SELLERSPARK_SUPABASE_SERVICE_ROLE_KEY;
+    if (tiktokConfig.clientKey && tiktokConfig.clientSecret && tiktokConfig.redirectUri && tiktokConfig.encryptionKey && supabaseServerKey) {
       const tokenCipher = createTokenCipher(tiktokConfig.encryptionKey);
       const tokenStore = new SupabaseTikTokConnectionStore({
         url: supabaseUrl,
-        anonKey: supabaseAnonKey,
+        serverKey: supabaseServerKey,
         cipher: tokenCipher
+      });
+      const stateStore = new SupabaseTikTokOAuthStateStore({
+        url: supabaseUrl,
+        serverKey: supabaseServerKey
       });
       tiktokIntegration = createTikTokIntegration({
         clientKey: tiktokConfig.clientKey,
         clientSecret: tiktokConfig.clientSecret,
         redirectUri: tiktokConfig.redirectUri,
         tokenStore,
-        stateCookieCipher: tokenCipher
+        stateStore
       });
     }
   } else if (storageMode === "local") {

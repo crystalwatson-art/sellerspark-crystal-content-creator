@@ -18,7 +18,7 @@ alter table public.sellerspark_tiktok_connections force row level security;
 
 revoke all on table public.sellerspark_tiktok_connections from anon;
 revoke all on table public.sellerspark_tiktok_connections from authenticated;
-grant select, insert, update, delete on table public.sellerspark_tiktok_connections to authenticated;
+grant select, insert, update, delete on table public.sellerspark_tiktok_connections to service_role;
 
 create policy "SellerSpark owners can read TikTok connections"
   on public.sellerspark_tiktok_connections
@@ -44,3 +44,25 @@ create policy "SellerSpark owners can delete TikTok connections"
   for delete
   to authenticated
   using (auth.uid() is not null and auth.uid() = owner_id);
+
+-- OAuth state is server-only, short-lived, and consumed atomically by the
+-- server-side service-role adapter. The raw state is never stored.
+create table if not exists public.sellerspark_tiktok_oauth_states (
+  state_hash text primary key check (state_hash ~ '^[0-9a-f]{64}$'),
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  expires_at timestamptz not null,
+  consumed_at timestamptz,
+  created_at timestamptz not null default timezone('utc', now()),
+  check (expires_at > created_at),
+  check (consumed_at is null or consumed_at >= created_at)
+);
+
+create index if not exists sellerspark_tiktok_oauth_states_expires_at_idx
+  on public.sellerspark_tiktok_oauth_states (expires_at);
+
+alter table public.sellerspark_tiktok_oauth_states enable row level security;
+alter table public.sellerspark_tiktok_oauth_states force row level security;
+
+revoke all on table public.sellerspark_tiktok_oauth_states from anon;
+revoke all on table public.sellerspark_tiktok_oauth_states from authenticated;
+grant select, insert, update, delete on table public.sellerspark_tiktok_oauth_states to service_role;
