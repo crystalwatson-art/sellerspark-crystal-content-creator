@@ -39,7 +39,7 @@ function makeStore(responses) {
   const mocked = mockFetch(responses);
   const store = new SupabaseReviewStore({
     url: "https://sellerspark-development.supabase.co",
-    secretKey: "mock-server-only-secret",
+    anonKey: "mock-public-anon-key",
     fetchImpl: mocked.fetchImpl
   });
   return store.init().then(() => ({ store, calls: mocked.calls }));
@@ -50,10 +50,10 @@ test("Supabase store persists records and scopes reads by trusted actor", async 
     { status: 201, body: [row()] },
     { status: 200, body: [row()] }
   ]);
-  const created = await store.create({ brief: { id: "fictional-lic" }, listingReview: { reviews: [] }, actorId });
-  const loaded = await store.get(created.id, { actorId });
+  const created = await store.create({ brief: { id: "fictional-lic" }, listingReview: { reviews: [] }, actorId, actorToken: "verified-owner-token" });
+  const loaded = await store.get(created.id, { actorId, actorToken: "verified-owner-token" });
   assert.equal(loaded.id, created.id);
-  assert.match(calls[0].options.headers.Authorization, /Bearer mock-server-only-secret/);
+  assert.match(calls[0].options.headers.Authorization, /Bearer verified-owner-token/);
   assert.match(calls[1].url, /owner_id=eq\.11111111-1111-4111-8111-111111111111/);
   assert.doesNotMatch(calls[0].options.body, /otherActor/);
 });
@@ -61,7 +61,7 @@ test("Supabase store persists records and scopes reads by trusted actor", async 
 test("missing or invalid actor identity is rejected before any database request", async () => {
   const { store, calls } = await makeStore([]);
   await assert.rejects(() => store.get("review-12345678-1234-4123-8123-123456789012"), { code: "authorization_required" });
-  await assert.rejects(() => store.get("review-12345678-1234-4123-8123-123456789012", { actorId: otherActorId.slice(0, -1) }), { code: "authorization_required" });
+  await assert.rejects(() => store.get("review-12345678-1234-4123-8123-123456789012", { actorId: otherActorId.slice(0, -1), actorToken: "verified-owner-token" }), { code: "authorization_required" });
   assert.equal(calls.length, 0);
 });
 
@@ -71,7 +71,7 @@ test("version checks reject stale updates and keep concurrent work safe", async 
     { status: 200, body: [row({ version: 2, updated_at: "2026-10-23T00:01:00.000Z" })] }
   ]);
   await assert.rejects(
-    () => store.update("review-12345678-1234-4123-8123-123456789012", 0, () => {}, { actorId }),
+    () => store.update("review-12345678-1234-4123-8123-123456789012", 0, () => {}, { actorId, actorToken: "verified-owner-token" }),
     { code: "conflict" }
   );
   assert.equal(calls.length, 1);
@@ -95,12 +95,12 @@ test("concurrent updates allow only one owner-scoped version transition", async 
   };
   const store = await new SupabaseReviewStore({
     url: "https://sellerspark-development.supabase.co",
-    secretKey: "mock-server-only-secret",
+    anonKey: "mock-public-anon-key",
     fetchImpl: mocked.fetchImpl
   }).init();
   const results = await Promise.allSettled([
-    store.update(current.id, 1, (next) => { next.listingReview.reviews[0].status = "accepted"; }, { actorId }),
-    store.update(current.id, 1, (next) => { next.listingReview.reviews[0].status = "rejected"; }, { actorId })
+    store.update(current.id, 1, (next) => { next.listingReview.reviews[0].status = "accepted"; }, { actorId, actorToken: "verified-owner-token" }),
+    store.update(current.id, 1, (next) => { next.listingReview.reviews[0].status = "rejected"; }, { actorId, actorToken: "verified-owner-token" })
   ]);
   assert.equal(results.filter((result) => result.status === "fulfilled").length, 1);
   assert.equal(results.filter((result) => result.status === "rejected" && result.reason.code === "conflict").length, 1);
@@ -110,7 +110,7 @@ test("concurrent updates allow only one owner-scoped version transition", async 
 test("database errors are sanitized and do not expose provider response text", async () => {
   const { store } = await makeStore([{ status: 403, body: { message: "private database detail" } }]);
   await assert.rejects(
-    () => store.get("review-12345678-1234-4123-8123-123456789012", { actorId }),
+    () => store.get("review-12345678-1234-4123-8123-123456789012", { actorId, actorToken: "verified-owner-token" }),
     (error) => error.code === "authorization_failed" && !error.message.includes("private database detail")
   );
 });
