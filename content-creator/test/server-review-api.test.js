@@ -62,6 +62,57 @@ test("server persists fictional LIC review actions and rejects stale versions", 
   assert.equal(recovered.listingReview.reviews[0].status, "accepted");
 });
 
+test("fictional demo supports reject, two revisions, restore original, and review history locally", async (t) => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "sellerspark-server-demo-actions-"));
+  const store = await new ReviewStore({ filePath: path.join(directory, "reviews.json") }).init();
+  const running = await start(store);
+  t.after(() => running.server.close());
+
+  const createdResponse = await fetch(running.base + "/api/content", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(fictionalLicBrief)
+  });
+  const created = await createdResponse.json();
+  const reviewId = encodeURIComponent(created.listingReviewId);
+  const draftId = created.listingReview.reviews[1].draftId;
+
+  async function action(actionName, expectedVersion) {
+    const response = await fetch(running.base + `/api/reviews/${reviewId}/actions`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action: actionName, draftId, expectedVersion })
+    });
+    return { response, body: await response.json() };
+  }
+
+  const rejected = await action("reject", 1);
+  assert.equal(rejected.response.status, 200);
+  assert.equal(rejected.body.listingReviewVersion, 2);
+
+  const firstRevision = await action("request_revision", 2);
+  assert.equal(firstRevision.response.status, 200);
+  assert.equal(firstRevision.body.listingReviewVersion, 3);
+  assert.equal(firstRevision.body.listingReview.reviews[1].status, "revision_requested");
+
+  const secondRevision = await action("request_revision", 3);
+  assert.equal(secondRevision.response.status, 200);
+  assert.equal(secondRevision.body.listingReviewVersion, 4);
+  assert.equal(secondRevision.body.listingReview.reviews[1].automaticRevisionAttempts, 2);
+
+  const limit = await action("request_revision", 4);
+  assert.equal(limit.response.status, 422);
+  assert.match(limit.body.message, /maximum of two automatic revision attempts/i);
+
+  const restored = await action("restore_original", 4);
+  assert.equal(restored.response.status, 200);
+  assert.equal(restored.body.listingReviewVersion, 5);
+  const restoredReview = restored.body.listingReview.reviews[1];
+  assert.equal(restoredReview.status, "original_restored");
+  assert.equal(restoredReview.automaticRevisionAttempts, 2);
+  assert.equal(restoredReview.revisionHistory.length, 4);
+});
+
 test("server accepts the separate fictional Brooklyn handoff without changing audience", async (t) => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "sellerspark-server-"));
   const store = await new ReviewStore({ filePath: path.join(directory, "reviews.json") }).init();

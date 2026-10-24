@@ -20,7 +20,7 @@ test("Supabase Auth rejects missing or malformed bearer tokens without a request
   assert.equal(calls, 0);
 });
 
-test("Supabase Auth validates the bearer token server-side and returns only the verified owner ID", async () => {
+test("Supabase Auth validates the bearer token server-side and returns the verified owner ID and token", async () => {
   const calls = [];
   const verifier = new SupabaseAuthVerifier({
     url: "https://sellerspark-development.supabase.co/",
@@ -31,7 +31,7 @@ test("Supabase Auth validates the bearer token server-side and returns only the 
     }
   });
   const result = await verifier.verify({ headers: { authorization: "Bearer mock-access-token" } });
-  assert.deepEqual(result, { userId });
+  assert.deepEqual(result, { userId, accessToken: "mock-access-token" });
   assert.equal(calls[0].url, "https://sellerspark-development.supabase.co/auth/v1/user");
   assert.equal(calls[0].options.headers.Authorization, "Bearer mock-access-token");
 });

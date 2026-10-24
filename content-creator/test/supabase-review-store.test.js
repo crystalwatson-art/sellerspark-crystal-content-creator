@@ -122,5 +122,5 @@ test("prepared migration enables forced RLS, owner policies, and no anon grants"
   assert.match(sql, /auth\.uid\(\)\s+is not null/i);
   assert.match(sql, /auth\.uid\(\)\s*=\s*owner_id/i);
   assert.match(sql, /revoke all on table public\.sellerspark_listing_reviews from anon/i);
-  assert.doesNotMatch(sql, /supabase_service_role|SUPABASE_SECRET_KEY|eyJ[A-Za-z0-9_-]+/);
+  assert.doesNotMatch(sql, /service_role|SUPABASE_SECRET_KEY|eyJ[A-Za-z0-9_-]+/i);
 });

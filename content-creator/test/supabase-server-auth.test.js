@@ -6,7 +6,7 @@ import test from "node:test";
 import { ReviewStore } from "../src/review-store.js";
 import { SupabaseAuthVerifier } from "../src/supabase-auth.js";
 import { SupabaseReviewStore } from "../src/supabase-review-store.js";
-import { createServer } from "../src/server.js";
+import { createConfiguredRequestHandler, createServer } from "../src/server.js";
 import fictionalLicBrief from "../fixtures/fictional-research-brief.json" with { type: "json" };
 
 const ownerA = "11111111-1111-4111-8111-111111111111";
@@ -82,6 +82,34 @@ test("auth configuration exposes only the browser-safe Supabase values", async (
     url: "https://sellerspark-development.supabase.co",
     anonKey: "mock-public-anon-key"
   });
+});
+
+test("configured Supabase mode requires only the public key and never a service key", async () => {
+  const names = [
+    "CONTENT_CREATOR_PROVIDER",
+    "SELLERSPARK_REVIEW_STORAGE",
+    "SELLERSPARK_SUPABASE_URL",
+    "SELLERSPARK_SUPABASE_ANON_KEY",
+    "SELLERSPARK_SUPABASE_SECRET_KEY",
+    "SELLERSPARK_DATA_DIR"
+  ];
+  const previous = Object.fromEntries(names.map((name) => [name, process.env[name]]));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "sellerspark-configured-auth-"));
+  try {
+    process.env.CONTENT_CREATOR_PROVIDER = "template";
+    process.env.SELLERSPARK_REVIEW_STORAGE = "supabase";
+    process.env.SELLERSPARK_SUPABASE_URL = "https://sellerspark-development.supabase.co";
+    process.env.SELLERSPARK_SUPABASE_ANON_KEY = "mock-public-anon-key";
+    delete process.env.SELLERSPARK_SUPABASE_SECRET_KEY;
+    process.env.SELLERSPARK_DATA_DIR = directory;
+    const handler = await createConfiguredRequestHandler();
+    assert.equal(typeof handler, "function");
+  } finally {
+    for (const name of names) {
+      if (previous[name] === undefined) delete process.env[name];
+      else process.env[name] = previous[name];
+    }
+  }
 });
 
 test("fictional demo remains available without an account and never uses persistent storage", async (t) => {

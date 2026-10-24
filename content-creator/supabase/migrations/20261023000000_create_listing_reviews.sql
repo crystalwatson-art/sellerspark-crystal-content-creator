@@ -23,7 +23,6 @@ alter table public.sellerspark_listing_reviews force row level security;
 revoke all on table public.sellerspark_listing_reviews from anon;
 revoke all on table public.sellerspark_listing_reviews from authenticated;
 grant select, insert, update on table public.sellerspark_listing_reviews to authenticated;
-grant select, insert, update on table public.sellerspark_listing_reviews to service_role;
 
 create policy "SellerSpark owners can read their reviews"
   on public.sellerspark_listing_reviews
