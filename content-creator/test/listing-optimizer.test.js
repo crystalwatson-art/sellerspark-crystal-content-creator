@@ -242,3 +242,18 @@ test("blocked content cannot create a reviewable optimizer queue", () => {
   assert.equal(review.humanApprovalRequired, true);
   assert.equal(review.publicationDisabled, true);
 });
+
+test("fictional optimizer proposals preserve three distinct creative angles", () => {
+  for (const brief of [fictionalLicBrief, fictionalBrooklynBrief]) {
+    const result = createContentDraft(brief);
+    const review = adaptContentResultToListingReview(result);
+    const proposed = review.reviews.map((entry) => entry.proposed);
+    assert.equal(proposed.length, 3);
+    assert.equal(new Set(proposed.map((item) => item.hook)).size, 3);
+    assert.equal(new Set(proposed.map((item) => item.script)).size, 3);
+    assert.match(proposed[0].script, /timing/i);
+    assert.match(proposed[1].script, /checklist/i);
+    assert.match(proposed[2].script, /conversation/i);
+    assert.ok(proposed.every((item) => item.hook.includes(brief.audience === "lic_condo_owner" ? "Long Island City condo" : "Brooklyn townhouse")));
+  }
+});
