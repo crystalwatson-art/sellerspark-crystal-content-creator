@@ -10,6 +10,15 @@ function now() {
   return new Date().toISOString();
 }
 
+function requireAccessToken(accessToken) {
+  if (typeof accessToken !== "string" || !accessToken.trim()) {
+    const error = new Error("A verified user session is required for review storage.");
+    error.code = "authorization_required";
+    throw error;
+  }
+  return accessToken;
+}
+
 function requireActorId(actorId) {
   if (typeof actorId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(actorId)) {
     const error = new Error("A trusted authenticated actor is required for review storage.");
@@ -63,16 +72,16 @@ function storageError(response) {
 }
 
 export class SupabaseReviewStore {
-  constructor({ url, secretKey, fetchImpl = globalThis.fetch } = {}) {
+  constructor({ url, anonKey, fetchImpl = globalThis.fetch } = {}) {
     if (typeof url !== "string" || !/^https:\/\/[^/]+/.test(url)) {
       throw new Error("SupabaseReviewStore requires a server-only HTTPS URL.");
     }
-    if (typeof secretKey !== "string" || !secretKey.trim()) {
-      throw new Error("SupabaseReviewStore requires a server-only secret key.");
+    if (typeof anonKey !== "string" || !anonKey.trim()) {
+      throw new Error("SupabaseReviewStore requires a Supabase public API key.");
     }
     if (typeof fetchImpl !== "function") throw new Error("SupabaseReviewStore requires fetch.");
     this.endpoint = url.replace(/\/+$/, "") + "/rest/v1/" + SUPABASE_REVIEW_TABLE;
-    this.secretKey = secretKey;
+    this.anonKey = anonKey;
     this.fetchImpl = fetchImpl;
     this.initialized = false;
   }
@@ -86,10 +95,10 @@ export class SupabaseReviewStore {
     return { persistent: this.initialized, backend: "supabase", table: SUPABASE_REVIEW_TABLE };
   }
 
-  headers(extra = {}) {
+  headers(accessToken, extra = {}) {
     return {
-      apikey: this.secretKey,
-      Authorization: "Bearer " + this.secretKey,
+      apikey: this.anonKey,
+      Authorization: "Bearer " + requireAccessToken(accessToken),
       "Content-Type": "application/json",
       ...extra
     };
@@ -105,9 +114,10 @@ export class SupabaseReviewStore {
     return response.status === 204 ? [] : response.json();
   }
 
-  async create({ brief, researchVerification, listingReview, actorId }) {
+  async create({ brief, researchVerification, listingReview, actorId, actorToken }) {
     this.assertReady();
     const ownerId = requireActorId(actorId);
+    requireAccessToken(actorToken);
     const timestamp = now();
     const record = {
       id: "review-" + randomUUID(),
@@ -120,29 +130,30 @@ export class SupabaseReviewStore {
     };
     const rows = await this.request(this.endpoint, {
       method: "POST",
-      headers: this.headers({ Prefer: "return=representation" }),
+      headers: this.headers(actorToken, { Prefer: "return=representation" }),
       body: JSON.stringify(recordToRow(record, ownerId))
     });
     return rowToRecord(rows[0]);
   }
 
-  async get(id, { actorId } = {}) {
+  async get(id, { actorId, actorToken } = {}) {
     this.assertReady();
     const ownerId = requireActorId(actorId);
+    requireAccessToken(actorToken);
     const reviewId = requireReviewId(id);
     const url = new URL(this.endpoint);
     url.searchParams.set("select", "*");
     url.searchParams.set("id", "eq." + reviewId);
     url.searchParams.set("owner_id", "eq." + ownerId);
-    const rows = await this.request(url, { headers: this.headers() });
+    const rows = await this.request(url, { headers: this.headers(actorToken) });
     return rows[0] ? rowToRecord(rows[0]) : null;
   }
 
-  async update(id, expectedVersion, updater, { actorId } = {}) {
+  async update(id, expectedVersion, updater, { actorId, actorToken } = {}) {
     this.assertReady();
     const ownerId = requireActorId(actorId);
     const reviewId = requireReviewId(id);
-    const current = await this.get(reviewId, { actorId: ownerId });
+    const current = await this.get(reviewId, { actorId: ownerId, actorToken });
     if (!current) {
       const error = new Error("review record not found");
       error.code = "not_found";
@@ -177,7 +188,7 @@ export class SupabaseReviewStore {
     if (!rows[0]) {
       const error = new Error("review record is out of date");
       error.code = "conflict";
-      error.current = await this.get(reviewId, { actorId: ownerId });
+      error.current = await this.get(reviewId, { actorId: ownerId, actorToken });
       throw error;
     }
     return rowToRecord(rows[0]);
