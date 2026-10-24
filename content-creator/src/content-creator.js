@@ -12,8 +12,8 @@ const CREATIVE_ANGLES = Object.freeze([
   {
     angle: "Seller education",
     hook: "Selling your {property} someday? Start with the question you want answered.",
-    script: "If selling your {property} is on your mind, start with the question you want answered: {question} Write one sentence about why that answer matters to you, then bring it to a conversation. That turns a broad concern into one useful thing to discuss.",
-    takeaway: "Writing the exact question — {question} — and why its answer matters can make a broad seller concern easier to discuss.",
+    script: "Thinking of selling your {property}, but not sure when to start? You don't have to make a decision today. Start by figuring out what you need to know about timing. Here's the planning prompt: {question} Write down your answer, then use it to guide a conversation with a real estate professional.",
+    takeaway: "A useful first step is to explore your timing with the prompt: {question} You can ask for information without committing to sell.",
     caption: "The first step can be a question, not a commitment. Follow for more practical NYC seller guidance.",
     suggestedNextStep: "Contact Shalinthia with this question when you are ready for a respectful seller conversation about your home.",
     videoConcept: "Direct-to-camera explainer for {property} owners that turns one supplied question into a focused first conversation.",
@@ -26,7 +26,7 @@ const CREATIVE_ANGLES = Object.freeze([
   {
     angle: "Common seller mistakes",
     hook: "Before a seller conversation about your {property}, avoid this prep mistake.",
-    script: "A practical seller mistake for {property} owners is bringing a broad goal but no details to discuss. Use this question as a checklist prompt: {question} Note the one building, unit, or home detail you want explained, so the conversation has a clear starting point.",
+    script: "Here's a common seller mistake: starting a conversation about your {property} without the property details that matter. Make a short checklist of what you know and what needs explaining. Start with this planning prompt: {question} Bring that list to your first conversation so you can get more useful answers.",
     takeaway: "Pair the supplied seller question — {question} — with one property detail you want explained before the conversation.",
     caption: "A question becomes more useful when you pair it with one detail you want explained. Follow for more NYC seller prompts.",
     suggestedNextStep: "Contact Shalinthia with the question you wrote down if you want help sorting out what to ask next.",
@@ -40,8 +40,8 @@ const CREATIVE_ANGLES = Object.freeze([
   {
     angle: "Decision-making questions",
     hook: "Not sure what to do next with your {property}? Ask this before you decide.",
-    script: "Before deciding whether to move forward with a seller conversation about your {property}, ask this question: {question} Then make two notes: what you know and what you still need to learn. Your next step can answer the open question, not promise to list.",
-    takeaway: "One open question — {question} — can help you choose an informed next conversation without promising to list.",
+    script: "Not ready to decide what to do with your {property}? That's okay. Before your first conversation, consider this: {question} Make two columns: what you already know and what you still need to learn. Then choose one low-pressure next step that gets you information, not a commitment to list.",
+    takeaway: "Separate what you already know from what you need to learn. Use this planning prompt: {question} Your next step can simply be a conversation.",
     caption: "You can gather information before making a decision. Follow for more calm questions for NYC homeowners.",
     suggestedNextStep: "Contact Shalinthia when you are ready to talk through this question and decide what information you still need.",
     videoConcept: "Question-led planning prompt for {property} owners that separates what they know from what they still want to learn.",
