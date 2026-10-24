@@ -57,10 +57,10 @@ test("scripts stay viewer-facing and use distinct creative language", () => {
 
   assert.equal(new Set(scripts).size, 3);
   assert.ok(scripts.every((script) => !/use the supplied brief as context/i.test(script)));
-  assert.ok(scripts.every((script) => /question|write it down|note what/i.test(script)));
+  assert.ok(scripts.every((script) => /timing|checklist|two columns|question|planning prompt/i.test(script)));
   assert.ok(result.drafts.every((draft) => /contact Shalinthia/i.test(draft.suggestedNextStep)));
   assert.ok(result.drafts.some((draft) => /Seller education/i.test(draft.angle)));
-  assert.ok(result.drafts.some((draft) => /seller mistake/i.test(draft.script)));
+  assert.ok(result.drafts.some((draft) => /common seller mistake/i.test(draft.script)));
   assert.ok(result.drafts.some((draft) => /first conversation/i.test(draft.script)));
   assert.ok(result.drafts.every((draft) => draft.takeaway.length > 35));
   assert.ok(result.drafts.every((draft) =>
