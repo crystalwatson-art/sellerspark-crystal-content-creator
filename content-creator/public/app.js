@@ -677,8 +677,56 @@ function applyReviewServerState(payload) {
   persistWorkspace();
 }
 
+function applyFictionalReviewAction(action, draftId, note) {
+  // The fictional demo is intentionally browser-local: Vercel's /tmp is not a durable review store.
+  const state = clone(currentListingReview);
+  const review = state?.reviews?.find((item) => item.draftId === draftId);
+  if (!review) return { ok: false, message: "That draft is no longer available." };
+  const record = (event, message) => review.revisionHistory.push({
+    action: event, note: message, at: new Date().toISOString()
+  });
+  if (action === "accept") {
+    if (!review.proposed) return { ok: false, message: "No proposed revision is available." };
+    review.working = clone(review.proposed);
+    review.status = "accepted";
+    record("accepted", "Human reviewer accepted the proposed revision for the next approval step.");
+  } else if (action === "reject") {
+    review.working = clone(review.original);
+    review.status = "rejected";
+    record("rejected", note);
+  } else if (action === "restore_original") {
+    review.working = clone(review.original);
+    review.status = "original_restored";
+    record("original_restored", "Human reviewer restored the original draft.");
+  } else if (action === "request_revision") {
+    if (review.automaticRevisionAttempts >= 2) {
+      return { ok: false, message: "The maximum of two automatic revision attempts has been reached." };
+    }
+    const nextAttempt = review.automaticRevisionAttempts + 1;
+    const candidate = review.revisionCandidates?.[nextAttempt];
+    if (!candidate?.draft || candidate.status === "unavailable") {
+      return { ok: false, message: "A safe revision was not available. The original draft was kept." };
+    }
+    review.automaticRevisionAttempts = nextAttempt;
+    review.proposed = clone(candidate.draft);
+    review.proposedSource = candidate.source;
+    review.revisionStatus = candidate.status;
+    review.revisionUnavailableReason = candidate.reason || null;
+    review.changes = clone(candidate.changes || []);
+    review.status = "revision_requested";
+    review.suggestedImprovements.push({
+      field: "review", recommendation: note,
+      reason: "A human reviewer supplied this request; the candidate still requires approval."
+    });
+    record("revision_requested", note);
+  } else {
+    return { ok: false, message: "That review action is not supported." };
+  }
+  return { ok: true, listingReview: state };
+}
+
 async function refreshReviewFromServer() {
-  if (!currentReviewId) return;
+  if (!currentReviewId || currentPersistenceStatus === "fictional_demo_store") return;
   try {
     const response = await reviewFetch("/api/reviews/" + encodeURIComponent(currentReviewId), { cache: "no-store" });
     if (!response.ok) return;
@@ -699,6 +747,17 @@ async function runReviewAction(action, note = "Human reviewer requested this act
   reviewActionInFlight = true;
   renderOptimizerReview();
   try {
+    if (currentPersistenceStatus === "fictional_demo_store") {
+      const outcome = applyFictionalReviewAction(action, review.draftId, note);
+      if (!outcome.ok) {
+        setDemoError(outcome.message);
+        return;
+      }
+      setDemoError();
+      applyReviewServerState({ listingReview: outcome.listingReview, listingReviewVersion: currentReviewVersion + 1, persistenceStatus: "fictional_demo_store" });
+      renderModal();
+      return;
+    }
     const response = await reviewFetch("/api/reviews/" + encodeURIComponent(currentReviewId) + "/actions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
