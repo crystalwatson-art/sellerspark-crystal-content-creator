@@ -51,7 +51,7 @@ export class SupabaseAuthVerifier {
     if (!user || typeof user.id !== "string" || !UUID_PATTERN.test(user.id)) {
       throw authError("authorization_failed", "Authentication was not accepted.");
     }
-    return { userId: user.id };
+    return { userId: user.id, accessToken: token };
   }
 }
 
