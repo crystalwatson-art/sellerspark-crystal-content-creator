@@ -62,7 +62,12 @@
           </div>
           <div class="workspace-stat">
             <span class="stat-label">Audience</span>
-            <strong id="audience-value">Awaiting brief</strong>
+            <label class="sr-only" for="audience-value">Choose research audience</label>
+            <select id="audience-value" class="audience-select" aria-describedby="audience-selection-help">
+              <option value="lic_condo_owner">Long Island City condo owners</option>
+              <option value="brooklyn_townhouse_owner">Brooklyn townhouse owners</option>
+            </select>
+            <span id="audience-selection-help" class="sr-only">The selected fictional research fixture will be used when you run the test.</span>
           </div>
           <div class="workspace-stat">
             <span class="stat-label">Draft status</span>

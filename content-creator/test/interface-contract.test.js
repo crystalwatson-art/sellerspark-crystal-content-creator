@@ -124,5 +124,5 @@ test("client wiring includes reset, theme, popup navigation, and contained close
 test("mobile audience status remains fully readable at the compact breakpoint", async () => {
   const styles = await readFile(stylesPath, "utf8");
 
-  assert.match(styles, /\.workspace-stat:nth-child\(2\) strong \{ white-space: normal; line-height: 1\.25; \}/);
+  assert.match(styles, /\.workspace-stat:nth-child\(2\) \.audience-select \{ font-size: 0\.72rem; \}/);
 });

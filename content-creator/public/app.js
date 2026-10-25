@@ -93,6 +93,11 @@ const authClient = new BrowserSupabaseAuth();
 const WORKSPACE_STORAGE_KEY = "sellerspark-listing-review-workspace-v1";
 const REVIEW_ARCHIVE_STORAGE_KEY = "sellerspark-listing-review-archive-v1";
 const GROWTH_PILOT_STORAGE_KEY = "sellerspark-growth-pilot-v1";
+const DEFAULT_RESEARCH_AUDIENCE = "lic_condo_owner";
+const RESEARCH_FIXTURES = Object.freeze({
+  lic_condo_owner: "/fixtures/fictional-research-brief.json",
+  brooklyn_townhouse_owner: "/fixtures/fictional-brooklyn-townhouse-brief.json"
+});
 const REVIEWABLE_FIELDS = Object.freeze([
   ["hook", "Hook"],
   ["script", "Script"],
@@ -471,7 +476,7 @@ function persistWorkspace() {
       listingReviewId: currentReviewId,
       listingReviewVersion: currentReviewVersion,
       persistenceStatus: currentPersistenceStatus,
-      audience: audienceValue.textContent,
+      audience: audienceValue.value,
       audiencePill: audiencePill.textContent,
       summary: summary.textContent,
       status: statusValue.textContent,
@@ -513,8 +518,8 @@ function restoreWorkspace() {
     currentReviewId = saved.listingReviewId || null;
     currentReviewVersion = Number.isInteger(saved.listingReviewVersion) ? saved.listingReviewVersion : null;
     currentPersistenceStatus = saved.persistenceStatus || "fictional_demo_store";
+    if (Object.hasOwn(RESEARCH_FIXTURES, saved.audience)) audienceValue.value = saved.audience;
     emptyState.hidden = currentDrafts.length > 0;
-    audienceValue.textContent = saved.audience || currentListingReview.audienceLabel || "Audience needs review";
     audiencePill.textContent = saved.audiencePill || currentListingReview.audienceLabel || "Audience needs review";
     summary.textContent = (saved.summary || "Saved review restored.") + " Saved locally for this browser.";
     setStatus(saved.status || "Ready for review", "success");
@@ -610,7 +615,7 @@ function renderResult(result) {
     : "The Content Creator stopped with information to resolve before review. Writer: " + writerLabel + ".";
   setStatus(result.status, result.status === "ready_for_review" ? "success" : "warning");
   renderWriterDiagnostic(result);
-  audienceValue.textContent = result.audienceLabel || "Audience needs review";
+  if (Object.hasOwn(RESEARCH_FIXTURES, result.audience)) audienceValue.value = result.audience;
   audiencePill.textContent = result.audienceLabel || "Audience needs review";
   if (result.growthPilot?.tracker) {
     renderGrowthPilot({
@@ -816,6 +821,7 @@ function resetWorkspace() {
   activeRequestController?.abort();
   activeRequestController = null;
   runTestButton.disabled = false;
+  audienceValue.disabled = false;
   archiveWorkspace();
   localStorage.removeItem(WORKSPACE_STORAGE_KEY);
   closeDraft();
@@ -827,13 +833,36 @@ function resetWorkspace() {
   currentPersistenceStatus = "fictional_demo_store";
   drafts.replaceChildren();
   emptyState.hidden = false;
-  audienceValue.textContent = "Awaiting brief";
+  audienceValue.value = DEFAULT_RESEARCH_AUDIENCE;
   audiencePill.textContent = "Audience pending";
   summary.textContent = "Active review reset. Saved review history remains on this browser.";
   setStatus("Ready to test", "muted");
   resultDiagnostic.hidden = true;
   setDemoError();
   resetConfirmation.hidden = true;
+}
+
+function clearAudienceWorkspace() {
+  requestSequence += 1;
+  activeRequestController?.abort();
+  activeRequestController = null;
+  runTestButton.disabled = false;
+  audienceValue.disabled = false;
+  closeDraft();
+  localStorage.removeItem(WORKSPACE_STORAGE_KEY);
+  currentDrafts = [];
+  currentEditorialQuality = null;
+  currentListingReview = null;
+  currentReviewId = null;
+  currentReviewVersion = null;
+  currentPersistenceStatus = "fictional_demo_store";
+  drafts.replaceChildren();
+  emptyState.hidden = false;
+  audiencePill.textContent = "Audience pending";
+  summary.textContent = "Audience changed. Run fictional test mode to create a new review-only queue.";
+  setStatus("Ready to test", "muted");
+  resultDiagnostic.hidden = true;
+  setDemoError();
 }
 
 function applyReviewServerState(payload) {
@@ -964,9 +993,11 @@ async function runFictionalTest() {
   setStatus("Creating drafts…", "muted");
   summary.textContent = "Running the fictional Content Creator test.";
   runTestButton.disabled = true;
+  audienceValue.disabled = true;
 
   try {
-    const briefResponse = await fetch("/fixtures/fictional-research-brief.json", { signal: activeRequestController.signal });
+    const fixturePath = RESEARCH_FIXTURES[audienceValue.value] || RESEARCH_FIXTURES[DEFAULT_RESEARCH_AUDIENCE];
+    const briefResponse = await fetch(fixturePath, { signal: activeRequestController.signal });
     if (!briefResponse.ok) throw new Error("fictional fixture unavailable");
     const brief = await briefResponse.json();
     brief.campaignAudienceMode = campaignAudienceMode.value;
@@ -989,6 +1020,7 @@ async function runFictionalTest() {
     if (requestId === requestSequence) {
       activeRequestController = null;
       runTestButton.disabled = false;
+      audienceValue.disabled = false;
     }
   }
 }
@@ -1004,6 +1036,10 @@ resetCancel.addEventListener("click", () => {
 resetConfirm.addEventListener("click", resetWorkspace);
 updateGrowthPilot.addEventListener("click", () => renderGrowthPilot());
 campaignAudienceMode.addEventListener("change", () => renderGrowthPilot());
+audienceValue.addEventListener("change", () => {
+  clearAudienceWorkspace();
+  renderGrowthPilot();
+});
 startingFollowers.addEventListener("change", () => renderGrowthPilot());
 currentFollowers.addEventListener("change", () => renderGrowthPilot());
 authForm.addEventListener("submit", async (event) => {
