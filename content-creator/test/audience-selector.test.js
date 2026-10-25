@@ -13,7 +13,7 @@ test("research audience selector offers exactly the two approved audiences", asy
   assert.equal((selector.match(/<option\b/g) || []).length, 2);
 });
 
-test("fictional audience selection maps to the matching research fixture and clears active review state", async () => {
+test("fictional audience selection maps to the matching fixture and restores saved workspaces", async () => {
   const app = await readFile(appPath, "utf8");
   assert.match(app, /lic_condo_owner:\s*"\/fixtures\/fictional-research-brief\.json"/);
   assert.match(app, /brooklyn_townhouse_owner:\s*"\/fixtures\/fictional-brooklyn-townhouse-brief\.json"/);
@@ -21,6 +21,11 @@ test("fictional audience selection maps to the matching research fixture and cle
   assert.match(app, /audienceValue\.disabled = true/);
   assert.match(app, /audienceValue\.disabled = false/);
   assert.match(app, /audienceValue\.addEventListener\("change", \(\) =>/);
-  assert.match(app, /localStorage\.removeItem\(WORKSPACE_STORAGE_KEY\)/);
+  assert.match(app, /const WORKSPACE_STORAGE_KEY = "sellerspark-listing-review-workspaces-v2"/);
+  assert.match(app, /const LEGACY_WORKSPACE_STORAGE_KEY = "sellerspark-listing-review-workspace-v1"/);
+  assert.match(app, /map\[currentWorkspaceAudience\] = workspaceSnapshot\(\)/);
+  assert.match(app, /const saved = readWorkspaceMap\(\)\[currentWorkspaceAudience\]/);
+  assert.match(app, /persistWorkspace\(\);\s+const nextAudience/);
+  assert.doesNotMatch(app, /localStorage\.removeItem\(WORKSPACE_STORAGE_KEY\)/);
   assert.match(app, /currentListingReview = null/);
 });

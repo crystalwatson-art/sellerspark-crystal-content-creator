@@ -90,14 +90,22 @@ let requestSequence = 0;
 let reviewActionInFlight = false;
 const authClient = new BrowserSupabaseAuth();
 
-const WORKSPACE_STORAGE_KEY = "sellerspark-listing-review-workspace-v1";
+const WORKSPACE_STORAGE_KEY = "sellerspark-listing-review-workspaces-v2";
+const LEGACY_WORKSPACE_STORAGE_KEY = "sellerspark-listing-review-workspace-v1";
 const REVIEW_ARCHIVE_STORAGE_KEY = "sellerspark-listing-review-archive-v1";
-const GROWTH_PILOT_STORAGE_KEY = "sellerspark-growth-pilot-v1";
+const GROWTH_PILOT_STORAGE_KEY = "sellerspark-growth-pilot-by-audience-v2";
+const LEGACY_GROWTH_PILOT_STORAGE_KEY = "sellerspark-growth-pilot-v1";
+const AUDIENCE_SELECTION_STORAGE_KEY = "sellerspark-selected-research-audience-v1";
 const DEFAULT_RESEARCH_AUDIENCE = "lic_condo_owner";
 const RESEARCH_FIXTURES = Object.freeze({
   lic_condo_owner: "/fixtures/fictional-research-brief.json",
   brooklyn_townhouse_owner: "/fixtures/fictional-brooklyn-townhouse-brief.json"
 });
+const RESEARCH_AUDIENCE_LABELS = Object.freeze({
+  lic_condo_owner: "Long Island City condo owners",
+  brooklyn_townhouse_owner: "Brooklyn townhouse owners"
+});
+let currentWorkspaceAudience = DEFAULT_RESEARCH_AUDIENCE;
 const REVIEWABLE_FIELDS = Object.freeze([
   ["hook", "Hook"],
   ["script", "Script"],
@@ -218,6 +226,7 @@ async function initializeAuth() {
       authClient.configure({ url: config.url, anonKey: config.anonKey });
       const session = await authClient.getSession();
       renderAuthState(session);
+      if (session && currentReviewId && currentPersistenceStatus === "supabase") void refreshReviewFromServer();
       void refreshTikTokStatus();
     } else {
       authClient.configure({ url: "", anonKey: "" });
@@ -399,16 +408,51 @@ function renderGrowthCalendar(calendar) {
   });
 }
 
-function persistGrowthPilot() {
+function isSupportedAudience(value) {
+  return Object.hasOwn(RESEARCH_FIXTURES, value);
+}
+
+function resolveAudience(value, listingReview = null) {
+  if (isSupportedAudience(value)) return value;
+  if (listingReview && isSupportedAudience(listingReview.audience)) return listingReview.audience;
+  return Object.entries(RESEARCH_AUDIENCE_LABELS).find(([, label]) => label === value)?.[0] || null;
+}
+
+function readStorageObject(key, fallback) {
   try {
-    localStorage.setItem(GROWTH_PILOT_STORAGE_KEY, JSON.stringify({
-      audienceMode: campaignAudienceMode.value,
-      startingFollowers: startingFollowers.value,
-      currentFollowers: currentFollowers.value
-    }));
+    const value = JSON.parse(localStorage.getItem(key) || "null");
+    return value && typeof value === "object" ? value : fallback;
   } catch {
-    // Campaign planning remains usable when browser storage is unavailable.
+    return fallback;
   }
+}
+
+function writeStorageObject(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Browser storage is a convenience; the current review remains usable in memory.
+  }
+}
+
+function readGrowthPilotMap() {
+  const saved = readStorageObject(GROWTH_PILOT_STORAGE_KEY, {});
+  if (Object.keys(saved).some((key) => isSupportedAudience(key))) return saved;
+  const legacy = readStorageObject(LEGACY_GROWTH_PILOT_STORAGE_KEY, null);
+  if (legacy && typeof legacy === "object") {
+    return { [DEFAULT_RESEARCH_AUDIENCE]: legacy };
+  }
+  return {};
+}
+
+function persistGrowthPilot() {
+  const map = readGrowthPilotMap();
+  map[currentWorkspaceAudience] = {
+    audienceMode: campaignAudienceMode.value,
+    startingFollowers: startingFollowers.value,
+    currentFollowers: currentFollowers.value
+  };
+  writeStorageObject(GROWTH_PILOT_STORAGE_KEY, map);
 }
 
 function renderGrowthPilot(values = {}) {
@@ -437,12 +481,8 @@ function renderGrowthPilot(values = {}) {
 }
 
 function restoreGrowthPilot() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(GROWTH_PILOT_STORAGE_KEY) || "null");
-    renderGrowthPilot(saved || {});
-  } catch {
-    renderGrowthPilot({});
-  }
+  const saved = readGrowthPilotMap()[currentWorkspaceAudience] || {};
+  renderGrowthPilot(saved);
 }
 
 function clone(value) {
@@ -466,25 +506,70 @@ function renderComparison(parent, content) {
   REVIEWABLE_FIELDS.forEach(([field, label]) => addText(parent, label, displayValue(content[field])));
 }
 
-function persistWorkspace() {
-  if (currentPersistenceStatus === "supabase" || !currentDrafts.length || !currentListingReview) return;
-  try {
-    localStorage.setItem(WORKSPACE_STORAGE_KEY, JSON.stringify({
+function workspaceSnapshot() {
+  return {
       drafts: clone(currentDrafts),
       editorialQuality: clone(currentEditorialQuality),
       listingReview: clone(currentListingReview),
       listingReviewId: currentReviewId,
       listingReviewVersion: currentReviewVersion,
       persistenceStatus: currentPersistenceStatus,
-      audience: audienceValue.value,
+      audience: currentWorkspaceAudience,
       audiencePill: audiencePill.textContent,
       summary: summary.textContent,
       status: statusValue.textContent,
       savedAt: new Date().toISOString()
-    }));
-  } catch {
-    // Persistence is a convenience; review controls remain usable in memory.
+  };
+}
+
+function readWorkspaceMap() {
+  const saved = readStorageObject(WORKSPACE_STORAGE_KEY, {});
+  if (Object.keys(saved).some((key) => isSupportedAudience(key))) return saved;
+  const legacy = readStorageObject(LEGACY_WORKSPACE_STORAGE_KEY, null);
+  const audience = resolveAudience(legacy?.audience, legacy?.listingReview);
+  return legacy && audience ? { [audience]: legacy } : {};
+}
+
+function writeWorkspaceMap(map) {
+  writeStorageObject(WORKSPACE_STORAGE_KEY, map);
+}
+
+function persistWorkspace() {
+  if (!currentDrafts.length || !currentListingReview) return;
+  const map = readWorkspaceMap();
+  map[currentWorkspaceAudience] = workspaceSnapshot();
+  writeWorkspaceMap(map);
+}
+
+function restoreWorkspaceSnapshot(saved) {
+  if (!saved || !Array.isArray(saved.drafts) || !saved.listingReview) {
+    currentDrafts = [];
+    currentEditorialQuality = null;
+    currentListingReview = null;
+    currentReviewId = null;
+    currentReviewVersion = null;
+    currentPersistenceStatus = "fictional_demo_store";
+    drafts.replaceChildren();
+    emptyState.hidden = false;
+    audiencePill.textContent = "Audience pending";
+    summary.textContent = "Run fictional test mode to create a review-only queue.";
+    setStatus("Ready to test", "muted");
+    resultDiagnostic.hidden = true;
+    setDemoError();
+    return false;
   }
+  currentDrafts = clone(saved.drafts);
+  currentEditorialQuality = clone(saved.editorialQuality) || null;
+  currentListingReview = clone(saved.listingReview);
+  currentReviewId = saved.listingReviewId || null;
+  currentReviewVersion = Number.isInteger(saved.listingReviewVersion) ? saved.listingReviewVersion : null;
+  currentPersistenceStatus = saved.persistenceStatus || "fictional_demo_store";
+  audiencePill.textContent = saved.audiencePill || currentListingReview.audienceLabel || "Audience needs review";
+  summary.textContent = saved.summary || "Saved review restored locally for this browser.";
+  setStatus(saved.status || "Ready for review", "success");
+  emptyState.hidden = currentDrafts.length > 0;
+  renderDraftCards();
+  return true;
 }
 
 function archiveWorkspace() {
@@ -505,29 +590,9 @@ function archiveWorkspace() {
 }
 
 function restoreWorkspace() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(WORKSPACE_STORAGE_KEY) || "null");
-    if (!saved || !Array.isArray(saved.drafts) || !saved.listingReview) return;
-    if (saved.persistenceStatus === "supabase") {
-      localStorage.removeItem(WORKSPACE_STORAGE_KEY);
-      return;
-    }
-    currentDrafts = saved.drafts;
-    currentEditorialQuality = saved.editorialQuality || null;
-    currentListingReview = saved.listingReview;
-    currentReviewId = saved.listingReviewId || null;
-    currentReviewVersion = Number.isInteger(saved.listingReviewVersion) ? saved.listingReviewVersion : null;
-    currentPersistenceStatus = saved.persistenceStatus || "fictional_demo_store";
-    if (Object.hasOwn(RESEARCH_FIXTURES, saved.audience)) audienceValue.value = saved.audience;
-    emptyState.hidden = currentDrafts.length > 0;
-    audiencePill.textContent = saved.audiencePill || currentListingReview.audienceLabel || "Audience needs review";
-    summary.textContent = (saved.summary || "Saved review restored.") + " Saved locally for this browser.";
-    setStatus(saved.status || "Ready for review", "success");
-    renderDraftCards();
-    if (currentReviewId) void refreshReviewFromServer();
-  } catch {
-    localStorage.removeItem(WORKSPACE_STORAGE_KEY);
-  }
+  const saved = readWorkspaceMap()[currentWorkspaceAudience];
+  if (!restoreWorkspaceSnapshot(saved)) return;
+  if (currentReviewId && currentPersistenceStatus === "supabase" && authClient.session) void refreshReviewFromServer();
 }
 
 function addText(parent, label, value) {
@@ -598,6 +663,11 @@ function renderDraftCards() {
 }
 
 function renderResult(result) {
+  if (isSupportedAudience(result.audience)) {
+    currentWorkspaceAudience = result.audience;
+    audienceValue.value = result.audience;
+    localStorage.setItem(AUDIENCE_SELECTION_STORAGE_KEY, currentWorkspaceAudience);
+  }
   currentDrafts = Array.isArray(result.drafts) ? result.drafts : [];
   currentEditorialQuality = result.editorialQuality || null;
   currentListingReview = result.listingReview
@@ -615,7 +685,6 @@ function renderResult(result) {
     : "The Content Creator stopped with information to resolve before review. Writer: " + writerLabel + ".";
   setStatus(result.status, result.status === "ready_for_review" ? "success" : "warning");
   renderWriterDiagnostic(result);
-  if (Object.hasOwn(RESEARCH_FIXTURES, result.audience)) audienceValue.value = result.audience;
   audiencePill.textContent = result.audienceLabel || "Audience needs review";
   if (result.growthPilot?.tracker) {
     renderGrowthPilot({
@@ -823,7 +892,9 @@ function resetWorkspace() {
   runTestButton.disabled = false;
   audienceValue.disabled = false;
   archiveWorkspace();
-  localStorage.removeItem(WORKSPACE_STORAGE_KEY);
+  const map = readWorkspaceMap();
+  delete map[currentWorkspaceAudience];
+  writeWorkspaceMap(map);
   closeDraft();
   currentDrafts = [];
   currentEditorialQuality = null;
@@ -833,7 +904,10 @@ function resetWorkspace() {
   currentPersistenceStatus = "fictional_demo_store";
   drafts.replaceChildren();
   emptyState.hidden = false;
-  audienceValue.value = DEFAULT_RESEARCH_AUDIENCE;
+  currentWorkspaceAudience = DEFAULT_RESEARCH_AUDIENCE;
+  audienceValue.value = currentWorkspaceAudience;
+  localStorage.setItem(AUDIENCE_SELECTION_STORAGE_KEY, currentWorkspaceAudience);
+  restoreGrowthPilot();
   audiencePill.textContent = "Audience pending";
   summary.textContent = "Active review reset. Saved review history remains on this browser.";
   setStatus("Ready to test", "muted");
@@ -842,14 +916,13 @@ function resetWorkspace() {
   resetConfirmation.hidden = true;
 }
 
-function clearAudienceWorkspace() {
+function clearActiveWorkspace() {
   requestSequence += 1;
   activeRequestController?.abort();
   activeRequestController = null;
   runTestButton.disabled = false;
   audienceValue.disabled = false;
   closeDraft();
-  localStorage.removeItem(WORKSPACE_STORAGE_KEY);
   currentDrafts = [];
   currentEditorialQuality = null;
   currentListingReview = null;
@@ -987,6 +1060,11 @@ async function runReviewAction(action, note = "Human reviewer requested this act
 
 async function runFictionalTest() {
   if (activeRequestController) return;
+  currentWorkspaceAudience = isSupportedAudience(audienceValue.value)
+    ? audienceValue.value
+    : DEFAULT_RESEARCH_AUDIENCE;
+  audienceValue.value = currentWorkspaceAudience;
+  localStorage.setItem(AUDIENCE_SELECTION_STORAGE_KEY, currentWorkspaceAudience);
   const requestId = ++requestSequence;
   activeRequestController = new AbortController();
   setDemoError();
@@ -1037,8 +1115,17 @@ resetConfirm.addEventListener("click", resetWorkspace);
 updateGrowthPilot.addEventListener("click", () => renderGrowthPilot());
 campaignAudienceMode.addEventListener("change", () => renderGrowthPilot());
 audienceValue.addEventListener("change", () => {
-  clearAudienceWorkspace();
-  renderGrowthPilot();
+  // Save the workspace that is being left before changing the active key.
+  persistWorkspace();
+  const nextAudience = isSupportedAudience(audienceValue.value)
+    ? audienceValue.value
+    : DEFAULT_RESEARCH_AUDIENCE;
+  clearActiveWorkspace();
+  currentWorkspaceAudience = nextAudience;
+  audienceValue.value = currentWorkspaceAudience;
+  localStorage.setItem(AUDIENCE_SELECTION_STORAGE_KEY, currentWorkspaceAudience);
+  restoreWorkspace();
+  restoreGrowthPilot();
 });
 startingFollowers.addEventListener("change", () => renderGrowthPilot());
 currentFollowers.addEventListener("change", () => renderGrowthPilot());
@@ -1093,8 +1180,14 @@ document.addEventListener("keydown", (event) => {
 });
 
 initializeTheme();
+const savedAudience = localStorage.getItem(AUDIENCE_SELECTION_STORAGE_KEY);
+currentWorkspaceAudience = isSupportedAudience(savedAudience) ? savedAudience : DEFAULT_RESEARCH_AUDIENCE;
+audienceValue.value = currentWorkspaceAudience;
 restoreGrowthPilot();
 restoreWorkspace();
 authClient.onAuthStateChange((session) => renderAuthState(session));
+authClient.onAuthStateChange((session) => {
+  if (session && currentReviewId && currentPersistenceStatus === "supabase") void refreshReviewFromServer();
+});
 authClient.onAuthStateChange(() => void refreshTikTokStatus());
 void initializeAuth();
