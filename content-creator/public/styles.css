@@ -389,3 +389,88 @@ main { display:grid; grid-template-columns:minmax(0,1.93fr) minmax(280px,.87fr);
  .campaign-calendar {grid-template-columns:repeat(2,minmax(0,1fr));}
  .campaign-controls,.campaign-summary {grid-template-columns:1fr 1fr;}
 }
+
+
+/* Presentation refinement: dashboard-first composition, compact rail and preview gallery */
+@media (min-width: 1181px) {
+  .studio-layout {grid-template-columns:205px minmax(0,1fr)!important;gap:15px!important;}
+  main {grid-template-columns:minmax(0,2.35fr) minmax(290px,.92fr)!important;
+    grid-template-areas:"hero workflow" "status workflow" "drafts campaign"!important;gap:13px!important;}
+  .sidebar {position:sticky!important;top:14px!important;min-height:calc(100vh - 120px)!important;
+    flex-direction:column!important;align-items:stretch!important;}
+  .sidebar-nav {display:grid!important;grid-template-columns:1fr!important;}
+}
+.topbar {min-height:64px;padding-top:9px;padding-bottom:9px;}
+.topbar .auth-panel {box-shadow:none;background:transparent;border:0;padding:0;margin:0;}
+.topbar .auth-status {color:#e5ddff;}
+.hero {min-height:280px;grid-template-columns:minmax(0,1fr)!important;gap:14px;padding:24px 28px;
+ background-position:center center!important;}
+.hero-copy {max-width:92%;}
+.hero h1 {max-width:780px;font-size:clamp(2.3rem,3.25vw,3.6rem)!important;line-height:1.02;}
+.hero .intro {max-width:570px;font-size:.85rem;}
+.hero-actions {justify-items:start!important;align-self:end;}
+.hero .primary-button {max-width:100%;}
+.workflow-section {color:#f9f7ff;background:#0b1531!important;border-color:#29355d!important;}
+.workflow-section .eyebrow {color:#d5adff;}
+.workflow-section h2 {color:#fff;font-family:inherit;font-size:1rem;line-height:1.26;}
+.workflow-section .status-badge {font-size:.6rem;}
+.workflow-node {color:#fff;background:#142143!important;border:1px solid #313c66;}
+.workflow-node small {color:#c5c8df;}
+.workflow-node strong {color:#fff;}
+.workflow-node .workflow-number {background:#6f3ce8;}
+.drafts-section {background:#0b1531!important;color:#fff;border-color:#29355d!important;}
+.drafts-section h2 {font-family:inherit;font-size:1.45rem;color:#fff;}
+.drafts-section .section-summary {color:#c6cee8;}
+.drafts-section .empty-state {padding:13px;border-color:#384367;background:#111d3a;margin-top:14px;}
+.drafts-section .empty-state p,.drafts-section .empty-state span {color:#bfc7df;}
+.drafts-section .draft-card {background:linear-gradient(150deg,#142144,#0b1635);border-color:#38466c;}
+.drafts-section .draft-card p {color:#c7cce0;}
+.drafts-section .draft-card h3 {color:#fff;}
+.drafts-section .draft-card .hook-copy {color:#fff!important;}
+.campaign-section {background:#0b1531!important;color:#fff;border-color:#29355d!important;}
+.campaign-section h2 {font-family:inherit;color:#fff;font-size:1.1rem;}
+.campaign-section .campaign-intro,.campaign-section .campaign-field label {color:#b8bfd9;}
+.campaign-section .campaign-summary>div {background:#142143;border-color:#35436b;}
+.campaign-section .campaign-summary strong {font-family:inherit;color:#fff;}
+.campaign-section .calendar-day {background:#142143;border-color:#35436b;}
+.campaign-section .calendar-day span {color:#c8cce1;}
+.campaign-section .tiktok-connection {background:#132041;border-color:#35436b;box-shadow:none;}
+.campaign-section .tiktok-connection h2 {color:#fff;}
+.campaign-section input,.campaign-section select {background:#1b294e;color:#fff;border-color:#59648f;}
+.campaign-calendar {display:grid;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px;min-width:0;}
+.calendar-day {min-width:0;overflow:hidden;overflow-wrap:anywhere;word-break:normal;min-height:115px;}
+.calendar-day strong {line-height:1.4;overflow-wrap:anywhere;}
+.calendar-day span {line-height:1.4!important;overflow-wrap:anywhere;}
+.concept-gallery {margin-top:15px;}
+.concept-gallery-label {font-size:.6rem;letter-spacing:.15em;font-weight:800;color:#e2b56c;margin-bottom:10px;}
+.concept-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+.concept-card {overflow:hidden;border-radius:12px;background:#14203f;border:1px solid #334066;padding:9px;}
+.concept-card h3 {font-size:.93rem;font-family:inherit;margin:12px 1px 5px;color:#fff;}
+.concept-card p {font-size:.72rem;line-height:1.45;color:#c8cee5;margin-bottom:10px;}
+.concept-card small {color:#d4b0ff;font-size:.62rem;}
+.concept-art {min-height:130px;border-radius:8px;display:flex;align-items:end;padding:10px;background-size:cover;background-position:center;}
+.concept-art span {font-size:.58rem;letter-spacing:.09em;font-weight:800;background:#10152cc9;color:white;padding:5px 8px;border-radius:5px;}
+.concept-art-one {background-image:linear-gradient(0deg,#09102a55,#09102a15),url("https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=640&q=80");}
+.concept-art-two {background-image:linear-gradient(0deg,#09102a55,#09102a15),url("https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=640&q=80");}
+.concept-art-three {background-image:linear-gradient(0deg,#09102a55,#09102a15),url("https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=640&q=80");}
+.concept-notice {font-size:.66rem;color:#b4bdd8;margin:12px 2px 0;line-height:1.45;}
+.drafts-section:has(#empty-state[hidden]) .concept-gallery {display:none;}
+:root[data-theme="light"] .topbar {background:#fff;color:#241742;border-color:#cfc4f2;}
+:root[data-theme="light"] .topbar .auth-status {color:#565071;}
+:root[data-theme="light"] .topbar .icon-button,:root[data-theme="light"] .topbar .reset-button {color:#221946;background:#f1edff;border-color:#cfc4f2;}
+:root[data-theme="light"] .sidebar {background:linear-gradient(#201647,#0a163c)!important;}
+:root[data-theme="light"] body {background:#f3efff;}
+:root[data-theme="light"] .hero {box-shadow:0 16px 45px #7b4cbd38;}
+:root[data-theme="light"] .workflow-section,:root[data-theme="light"] .drafts-section,:root[data-theme="light"] .campaign-section {box-shadow:0 15px 44px #49338732;}
+@media (max-width:1180px) {
+ main {grid-template-columns:minmax(0,1fr);grid-template-areas:"hero" "status" "drafts" "workflow" "campaign";}
+ .workflow-track {grid-template-columns:repeat(3,minmax(0,1fr));}
+ .draft-grid {grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+@media (max-width:680px) {
+ .concept-grid {grid-template-columns:1fr;}
+ .concept-art {min-height:155px;}
+ .draft-grid {grid-template-columns:1fr;}
+ .hero h1 {font-size:clamp(2.2rem,8vw,3rem)!important;}
+ .campaign-calendar {grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+}
