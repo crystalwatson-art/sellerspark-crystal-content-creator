@@ -13,7 +13,7 @@
           <span class="brand-mark">S</span>
           <span>SellerSpark</span>
           <span class="brand-divider">/</span>
-          <span class="brand-muted">Content Creator</span>
+          <span class="brand-muted">Studio</span>
         </a>
         <div class="topbar-actions">
           <span class="workspace-label"><span class="status-dot"></span>Local workspace</span>
@@ -37,21 +37,47 @@
         </div>
       </header>
 
-      <main>
-        <section class="hero" aria-labelledby="page-title">
+      <div class="studio-layout">
+        <aside class="sidebar" aria-label="Studio navigation">
+          <div class="sidebar-kicker">SellerSpark Studio</div>
+          <nav class="sidebar-nav" aria-label="Workspace sections">
+            <a class="nav-item active" href="#overview"><span class="nav-icon" aria-hidden="true">✦</span><span>Overview</span></a>
+            <a class="nav-item" href="#draft-queue"><span class="nav-icon" aria-hidden="true">▣</span><span>Content Generator</span></a>
+            <a class="nav-item" href="#campaign"><span class="nav-icon" aria-hidden="true">◷</span><span>Growth pilot</span></a>
+            <a class="nav-item" href="#workflow"><span class="nav-icon" aria-hidden="true">⌘</span><span>Workflow</span></a>
+          </nav>
+          <div class="sidebar-divider"></div>
+          <div class="sidebar-note">
+            <span class="sidebar-note-mark" aria-hidden="true">✓</span>
+            <div><strong>Human-led by design</strong><span>Every draft stays reviewable.</span></div>
+          </div>
+          <div class="profile-card">
+            <span class="profile-avatar" aria-hidden="true">C</span>
+            <span><strong>Crystal</strong><small>Workspace owner</small></span>
+            <span class="profile-status" aria-label="Online"></span>
+          </div>
+        </aside>
+
+        <main>
+        <section id="overview" class="hero" aria-labelledby="page-title">
           <div class="hero-copy">
-            <p class="eyebrow">CRYSTAL'S COMPONENT · TIKTOK WORKSPACE</p>
+            <p class="eyebrow"><span class="eyebrow-dot"></span>CRYSTAL'S STUDIO · TIKTOK WORKSPACE</p>
             <h1 id="page-title">Turn TikTok Attention Into <span>Listing Opportunities.</span></h1>
             <p class="intro">
-              Three focused TikTok directions for the right homeowner audience,
-              grounded in the supplied brief and held for human approval.
+              Create thoughtful seller conversations from grounded research,
+              then move every idea through a clear human review.
             </p>
+            <div class="hero-meta" aria-label="Studio summary">
+              <span><strong>03</strong> draft directions</span>
+              <span><strong>02</strong> approved audiences</span>
+              <span><strong>01</strong> human gate</span>
+            </div>
           </div>
           <div class="hero-actions">
             <button id="run-fictional-test" class="primary-button" type="button">
               <span aria-hidden="true">✦</span> Run fictional test mode
             </button>
-            <p>Fictional data only · no publishing or outreach</p>
+            <p><span class="gold-dot"></span>Fictional data only · no publishing or outreach</p>
           </div>
         </section>
 
@@ -79,7 +105,30 @@
           </div>
         </section>
 
-        <section class="campaign-section" aria-labelledby="campaign-heading">
+        <section id="workflow" class="workflow-section" aria-labelledby="workflow-heading">
+          <div class="section-heading workflow-heading">
+            <div>
+              <p class="eyebrow">MULTI-AGENT WORKFLOW</p>
+              <h2 id="workflow-heading">From research brief to ready-to-review draft</h2>
+            </div>
+            <span class="status-badge violet-badge">Orchestrated locally</span>
+          </div>
+          <div class="workflow-track" aria-label="Content workflow steps">
+            <article class="workflow-node workflow-node-primary"><span class="workflow-number">01</span><strong>Content Generator</strong><small>Three TikTok directions</small></article>
+            <span class="workflow-arrow" aria-hidden="true">→</span>
+            <article class="workflow-node"><span class="workflow-number">02</span><strong>Router</strong><small>Provider-aware writing</small></article>
+            <span class="workflow-arrow" aria-hidden="true">→</span>
+            <article class="workflow-node"><span class="workflow-number">03</span><strong>Validation</strong><small>Evidence and format checks</small></article>
+            <span class="workflow-arrow" aria-hidden="true">→</span>
+            <article class="workflow-node"><span class="workflow-number">04</span><strong>Handoff</strong><small>Structured review package</small></article>
+            <span class="workflow-arrow" aria-hidden="true">→</span>
+            <article class="workflow-node workflow-node-gold"><span class="workflow-number">05</span><strong>Listing Optimizer</strong><small>Compare and improve</small></article>
+            <span class="workflow-arrow" aria-hidden="true">→</span>
+            <article class="workflow-node workflow-node-approval"><span class="workflow-number">06</span><strong>Human approval gate</strong><small>Nothing publishes automatically</small></article>
+          </div>
+        </section>
+
+        <section id="campaign" class="campaign-section" aria-labelledby="campaign-heading">
           <div class="campaign-heading">
             <div>
               <p class="eyebrow">14-DAY TIKTOK GROWTH PILOT</p>
@@ -144,7 +193,7 @@
           <div id="campaign-calendar" class="campaign-calendar"></div>
         </section>
 
-        <section class="drafts-section" aria-labelledby="drafts-heading">
+        <section id="draft-queue" class="drafts-section" aria-labelledby="drafts-heading">
           <div class="section-heading">
             <div>
               <p class="eyebrow">DRAFT QUEUE</p>
@@ -177,7 +226,8 @@
             </div>
           </div>
         </section>
-      </main>
+        </main>
+      </div>
 
       <footer class="footer">
         <span>SellerSpark · Crystal's Content Creator</span>
