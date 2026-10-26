@@ -294,3 +294,98 @@ h2 { margin-bottom: 0; font-family: Georgia, "Times New Roman", serif; font-size
   .modal-actions { width: 100%; justify-content: space-between; }
   .footer { flex-direction: column; gap: 6px; }
 }
+
+
+/* SellerSpark Studio — Crystal-approved cinematic presentation design.
+   Visual-only override; existing application routes, review and TikTok logic remain untouched. */
+:root {
+  --bg:#050b21; --bg-raised:#09112a; --panel:#0b1531; --panel-soft:#111d3a; --panel-bright:#1b2850;
+  --ink:#faf8ff; --muted:#c1c7df; --subtle:#979ebc; --line:rgba(170,159,255,.23);
+  --line-strong:rgba(180,166,255,.42); --violet:#b08bff; --violet-deep:#7140ff;
+  --violet-soft:rgba(142,85,255,.21); --gold:#ffc56f; --gold-soft:rgba(255,197,111,.14);
+  --shadow:0 22px 56px rgba(0,0,0,.34);
+}
+:root[data-theme="light"] {
+  --bg:#eeedff; --bg-raised:#f9f8ff; --panel:#fff; --panel-soft:#f4f0ff; --panel-bright:#e6dfff;
+  --ink:#181333; --muted:#504e72; --subtle:#6a658c; --line:rgba(72,48,130,.17);
+  --line-strong:rgba(88,62,151,.32); --violet:#6740d5; --violet-deep:#5426d1;
+  --violet-soft:rgba(103,64,213,.13); --gold:#a96500; --gold-soft:rgba(228,153,34,.14);
+  --shadow:0 22px 54px rgba(54,37,124,.15);
+}
+body { background:radial-gradient(ellipse at 65% -10%,rgba(115,64,242,.22),transparent 52%),var(--bg); }
+.app-shell { width:min(1720px,calc(100% - 36px)); padding-top:14px; }
+.topbar { padding:11px 23px; background:rgba(9,17,42,.93); border:1px solid rgba(172,149,255,.23); border-radius:17px; color:white; }
+.brand { font-weight:800; font-size:1.14rem; }
+.brand-mark { background:linear-gradient(135deg,#ffcf78,#d9953d); color:#071029; border-radius:7px; transform:rotate(-8deg); }
+.brand-muted { color:#e9e1ff; } .brand-divider { color:#ccaa65; }
+.topbar .icon-button,.topbar .reset-button { background:#172245;color:white;border-color:#43507a; }
+.studio-layout { grid-template-columns:204px minmax(0,1fr); gap:16px; margin-top:15px; }
+.sidebar { top:15px; padding:18px 12px; gap:20px; min-height:calc(100vh - 116px); border-radius:16px;
+ background:linear-gradient(180deg,#070e2a 0%,#101235 62%,#050b22 100%); border-color:#2a2854; }
+:root[data-theme="light"] .sidebar {background:linear-gradient(180deg,#0b1434,#211443);color:white;}
+.sidebar-kicker { color:#ffc46c; padding:8px; font-size:.73rem; }
+.nav-item { border-radius:8px; min-height:43px; padding:12px; }
+.nav-item.active {background:linear-gradient(100deg,#443089,#28215d);color:#fff; box-shadow:inset 3px 0 #b57aff;}
+.nav-icon {color:#ffbc68;}
+main { display:grid; grid-template-columns:minmax(0,1.93fr) minmax(280px,.87fr); gap:14px; align-items:start;
+ grid-template-areas:"hero workflow" "status workflow" "drafts campaign";}
+.hero {grid-area:hero; min-height:230px; border-radius:14px; padding:30px 34px; align-items:center;
+ background:linear-gradient(90deg,rgba(7,13,40,.97) 0%,rgba(14,18,50,.89) 55%,rgba(14,20,57,.26) 100%),
+ url("https://images.unsplash.com/photo-1518391846015-55a9cc003b25?auto=format&fit=crop&w=1600&q=85") center/cover;
+ color:#fff;border-color:#34305d;}
+:root[data-theme="light"] .hero {background:linear-gradient(90deg,rgba(11,19,56,.97),rgba(25,25,74,.8) 67%,rgba(23,28,80,.23)),
+ url("https://images.unsplash.com/photo-1518391846015-55a9cc003b25?auto=format&fit=crop&w=1600&q=85") center/cover;color:#fff;}
+.hero h1 {font-size:clamp(2.15rem,3.05vw,3.45rem);line-height:1.03;letter-spacing:-.035em;max-width:570px;text-shadow:0 2px 12px #09112b;}
+.hero h1 span {color:#c4a0ff;} .hero .eyebrow {color:#ffcc8b;} .hero .intro {color:#eee9ff;max-width:520px;font-size:.91rem;}
+.hero .hero-meta {color:#ded2fa;} .hero-actions>p {color:#eee6ff;}
+.primary-button {background:linear-gradient(105deg,#f064cc,#6940f9);border:1px solid #bb79f5;box-shadow:0 9px 28px rgba(102,46,209,.27);}
+.primary-button:hover {box-shadow:0 10px 34px rgba(164,74,242,.49);}
+.workspace-strip {grid-area:status; border-radius:13px; background:var(--panel); border:1px solid var(--line);}
+.workflow-section {grid-area:workflow; border-radius:14px; padding:18px; background:var(--panel); border:1px solid var(--line);}
+.workflow-heading h2 {font-size:1.15rem;line-height:1.22;}
+.workflow-track {grid-template-columns:1fr;gap:8px;}
+.workflow-arrow {display:none;}
+.workflow-node {min-height:unset; padding:13px 12px 13px 50px; position:relative;border-radius:11px; background:var(--panel-soft);}
+.workflow-number {position:absolute;left:13px;top:14px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--violet-deep);color:white;font-size:.67rem;}
+.workflow-node strong {font-size:.81rem;}.workflow-node small {font-size:.72rem;line-height:1.4;}
+.campaign-section {grid-area:campaign; border-radius:14px;background:var(--panel);border:1px solid var(--line);padding:18px;}
+.campaign-section h2 {font-size:1.35rem;line-height:1.12;}
+.campaign-controls,.campaign-summary {grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.campaign-field input,.campaign-field select {min-width:0;max-width:100%;}
+.campaign-summary>div {padding:10px;}.campaign-summary strong {font-size:1.12rem;}
+.campaign-calendar {grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;}
+.calendar-day {min-width:0;min-height:104px;overflow-wrap:anywhere;padding:10px;}
+.calendar-day span {font-size:.72rem;line-height:1.4;white-space:normal;}
+.drafts-section {grid-area:drafts; border-radius:14px;background:var(--panel);border:1px solid var(--line);padding:20px;}
+.drafts-section h2 {font-size:1.75rem;}
+.draft-grid {gap:9px;} .draft-card {padding:13px;border-radius:12px;min-width:0;}
+.draft-card h3 {font-size:1.05rem;}
+.draft-card p {overflow-wrap:anywhere;}
+.hero,.workflow-section,.campaign-section,.drafts-section {box-shadow:var(--shadow);}
+.footer {grid-column:1/-1;}
+:root[data-theme="light"] .workflow-section,:root[data-theme="light"] .campaign-section,:root[data-theme="light"] .drafts-section,:root[data-theme="light"] .workspace-strip {box-shadow:0 16px 40px rgba(69,47,144,.12);}
+:root[data-theme="light"] .nav-item.active {color:#fff;}
+@media(max-width:1310px) {
+ .studio-layout {grid-template-columns:188px minmax(0,1fr);}
+ main {grid-template-columns:minmax(0,1.5fr) minmax(260px,1fr);}
+ .draft-grid {grid-template-columns:1fr;}
+}
+@media(max-width:1050px) {
+ .studio-layout {grid-template-columns:1fr;}
+ .sidebar {position:static;min-height:unset;display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;}
+ .sidebar-nav {display:flex;flex:1;flex-wrap:wrap;}
+ .sidebar-note {display:none;} .profile-card {margin-top:0;}
+}
+@media(max-width:820px) {
+ main {grid-template-columns:1fr;grid-template-areas:"hero" "status" "drafts" "workflow" "campaign";}
+ .hero {grid-template-columns:1fr;}.campaign-calendar {grid-template-columns:repeat(3,minmax(0,1fr));}
+ .draft-grid {grid-template-columns:1fr;}
+}
+@media(max-width:520px) {
+ .app-shell {width:calc(100% - 16px);}
+ .topbar {padding:12px;}
+ .sidebar-nav {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}
+ .hero {padding:27px 20px;}
+ .campaign-calendar {grid-template-columns:repeat(2,minmax(0,1fr));}
+ .campaign-controls,.campaign-summary {grid-template-columns:1fr 1fr;}
+}
