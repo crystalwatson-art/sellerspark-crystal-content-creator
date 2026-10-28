@@ -192,6 +192,11 @@ h2 { margin-bottom: 0; font-family: Georgia, "Times New Roman", serif; font-size
 .auth-recovery-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-top: 14px; }
 .auth-recovery-form input { padding: 10px 11px; }
 .auth-recovery-label { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: .78rem; }
+.password-field { position: relative; display: block; min-width: 0; }
+.password-field input { width: 100%; padding-right: 40px; }
+.password-toggle { position: absolute; top: 50%; right: 4px; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 7px; color: var(--muted); background: transparent; transform: translateY(-50%); }
+.password-toggle:hover, .password-toggle:focus-visible { color: var(--violet); background: var(--violet-soft); }
+.password-toggle svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
 .tiktok-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
 .permission-list, .reference-list, .warning-list, .scene-list, .review-list, .quality-list { display: grid; gap: 7px; margin: 0; padding-left: 18px; color: var(--muted); font-size: .78rem; line-height: 1.5; }
 

@@ -27,16 +27,31 @@
               <label class="sr-only" for="auth-email">Email</label>
               <input id="auth-email" name="email" type="email" autocomplete="email" placeholder="Email">
               <label class="sr-only" for="auth-password">Password</label>
-              <input id="auth-password" name="password" type="password" autocomplete="current-password" placeholder="Password">
+              <span class="password-field">
+                <input id="auth-password" name="password" type="password" autocomplete="current-password" placeholder="Password">
+                <button class="password-toggle" type="button" data-password-toggle="auth-password" data-password-label="password" aria-label="Show password" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
+                </button>
+              </span>
               <button id="auth-sign-in" class="secondary-button" type="submit">Sign in</button>
               <button id="auth-sign-out" class="secondary-button" type="button" hidden>Sign out</button>
             </form>
             <form id="auth-recovery-form" class="auth-recovery-form" hidden>
               <p id="auth-recovery-label" class="auth-recovery-label">Set a new SellerSpark password</p>
               <label class="sr-only" for="auth-recovery-password">New password</label>
-              <input id="auth-recovery-password" name="new-password" type="password" autocomplete="new-password" placeholder="New password">
+              <span class="password-field">
+                <input id="auth-recovery-password" name="new-password" type="password" autocomplete="new-password" placeholder="New password">
+                <button class="password-toggle" type="button" data-password-toggle="auth-recovery-password" data-password-label="new password" aria-label="Show new password" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
+                </button>
+              </span>
               <label class="sr-only" for="auth-recovery-confirm">Confirm new password</label>
-              <input id="auth-recovery-confirm" name="confirm-password" type="password" autocomplete="new-password" placeholder="Confirm password">
+              <span class="password-field">
+                <input id="auth-recovery-confirm" name="confirm-password" type="password" autocomplete="new-password" placeholder="Confirm password">
+                <button class="password-toggle" type="button" data-password-toggle="auth-recovery-confirm" data-password-label="password confirmation" aria-label="Show password confirmation" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
+                </button>
+              </span>
               <button id="auth-recovery-submit" class="secondary-button" type="submit">Set password</button>
             </form>
             <p id="auth-error" class="auth-error" role="alert" hidden></p>

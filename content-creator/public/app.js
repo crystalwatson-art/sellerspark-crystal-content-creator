@@ -205,6 +205,22 @@ function setAuthError(message = "") {
   authError.hidden = !message;
 }
 
+function initializePasswordVisibilityToggles() {
+  document.querySelectorAll("[data-password-toggle]").forEach((toggle) => {
+    const input = document.getElementById(toggle.dataset.passwordToggle);
+    if (!input) return;
+    const label = toggle.dataset.passwordLabel || "password";
+    toggle.addEventListener("click", () => {
+      const shouldShow = input.type === "password";
+      input.type = shouldShow ? "text" : "password";
+      toggle.setAttribute("aria-pressed", String(shouldShow));
+      toggle.setAttribute("aria-label", (shouldShow ? "Hide " : "Show ") + label);
+    });
+  });
+}
+
+initializePasswordVisibilityToggles();
+
 function renderAuthState(session = authClient.session) {
   if (!authClient.enabled) {
     authForm.hidden = true;

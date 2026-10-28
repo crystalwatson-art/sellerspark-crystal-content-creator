@@ -9,6 +9,12 @@ test("browser auth UI is optional and the client uses server-provided public con
   assert.match(html, /id="auth-form"/);
   assert.match(html, /id="auth-recovery-form"/);
   assert.match(html, /id="auth-recovery-password"/);
+  assert.match(html, /<button[^>]*type="button"[^>]*data-password-toggle="auth-password"/);
+  assert.match(html, /<button[^>]*type="button"[^>]*data-password-toggle="auth-recovery-password"/);
+  assert.match(html, /<button[^>]*type="button"[^>]*data-password-toggle="auth-recovery-confirm"/);
+  assert.equal((html.match(/data-password-toggle=/g) || []).length, 3);
+  assert.match(html, /aria-label="Show password"/);
+  assert.match(html, /aria-pressed="false"/);
   assert.match(html, /Fictional demo available without sign-in/);
   assert.match(app, /\/api\/auth-config/);
   assert.match(app, /authorizedFetch/);
@@ -22,5 +28,8 @@ test("browser auth UI is optional and the client uses server-provided public con
   assert.match(auth, /restoreRecoverySession/);
   assert.match(app, /clearRecoveryUrl/);
   assert.match(app, /authRecoveryForm/);
+  assert.match(app, /function initializePasswordVisibilityToggles\(\)/);
+  assert.match(app, /input\.type = shouldShow \? "text" : "password"/);
+  assert.match(app, /toggle\.setAttribute\("aria-pressed", String\(shouldShow\)\)/);
   assert.doesNotMatch(auth, /SUPABASE_SECRET|SERVICE_ROLE|service_role/i);
 });
