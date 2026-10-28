@@ -39,7 +39,7 @@
 :root[data-theme=day] .feature:hover,:root[data-theme=day] .feature:focus-visible{background:rgba(14,12,39,.52)}
 
 /* Crystal's approved design refinement — 2026-10-28.
-   Keep a single Overview link in the rail; the four bottom cards
+   Overview belongs in the header; the four bottom cards
    remain the entry points to the dedicated workspaces.
    Make *background surfaces* lighter, never the text or controls. */
 .subview .subheading.glass {
@@ -82,6 +82,15 @@
  :root[data-theme=day] .subview .metric.glass,
  :root[data-theme=day] .subview .calendar.glass {background:rgba(255,255,255,.89)}
 }
+
+/* Open-skyline layout: sidebar removed, Overview remains in the header. */
+.layout{grid-template-columns:minmax(0,1fr)}
+.overview-button{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 13px;border-radius:11px;border:1px solid rgba(255,255,255,.38);background:rgba(19,24,49,.30);font-size:.75rem;font-weight:800;color:#fff;white-space:nowrap;transition:background .18s,border-color .18s}
+.overview-button:hover,.overview-button:focus-visible{background:rgba(65,44,117,.60);border-color:#f9db9b}
+.overview-button[aria-current=page]{border-color:rgba(249,219,155,.72)}
+:root[data-theme=day] .overview-button{background:rgba(255,255,255,.52);border-color:rgba(91,64,129,.28);color:#2b2240}
+:root[data-theme=day] .overview-button:hover,:root[data-theme=day] .overview-button:focus-visible{background:rgba(255,255,255,.80)}
+@media(max-width:470px){.overview-button{font-size:.7rem;padding:9px 10px}}
 </style>
 </head>
 <body>
@@ -89,18 +98,9 @@
 <div class="shell">
   <header class="topbar glass">
     <a class="brand" href="#home" aria-label="SellerSpark studio home"><span class="brand-emblem">S</span><strong>SellerSpark</strong><span class="brand-divider">/</span><small>STUDIO</small></a>
-    <div class="top-actions"><span class="privacy-indicator"><span class="pulse"></span> DESIGN PREVIEW</span><button id="theme-switch" class="theme-button" type="button" aria-label="Switch to daylight view"><span class="theme-symbol" aria-hidden="true">☀</span><span id="theme-label">Day view</span></button><span class="identity" title="Workspace owner">C</span></div>
+    <div class="top-actions"><a class="overview-button" href="#home" data-route="home" aria-label="Overview: return to the studio home">◈ Overview</a><span class="privacy-indicator"><span class="pulse"></span> DESIGN PREVIEW</span><button id="theme-switch" class="theme-button" type="button" aria-label="Switch to daylight view"><span class="theme-symbol" aria-hidden="true">☀</span><span id="theme-label">Day view</span></button><span class="identity" title="Workspace owner">C</span></div>
   </header>
   <div class="layout">
-    <aside class="rail glass" aria-label="Studio navigation">
-      <div class="rail-label">YOUR STUDIO</div>
-      <nav class="main-nav">
-        <a href="#home" data-route="home" class="nav-link active"><span class="nav-glyph">◈</span> Overview</a>
-      </nav>
-      <div class="rail-spacer"></div>
-      <div class="rail-footer"><div class="trust-mark">✓</div><div><strong>Human-led</strong><small>Nothing publishes on its own.</small></div></div>
-      <div class="account"><span class="owner-avatar">C</span><span><strong>Crystal</strong><small>Workspace owner</small></span></div>
-    </aside>
     <main id="main" class="stage" tabindex="-1">
       <section id="view-home" class="route-view home-view" aria-labelledby="home-title">
         <div class="home-top">
