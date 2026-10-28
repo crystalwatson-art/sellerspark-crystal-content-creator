@@ -30,6 +30,13 @@
 :root[data-theme=day] .feature-index{color:#5d238f}
 :root[data-theme=day] .nav-glyph{color:#71409b}
 :root[data-theme=day] .nav-link.active .nav-glyph{color:#fff}
+
+/* QA pass: keep cards translucent but make daytime titles readable over furniture. */
+:root[data-theme=day] .feature{background:rgba(14,12,39,.28);color:#fff;text-shadow:0 2px 7px rgba(0,0,0,.65)}
+:root[data-theme=day] .feature strong{color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.72)}
+:root[data-theme=day] .feature small{color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.8)}
+:root[data-theme=day] .feature-index{color:#ffe4bd;text-shadow:0 1px 6px rgba(0,0,0,.7)}
+:root[data-theme=day] .feature:hover,:root[data-theme=day] .feature:focus-visible{background:rgba(14,12,39,.52)}
 </style>
 </head>
 <body>
@@ -37,7 +44,7 @@
 <div class="shell">
   <header class="topbar glass">
     <a class="brand" href="#home" aria-label="SellerSpark studio home"><span class="brand-emblem">S</span><strong>SellerSpark</strong><span class="brand-divider">/</span><small>STUDIO</small></a>
-    <div class="top-actions"><span class="privacy-indicator"><span class="pulse"></span> PRIVATE WORKSPACE</span><button id="theme-switch" class="theme-button" type="button" aria-label="Switch to daylight view"><span class="theme-symbol" aria-hidden="true">☀</span><span id="theme-label">Day view</span></button><span class="identity" title="Workspace owner">C</span></div>
+    <div class="top-actions"><span class="privacy-indicator"><span class="pulse"></span> DESIGN PREVIEW</span><button id="theme-switch" class="theme-button" type="button" aria-label="Switch to daylight view"><span class="theme-symbol" aria-hidden="true">☀</span><span id="theme-label">Day view</span></button><span class="identity" title="Workspace owner">C</span></div>
   </header>
   <div class="layout">
     <aside class="rail glass" aria-label="Studio navigation">
@@ -57,7 +64,7 @@
       <section id="view-home" class="route-view home-view" aria-labelledby="home-title">
         <div class="home-top">
           <div class="greeting glass"><div class="eyebrow">SELLERSPARK <span>•</span> PRIVATE CREATIVE STUDIO</div><h1 id="home-title">Welcome to your <em>studio.</em></h1><p>Thoughtful content. Clear decisions. Your view of Manhattan.</p></div>
-          <div class="status glass" aria-live="polite"><span class="status-label">TIKTOK FOLLOWERS <b>·</b> GOAL 100</span><strong id="dashboard-followers">Not connected</strong><a href="#growth">Connect &amp; sync <span aria-hidden="true">↗</span></a></div>
+          <div class="status glass" aria-live="polite"><span class="status-label">TIKTOK FOLLOWERS <b>·</b> GOAL 100</span><strong id="dashboard-followers">Not connected</strong><a href="#growth">View connection status <span aria-hidden="true">↗</span></a></div>
         </div>
         <div class="quick-controls glass" aria-label="Workspace preferences"><label>Location<select id="location"><option value="lic">Long Island City (LIC)</option><option value="brooklyn">Brooklyn</option></select></label><label>Audience<select id="audience"><option value="sellers">Sellers</option><option value="buyers">Buyers</option></select></label><span class="controls-hint">Human review required before any action</span></div>
         <div class="home-bottom">
