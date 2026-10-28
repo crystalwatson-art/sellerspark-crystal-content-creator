@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>SellerSpark · Crystal's Content Creator</title>
     <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/penthouse-studio.css">
   </head>
   <body>
     <div class="app-shell">
@@ -64,10 +65,10 @@
         <aside class="sidebar" aria-label="Studio navigation">
           <div class="sidebar-kicker">SellerSpark Studio</div>
           <nav class="sidebar-nav" aria-label="Workspace sections">
-            <a class="nav-item active" href="#overview"><span class="nav-icon" aria-hidden="true">✦</span><span>Overview</span></a>
-            <a class="nav-item" href="#draft-queue"><span class="nav-icon" aria-hidden="true">▣</span><span>Content Generator</span></a>
-            <a class="nav-item" href="#campaign"><span class="nav-icon" aria-hidden="true">◷</span><span>Growth pilot</span></a>
-            <a class="nav-item" href="#workflow"><span class="nav-icon" aria-hidden="true">⌘</span><span>Workflow</span></a>
+            <a class="nav-item active" href="#studio"><span class="nav-icon" aria-hidden="true">✦</span><span>Overview</span></a>
+            <a class="nav-item" href="#creator"><span class="nav-icon" aria-hidden="true">▣</span><span>Content Generator</span></a>
+            <a class="nav-item" href="#tiktok"><span class="nav-icon" aria-hidden="true">◷</span><span>Growth pilot</span></a>
+            <a class="nav-item" href="#approval"><span class="nav-icon" aria-hidden="true">⌘</span><span>Workflow</span></a>
           </nav>
           <div class="sidebar-divider"></div>
           <div class="sidebar-note">
@@ -81,7 +82,49 @@
           </div>
         </aside>
 
-        <main>
+        <main>\n
+        <section id="studio-home" class="studio-dashboard" aria-labelledby="studio-home-heading">
+          <div class="studio-dashboard-header">
+            <span class="studio-kicker">SellerSpark · Private Studio</span>
+            <h1 id="studio-home-heading">Your city. Your creative studio.</h1>
+            <p>A quieter place to create, review, and plan—with Manhattan always in view.</p>
+          </div>
+          <div class="studio-control-bar" aria-label="Studio preferences">
+            <label for="studio-location">Location
+              <select id="studio-location"><option value="lic">Long Island City (LIC)</option><option value="brooklyn">Brooklyn</option></select>
+            </label>
+            <label for="studio-audience">Audience
+              <select id="studio-audience"><option value="sellers">Sellers</option><option value="buyers">Buyers</option></select>
+            </label>
+            <div class="studio-counter" aria-live="polite"><small>TikTok followers · goal 100</small><strong id="studio-live-count">Not connected</strong></div>
+          </div>
+          <div class="studio-bottom">
+            <div class="studio-calendar-strip"><span>14-day TikTok growth planner · Drafts only</span><a href="#tiktok">Open calendar →</a></div>
+            <nav class="studio-card-grid" aria-label="Studio workspaces">
+              <a class="studio-card" href="#creator"><span class="studio-card-arrow" aria-hidden="true">↗</span><span><strong>Content Creator</strong><small>Research-based ideas and draft packages</small></span></a>
+              <a class="studio-card" href="#optimizer"><span class="studio-card-arrow" aria-hidden="true">↗</span><span><strong>Listing Optimizer</strong><small>Improve drafts without losing their history</small></span></a>
+              <a class="studio-card" href="#tiktok"><span class="studio-card-arrow" aria-hidden="true">↗</span><span><strong>TikTok Growth</strong><small>14-day calendar and real follower connection</small></span></a>
+              <a class="studio-card" href="#approval"><span class="studio-card-arrow" aria-hidden="true">↗</span><span><strong>Human Approval</strong><small>Review before any outside action</small></span></a>
+            </nav>
+          </div>
+        </section>
+        <section id="studio-optimizer" class="studio-view" aria-labelledby="studio-optimizer-title">
+          <a href="#studio" class="studio-back">← Studio home</a>
+          <div class="studio-kicker">SellerSpark / Listing Optimizer</div>
+          <h2 id="studio-optimizer-title">Make every draft stronger.</h2>
+          <p>Compare the original draft with suggested improvements, inspect evidence warnings, and preserve revision history.</p>
+          <p class="studio-note">The working optimizer is available inside each generated draft's review window. Create or open a draft first; this page does not invent a saved review.</p>
+          <a href="#creator" class="primary-button">Go to Content Creator →</a>
+        </section>
+        <section id="studio-approval" class="studio-view" aria-labelledby="studio-approval-title">
+          <a href="#studio" class="studio-back">← Studio home</a>
+          <div class="studio-kicker">SellerSpark / Human Approval</div>
+          <h2 id="studio-approval-title">Your decision comes first.</h2>
+          <p>Review the original, proposed revision, factual warnings, and history before accepting or rejecting changes.</p>
+          <p class="studio-note">Approval controls remain inside the existing draft review window. No posting, outreach, or automatic approval is enabled.</p>
+          <a href="#creator" class="primary-button">Open draft workspace →</a>
+        </section>
+
         <section id="overview" class="hero" aria-labelledby="page-title">
           <div class="hero-copy">
             <p class="eyebrow"><span class="eyebrow-dot"></span>CRYSTAL'S STUDIO · TIKTOK WORKSPACE</p>
@@ -402,5 +445,6 @@
     </div>
 
     <script type="module" src="/app.js"></script>
+    <script type="module" src="/penthouse-studio.js"></script>
   </body>
 </html>
