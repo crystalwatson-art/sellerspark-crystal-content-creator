@@ -189,6 +189,9 @@ h2 { margin-bottom: 0; font-family: Georgia, "Times New Roman", serif; font-size
 .auth-status, .tiktok-connection-note { color: var(--muted); font-size: .8rem; line-height: 1.5; }
 .auth-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-top: 14px; }
 .auth-form input { padding: 10px 11px; }
+.auth-recovery-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-top: 14px; }
+.auth-recovery-form input { padding: 10px 11px; }
+.auth-recovery-label { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: .78rem; }
 .tiktok-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
 .permission-list, .reference-list, .warning-list, .scene-list, .review-list, .quality-list { display: grid; gap: 7px; margin: 0; padding-left: 18px; color: var(--muted); font-size: .78rem; line-height: 1.5; }
 
@@ -259,6 +262,8 @@ h2 { margin-bottom: 0; font-family: Georgia, "Times New Roman", serif; font-size
   .draft-card { min-height: 200px; }
   .auth-form { grid-template-columns: 1fr 1fr; }
   .auth-form .primary-button { grid-column: 1 / -1; }
+  .auth-recovery-form { grid-template-columns: 1fr 1fr; }
+  .auth-recovery-label, .auth-recovery-form button { grid-column: 1 / -1; }
 }
 
 @media (max-width: 600px) {

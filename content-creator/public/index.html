@@ -31,6 +31,14 @@
               <button id="auth-sign-in" class="secondary-button" type="submit">Sign in</button>
               <button id="auth-sign-out" class="secondary-button" type="button" hidden>Sign out</button>
             </form>
+            <form id="auth-recovery-form" class="auth-recovery-form" hidden>
+              <p id="auth-recovery-label" class="auth-recovery-label">Set a new SellerSpark password</p>
+              <label class="sr-only" for="auth-recovery-password">New password</label>
+              <input id="auth-recovery-password" name="new-password" type="password" autocomplete="new-password" placeholder="New password">
+              <label class="sr-only" for="auth-recovery-confirm">Confirm new password</label>
+              <input id="auth-recovery-confirm" name="confirm-password" type="password" autocomplete="new-password" placeholder="Confirm password">
+              <button id="auth-recovery-submit" class="secondary-button" type="submit">Set password</button>
+            </form>
             <p id="auth-error" class="auth-error" role="alert" hidden></p>
           </div>
           <button id="reset-button" class="reset-button" type="button">Reset</button>

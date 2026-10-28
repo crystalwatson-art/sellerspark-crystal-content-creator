@@ -38,6 +38,10 @@ const authEmail = document.querySelector("#auth-email");
 const authPassword = document.querySelector("#auth-password");
 const authSignIn = document.querySelector("#auth-sign-in");
 const authSignOut = document.querySelector("#auth-sign-out");
+const authRecoveryForm = document.querySelector("#auth-recovery-form");
+const authRecoveryPassword = document.querySelector("#auth-recovery-password");
+const authRecoveryConfirm = document.querySelector("#auth-recovery-confirm");
+const authRecoverySubmit = document.querySelector("#auth-recovery-submit");
 const authError = document.querySelector("#auth-error");
 const modal = document.querySelector("#draft-modal");
 const modalNumber = document.querySelector("#modal-number");
@@ -88,6 +92,7 @@ let previouslyFocusedElement = null;
 let activeRequestController = null;
 let requestSequence = 0;
 let reviewActionInFlight = false;
+let recoveryMode = false;
 const authClient = new BrowserSupabaseAuth();
 
 const WORKSPACE_STORAGE_KEY = "sellerspark-listing-review-workspaces-v2";
@@ -203,11 +208,20 @@ function setAuthError(message = "") {
 function renderAuthState(session = authClient.session) {
   if (!authClient.enabled) {
     authForm.hidden = true;
+    authRecoveryForm.hidden = true;
     authSignOut.hidden = true;
     authStatus.textContent = "Fictional demo available without sign-in";
     return;
   }
+  if (recoveryMode) {
+    authForm.hidden = true;
+    authRecoveryForm.hidden = false;
+    authSignOut.hidden = true;
+    authStatus.textContent = "Password recovery · choose a new password";
+    return;
+  }
   authForm.hidden = false;
+  authRecoveryForm.hidden = true;
   const signedIn = Boolean(session?.accessToken);
   authEmail.hidden = signedIn;
   authPassword.hidden = signedIn;
@@ -218,13 +232,31 @@ function renderAuthState(session = authClient.session) {
     : "Sign in to save and review persistent records";
 }
 
+function clearRecoveryUrl() {
+  if (typeof globalThis.history?.replaceState !== "function" || typeof globalThis.location?.pathname !== "string") return;
+  globalThis.history.replaceState({}, document.title, globalThis.location.pathname + globalThis.location.search);
+}
+
 async function initializeAuth() {
   try {
     const response = await fetch("/api/auth-config", { cache: "no-store" });
     const config = await response.json();
     if (config?.enabled && config.url && config.anonKey) {
       authClient.configure({ url: config.url, anonKey: config.anonKey });
-      const session = await authClient.getSession();
+      let session = null;
+      if (authClient.hasRecoveryRedirect()) {
+        try {
+          session = authClient.restoreRecoverySession();
+          recoveryMode = true;
+        } catch (error) {
+          setAuthError(authClientErrorMessage(error));
+          authClient.saveSession(null);
+        } finally {
+          clearRecoveryUrl();
+        }
+      } else {
+        session = await authClient.getSession();
+      }
       renderAuthState(session);
       if (session && currentReviewId && currentPersistenceStatus === "supabase") void refreshReviewFromServer();
       void refreshTikTokStatus();
@@ -1142,6 +1174,27 @@ authForm.addEventListener("submit", async (event) => {
     setAuthError(authClientErrorMessage(error));
   } finally {
     authSignIn.disabled = false;
+  }
+});
+authRecoveryForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  setAuthError();
+  if (authRecoveryPassword.value !== authRecoveryConfirm.value) {
+    setAuthError("The passwords do not match.");
+    return;
+  }
+  authRecoverySubmit.disabled = true;
+  try {
+    await authClient.updatePassword(authRecoveryPassword.value);
+    authRecoveryPassword.value = "";
+    authRecoveryConfirm.value = "";
+    recoveryMode = false;
+    renderAuthState(authClient.session);
+    await refreshTikTokStatus();
+  } catch (error) {
+    setAuthError(authClientErrorMessage(error));
+  } finally {
+    authRecoverySubmit.disabled = false;
   }
 });
 authSignOut.addEventListener("click", async () => {

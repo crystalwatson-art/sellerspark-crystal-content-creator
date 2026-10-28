@@ -96,3 +96,53 @@ test("sign-in failures expose safe messages and never provider response text", a
     (error) => error.code === "auth_failed" && !error.message.includes("private provider detail")
   );
 });
+
+test("password recovery restores the URL session and updates the password with its bearer token", async () => {
+  const calls = [];
+  const client = auth({
+    fetchImpl: async (url, options) => {
+      calls.push({ url: String(url), options });
+      return response(200, { user: { id: userId } });
+    }
+  });
+  const session = client.restoreRecoverySession({
+    hash: "#access_token=recovery-access&refresh_token=recovery-refresh&expires_in=3600&type=recovery"
+  });
+  assert.equal(session.accessToken, "recovery-access");
+  await client.updatePassword("new-fictional-password");
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, "https://sellerspark-development.supabase.co/auth/v1/user");
+  assert.equal(calls[0].options.method, "PUT");
+  assert.equal(calls[0].options.headers.get("Authorization"), "Bearer recovery-access");
+  assert.equal(calls[0].options.body, JSON.stringify({ password: "new-fictional-password" }));
+});
+
+test("password recovery rejects expired or incomplete links without making a request", async () => {
+  let calls = 0;
+  const client = auth({ fetchImpl: async () => { calls += 1; return response(200, {}); } });
+  assert.equal(client.hasRecoveryRedirect({ hash: "#type=recovery&access_token=token" }), true);
+  assert.throws(
+    () => client.restoreRecoverySession({ hash: "#type=recovery&access_token=token&expires_at=999&type=recovery" }),
+    (error) => error.code === "auth_failed" && /incomplete or expired/.test(error.message)
+  );
+  assert.throws(
+    () => client.restoreRecoverySession({ hash: "#type=recovery" }),
+    (error) => error.code === "auth_failed" && /incomplete or expired/.test(error.message)
+  );
+  assert.throws(
+    () => client.restoreRecoverySession({ hash: "#type=recovery&access_token=token" }),
+    (error) => error.code === "auth_failed" && /incomplete or expired/.test(error.message)
+  );
+  assert.equal(calls, 0);
+  assert.equal(client.session, null);
+});
+
+test("password update failures expose safe messages and clear an unauthorized recovery session", async () => {
+  const client = auth({ fetchImpl: async () => response(401, { message: "private provider detail" }) });
+  client.restoreRecoverySession({ hash: "#access_token=recovery-access&expires_in=3600&type=recovery" });
+  await assert.rejects(
+    () => client.updatePassword("new-fictional-password"),
+    (error) => error.code === "auth_failed" && !error.message.includes("private provider detail")
+  );
+  assert.equal(client.session, null);
+});

@@ -23,6 +23,12 @@ function normalizedSession(payload, now) {
   };
 }
 
+function numberFromParam(value) {
+  if (value === null || value === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export class BrowserSupabaseAuth {
   constructor({ url = "", anonKey = "", fetchImpl = globalThis.fetch, storage = globalThis.sessionStorage, clock = () => Date.now() } = {}) {
     this.fetchImpl = fetchImpl;
@@ -102,6 +108,58 @@ export class BrowserSupabaseAuth {
     const session = normalizedSession(payload, this.clock);
     this.saveSession(session);
     return session;
+  }
+
+  hasRecoveryRedirect(locationLike = globalThis.location) {
+    const hash = typeof locationLike?.hash === "string" ? locationLike.hash.replace(/^#/, "") : "";
+    return new URLSearchParams(hash).get("type") === "recovery";
+  }
+
+  restoreRecoverySession(locationLike = globalThis.location) {
+    const hash = typeof locationLike?.hash === "string" ? locationLike.hash.replace(/^#/, "") : "";
+    const params = new URLSearchParams(hash);
+    if (params.get("type") !== "recovery") return null;
+
+    const accessToken = params.get("access_token");
+    if (!accessToken) throw clientError("auth_failed", "The password-recovery link is incomplete or expired.");
+
+    const payload = {
+      access_token: accessToken,
+      refresh_token: params.get("refresh_token") || null,
+      expires_in: numberFromParam(params.get("expires_in")),
+      expires_at: numberFromParam(params.get("expires_at")),
+      user: { id: params.get("user_id") || null }
+    };
+    const session = normalizedSession(payload, this.clock);
+    if (!session.expiresAt || session.expiresAt <= this.clock()) {
+      throw clientError("auth_failed", "The password-recovery link is incomplete or expired.");
+    }
+    this.saveSession(session);
+    return session;
+  }
+
+  async updatePassword(password) {
+    if (!this.enabled || !this.session?.accessToken) {
+      throw clientError("auth_required", "Open a valid password-recovery link before setting a password.");
+    }
+    if (typeof password !== "string" || !password) {
+      throw clientError("auth_input_required", "Enter a new password.");
+    }
+    let response;
+    try {
+      response = await this.fetchImpl(this.url + "/auth/v1/user", {
+        method: "PUT",
+        headers: this.headers(this.session.accessToken),
+        body: JSON.stringify({ password })
+      });
+    } catch {
+      throw clientError("auth_unavailable", "Password update is temporarily unavailable.");
+    }
+    if (!response?.ok) {
+      if (response?.status === 401) this.saveSession(null);
+      throw clientError("auth_failed", "The password could not be updated safely.");
+    }
+    return this.session;
   }
 
   async refreshSession() {

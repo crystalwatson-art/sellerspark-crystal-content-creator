@@ -7,6 +7,8 @@ test("browser auth UI is optional and the client uses server-provided public con
   const app = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
   const auth = await readFile(new URL("../public/supabase-auth.js", import.meta.url), "utf8");
   assert.match(html, /id="auth-form"/);
+  assert.match(html, /id="auth-recovery-form"/);
+  assert.match(html, /id="auth-recovery-password"/);
   assert.match(html, /Fictional demo available without sign-in/);
   assert.match(app, /\/api\/auth-config/);
   assert.match(app, /authorizedFetch/);
@@ -16,5 +18,9 @@ test("browser auth UI is optional and the client uses server-provided public con
   assert.match(auth, /auth\/v1\/token\?grant_type=password/);
   assert.match(auth, /auth\/v1\/token\?grant_type=refresh_token/);
   assert.match(auth, /auth\/v1\/logout/);
+  assert.match(auth, /auth\/v1\/user/);
+  assert.match(auth, /restoreRecoverySession/);
+  assert.match(app, /clearRecoveryUrl/);
+  assert.match(app, /authRecoveryForm/);
   assert.doesNotMatch(auth, /SUPABASE_SECRET|SERVICE_ROLE|service_role/i);
 });
