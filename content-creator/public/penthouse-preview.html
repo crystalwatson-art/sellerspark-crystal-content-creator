@@ -37,6 +37,51 @@
 :root[data-theme=day] .feature small{color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.8)}
 :root[data-theme=day] .feature-index{color:#ffe4bd;text-shadow:0 1px 6px rgba(0,0,0,.7)}
 :root[data-theme=day] .feature:hover,:root[data-theme=day] .feature:focus-visible{background:rgba(14,12,39,.52)}
+
+/* Crystal's approved design refinement — 2026-10-28.
+   Keep a single Overview link in the rail; the four bottom cards
+   remain the entry points to the dedicated workspaces.
+   Make *background surfaces* lighter, never the text or controls. */
+.subview .subheading.glass {
+  background:rgba(11,16,42,.13);
+  -webkit-backdrop-filter:blur(2.5px);
+  backdrop-filter:blur(2.5px);
+}
+.subview .module.glass {
+  background:rgba(7,12,32,.18);
+  -webkit-backdrop-filter:blur(2.5px);
+  backdrop-filter:blur(2.5px);
+}
+.subview .metric.glass {
+  background:rgba(7,12,32,.18);
+  -webkit-backdrop-filter:blur(2.5px);
+  backdrop-filter:blur(2.5px);
+}
+.subview .calendar.glass {background:rgba(7,12,32,.12)}
+.subview .calendar-day {background:rgba(24,28,59,.28)}
+:root[data-theme=day] .subview .subheading.glass {
+  background:rgba(255,255,255,.23);
+}
+:root[data-theme=day] .subview .module.glass,
+:root[data-theme=day] .subview .metric.glass {
+  background:rgba(255,255,255,.26);
+}
+:root[data-theme=day] .subview .calendar.glass {background:rgba(255,255,255,.18)}
+:root[data-theme=day] .subview .calendar-day {background:rgba(255,255,255,.36)}
+/* Subtle lettering separation instead of opaque frosted panels. */
+:root[data-theme=day] .subview .subheading h2,
+:root[data-theme=day] .subview .module h3,
+:root[data-theme=day] .subview .metric strong {
+  text-shadow:0 1px 3px rgba(255,255,255,.65);
+}
+@media(prefers-reduced-transparency:reduce){
+ .subview .subheading.glass,.subview .module.glass,
+ .subview .metric.glass,.subview .calendar.glass {background:rgba(11,15,35,.88)}
+ :root[data-theme=day] .subview .subheading.glass,
+ :root[data-theme=day] .subview .module.glass,
+ :root[data-theme=day] .subview .metric.glass,
+ :root[data-theme=day] .subview .calendar.glass {background:rgba(255,255,255,.89)}
+}
 </style>
 </head>
 <body>
@@ -51,10 +96,6 @@
       <div class="rail-label">YOUR STUDIO</div>
       <nav class="main-nav">
         <a href="#home" data-route="home" class="nav-link active"><span class="nav-glyph">◈</span> Overview</a>
-        <a href="#creator" data-route="creator" class="nav-link"><span class="nav-glyph">▤</span> Content Creator</a>
-        <a href="#optimizer" data-route="optimizer" class="nav-link"><span class="nav-glyph">◇</span> Listing Optimizer</a>
-        <a href="#growth" data-route="growth" class="nav-link"><span class="nav-glyph">↗</span> TikTok Growth</a>
-        <a href="#approval" data-route="approval" class="nav-link"><span class="nav-glyph">✓</span> Human Approval</a>
       </nav>
       <div class="rail-spacer"></div>
       <div class="rail-footer"><div class="trust-mark">✓</div><div><strong>Human-led</strong><small>Nothing publishes on its own.</small></div></div>
