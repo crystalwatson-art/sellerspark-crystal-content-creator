@@ -10,6 +10,7 @@ import { isValidSupabaseUserId } from "./supabase-auth.js";
 export const TIKTOK_AUTHORIZATION_URL = "https://www.tiktok.com/v2/auth/authorize/";
 export const TIKTOK_TOKEN_URL = "https://open.tiktokapis.com/v2/oauth/token/";
 export const TIKTOK_USER_INFO_URL = "https://open.tiktokapis.com/v2/user/info/";
+export const TIKTOK_VIDEO_LIST_URL = "https://open.tiktokapis.com/v2/video/list/";
 export const TIKTOK_DRAFT_UPLOAD_URL = "https://open.tiktokapis.com/v2/post/publish/inbox/video/init/";
 export const TIKTOK_CONNECTION_TABLE = "sellerspark_tiktok_connections";
 export const TIKTOK_OAUTH_STATE_TABLE = "sellerspark_tiktok_oauth_states";
@@ -17,6 +18,7 @@ export const TIKTOK_OAUTH_STATE_TABLE = "sellerspark_tiktok_oauth_states";
 export const TIKTOK_SCOPES = Object.freeze({
   identity: "user.info.basic",
   followerStats: "user.info.stats",
+  videoViews: "video.list",
   draftUpload: "video.upload"
 });
 
@@ -311,22 +313,24 @@ export function createTikTokIntegration({
     if (!configured) throw tiktokError("not_configured", "TikTok connection is not configured for this environment.");
   }
 
-  async function startAuthorization({ userId }) {
+  async function startAuthorization({ userId, includeVideoViews = false }) {
     requireConfigured();
     const ownerId = requireUser(userId);
     const state = randomUUID();
     await stateStore.create({ state, ownerId, expiresAt: clock() + STATE_TTL_MS });
+    const requestedScopes = [TIKTOK_SCOPES.identity, TIKTOK_SCOPES.followerStats, TIKTOK_SCOPES.draftUpload];
+    if (includeVideoViews === true) requestedScopes.push(TIKTOK_SCOPES.videoViews);
     const params = new URLSearchParams({
       client_key: clientKey,
       response_type: "code",
-      scope: [TIKTOK_SCOPES.identity, TIKTOK_SCOPES.followerStats, TIKTOK_SCOPES.draftUpload].join(","),
+      scope: requestedScopes.join(","),
       redirect_uri: redirectUri,
       state
     });
     return {
       status: "authorization_required",
       authorizationUrl: TIKTOK_AUTHORIZATION_URL + "?" + params.toString(),
-      scopes: [TIKTOK_SCOPES.identity, TIKTOK_SCOPES.followerStats, TIKTOK_SCOPES.draftUpload]
+      scopes: requestedScopes
     };
   }
 
@@ -437,6 +441,46 @@ export function createTikTokIntegration({
     return { followerCount: count, observedAt: new Date(clock()).toISOString(), source: "TikTok User Info API" };
   }
 
+  async function videoViews({ userId, cursor = null } = {}) {
+    const ownerId = requireUser(userId);
+    if (cursor !== null && (!Number.isSafeInteger(cursor) || cursor < 0)) {
+      throw tiktokError("invalid_cursor", "The requested video page is invalid.");
+    }
+    const record = await accessTokenFor(ownerId);
+    if (!record.grantedScopes.includes(TIKTOK_SCOPES.videoViews)) {
+      throw tiktokError("scope_missing", "Authorize video access to read views on your public TikTok videos.");
+    }
+    const url = new URL(TIKTOK_VIDEO_LIST_URL);
+    url.searchParams.set("fields", "id,title,create_time,view_count");
+    let payload;
+    try {
+      const response = await fetchImpl(url, {
+        method: "POST",
+        headers: { Authorization: "Bearer " + record.accessToken, "Content-Type": "application/json" },
+        body: JSON.stringify({ max_count: 20, ...(cursor === null ? {} : { cursor }) })
+      });
+      if (!response?.ok) throw new Error("unavailable");
+      payload = await response.json();
+    } catch {
+      throw tiktokError("provider_unavailable", "TikTok video views are temporarily unavailable.");
+    }
+    const data = payload?.data;
+    if ((payload?.error?.code && payload.error.code !== "ok") || !Array.isArray(data?.videos)
+      || data.videos.length > 20 || typeof data.has_more !== "boolean"
+      || (data.has_more && (!Number.isSafeInteger(data.cursor) || data.cursor < 0 || data.cursor === cursor))) {
+      throw tiktokError("provider_invalid_response", "TikTok video views returned an incomplete response.");
+    }
+    const videos = data.videos.map(video => {
+      if (typeof video.id !== "string" || !video.id || typeof video.title !== "string"
+        || !Number.isSafeInteger(video.view_count) || video.view_count < 0) {
+        throw tiktokError("provider_invalid_response", "TikTok video views were incomplete.");
+      }
+      return { id: video.id, title: video.title, viewCount: video.view_count };
+    });
+    return { videos, hasMore: data.has_more, cursor: data.has_more ? data.cursor : null,
+      observedAt: new Date(clock()).toISOString(), source: "TikTok Display API" };
+  }
+
   async function uploadDraft({ userId, videoUrl, caption = "", humanApproved = false } = {}) {
     const ownerId = requireUser(userId);
     if (humanApproved !== true) throw tiktokError("human_approval_required", "Human approval is required before a TikTok draft handoff.");
@@ -498,6 +542,7 @@ export function createTikTokIntegration({
     completeAuthorization,
     status,
     followerCount,
+    videoViews,
     uploadDraft,
     disconnect
   });
@@ -508,10 +553,11 @@ export function safeTikTokError(error) {
     "not_configured", "authorization_required", "authorization_failed", "authorization_state_invalid",
     "authorization_denied", "authorization_code_missing", "provider_unavailable", "provider_invalid_response",
     "storage_unavailable", "storage_corrupt", "scope_missing", "not_connected", "human_approval_required",
-    "invalid_video_url"
+    "invalid_video_url", "invalid_cursor"
   ]);
   return {
     code: allowed.has(error?.code) ? error.code : "integration_error",
     message: allowed.has(error?.code) ? error.message : "TikTok integration could not complete that request safely."
   };
 }
+

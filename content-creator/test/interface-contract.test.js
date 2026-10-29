@@ -55,7 +55,9 @@ test("dashboard exposes fictional mode and popup controls without a JSON editor"
   assert.doesNotMatch(html, /<textarea\b/);
   assert.doesNotMatch(html, /Show structured handoff JSON/);
   assert.doesNotMatch(html, /SellerSpark AI/);
-  assert.match(html, /Turn TikTok Attention Into/);
+  assert.match(html, /Generate test drafts/);
+  assert.match(html, /Regenerate drafts/);
+  assert.doesNotMatch(html, /Turn TikTok Attention Into/);
 });
 
 test("client wiring includes reset, theme, popup navigation, and contained close behavior", async () => {
@@ -126,3 +128,4 @@ test("mobile audience status remains fully readable at the compact breakpoint", 
 
   assert.match(styles, /\.workspace-stat:nth-child\(2\) \.audience-select \{ font-size: 0\.72rem; \}/);
 });
+

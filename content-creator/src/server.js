@@ -256,7 +256,8 @@ export function createServer({
       try {
         const { userId } = await authenticate(request);
         if (!tiktokIntegration) throw Object.assign(new Error("TikTok connection is not configured for this environment."), { code: "not_configured" });
-        const outcome = await tiktokIntegration.startAuthorization({ userId });
+        const input = JSON.parse(await readBody(request, 4096) || "{}");
+        const outcome = await tiktokIntegration.startAuthorization({ userId, includeVideoViews: input?.includeVideoViews === true });
         sendJson(response, 200, outcome);
       } catch (error) {
         if (["authorization_required", "authorization_failed", "auth_unavailable"].includes(error?.code)) {
@@ -307,6 +308,24 @@ export function createServer({
         }
         const safe = safeTikTokError(error);
         sendJson(response, safe.code === "not_configured" ? 503 : 422, { status: "error", message: safe.message });
+      }
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/tiktok/video-views") {
+      try {
+        const { userId } = await authenticate(request);
+        if (!tiktokIntegration) throw Object.assign(new Error("TikTok connection is not configured for this environment."), { code: "not_configured" });
+        const rawCursor = url.searchParams.get("cursor");
+        const cursor = rawCursor === null ? null : /^\d+$/.test(rawCursor) ? Number(rawCursor) : NaN;
+        sendJson(response, 200, await tiktokIntegration.videoViews({ userId, cursor }));
+      } catch (error) {
+        if (["authorization_required", "authorization_failed", "auth_unavailable"].includes(error?.code)) {
+          sendJson(response, error.code === "auth_unavailable" ? 503 : 401, { status: "error", message: error.message });
+          return;
+        }
+        const safe = safeTikTokError(error);
+        sendJson(response, safe.code === "not_configured" ? 503 : 422, { status: "error", code: safe.code, message: safe.message });
       }
       return;
     }
@@ -614,3 +633,4 @@ export async function startServer({ port = Number(process.env.PORT || 3000) } = 
 
 const isMain = process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url;
 if (isMain) await startServer();
+

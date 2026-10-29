@@ -116,3 +116,16 @@ test("TikTok OAuth start uses the verified bearer identity and never accepts a b
   assert.doesNotMatch(body.authorizationUrl, /test-client-secret|supabase-token-a/);
   assert.equal(response.headers.get("set-cookie"), null);
 });
+
+test("video views are authenticated and follower permission alone cannot read videos", async t => {
+  const running = await startServerForTest();
+  t.after(() => running.server.close());
+  const anonymous = await fetch(running.base + "/api/tiktok/video-views");
+  assert.equal(anonymous.status, 401);
+  const missingScope = await fetch(running.base + "/api/tiktok/video-views", { headers: { authorization: "Bearer " + supabaseToken } });
+  assert.equal(missingScope.status, 422);
+  assert.equal((await missingScope.json()).code, "scope_missing");
+  const badPage = await fetch(running.base + "/api/tiktok/video-views?cursor=bad", { headers: { authorization: "Bearer " + supabaseToken } });
+  assert.equal((await badPage.json()).code, "invalid_cursor");
+});
+

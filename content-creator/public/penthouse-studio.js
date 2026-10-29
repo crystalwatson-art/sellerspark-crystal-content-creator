@@ -73,22 +73,6 @@ window.addEventListener("sellerspark:tiktok-metric", event => {
   liveCount = event.detail.followerCount;
   refreshFollowers();
 });
-function refreshMiniCalendar() {
-  const mini = document.querySelector("#mini-calendar");
-  mini.replaceChildren();
-  document.querySelectorAll("#campaign-calendar .calendar-card").forEach((card, index) => {
-    const link = document.createElement("a");
-    link.href = "#growth";
-    link.className = "calendar-day";
-    const label = document.createElement("b");
-    label.textContent = `D${String(index + 1).padStart(2, "0")}`;
-    const focus = document.createElement("span");
-    focus.textContent = card.querySelector("strong")?.textContent || "Draft idea";
-    link.append(label, focus);
-    mini.append(link);
-  });
-}
-new MutationObserver(refreshMiniCalendar).observe(document.querySelector("#campaign-calendar"), { childList: true });
 new MutationObserver(refreshReviewLists).observe(document.querySelector("#drafts"), { childList: true });
 window.addEventListener("hashchange", route);
 document.querySelector("#reset-button").addEventListener("click", () => {
@@ -98,5 +82,5 @@ document.querySelector("#reset-button").addEventListener("click", () => {
 document.querySelector("#theme-toggle").addEventListener("click", () => {
   localStorage.setItem("sellerspark-penthouse-theme", document.documentElement.dataset.theme === "light" ? "day" : "night");
 });
-refreshAccount(); refreshLocation(); refreshFollowers(); refreshMiniCalendar(); route();
+refreshAccount(); refreshLocation(); refreshFollowers(); route();
 

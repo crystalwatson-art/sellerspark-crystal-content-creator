@@ -7,36 +7,22 @@
 <div class="layout"><main id="main" class="stage" tabindex="-1"><section id="view-home" class="route-view home-view" aria-labelledby="home-title">
         <div class="home-top">
           <div class="greeting glass"><div class="eyebrow">SELLERSPARK <span>•</span> PRIVATE CREATIVE STUDIO</div><h1 id="home-title">Welcome to your <em>studio.</em></h1><p>Thoughtful content. Clear decisions. Your view of Manhattan.</p></div>
-          <div class="status glass" aria-live="polite"><span class="status-label">TIKTOK FOLLOWERS <b>·</b> GOAL 100</span><strong id="dashboard-followers">Not connected</strong><a href="#growth">View connection status <span aria-hidden="true">↗</span></a></div>
         </div>
         <div class="quick-controls glass" aria-label="Workspace preferences"><label>Location<select id="location"><option value="lic">Long Island City (LIC)</option><option value="brooklyn">Brooklyn</option></select></label><label>Audience<select id="audience"><option value="sellers">Sellers</option><option value="buyers" disabled>Buyers · research not available</option></select></label><span class="controls-hint">Seller research · human review required</span></div>
         <div class="home-bottom">
-          <div class="calendar glass" aria-label="14-day TikTok draft calendar"><div class="calendar-head"><span>14-DAY CONTENT CALENDAR</span><a href="#growth">View planner ↗</a></div><div class="calendar-days" id="mini-calendar"></div></div>
           <nav class="four-cards" aria-label="Open your workspace"><a class="feature glass" href="#creator"><span class="feature-index">01 / CREATE</span><span class="feature-open" aria-hidden="true">↗</span><div><strong>Content Creator</strong><small>Ideas, scripts &amp; drafts</small></div></a><a class="feature glass" href="#optimizer"><span class="feature-index">02 / IMPROVE</span><span class="feature-open" aria-hidden="true">↗</span><div><strong>Listing Optimizer</strong><small>Review &amp; revisions</small></div></a><a class="feature glass" href="#growth"><span class="feature-index">03 / GROW</span><span class="feature-open" aria-hidden="true">↗</span><div><strong>TikTok Growth</strong><small>Calendar &amp; real metrics</small></div></a><a class="feature glass" href="#approval"><span class="feature-index">04 / APPROVE</span><span class="feature-open" aria-hidden="true">↗</span><div><strong>Human Approval</strong><small>Every decision stays yours</small></div></a></nav>
         </div>
       </section>
 <section id="view-creator" class="route-view subview" hidden>
     <a class="back" href="#home">← Back to studio</a>
     <div class="subheading glass"><span class="eyebrow">SELLERSPARK / CREATOR</span><h2>Ideas worth sharing.</h2><p>Create drafts, inspect sources, and preserve every review.</p></div>
-    <section id="overview" class="hero" aria-labelledby="page-title">
-          <div class="hero-copy">
-            <p class="eyebrow"><span class="eyebrow-dot"></span>CRYSTAL'S STUDIO · TIKTOK WORKSPACE</p>
-            <h1 id="page-title">Turn TikTok Attention Into <span>Listing Opportunities.</span></h1>
-            <p class="intro">
-              Create thoughtful seller conversations from grounded research,
-              then move every idea through a clear human review.
-            </p>
-            <div class="hero-meta" aria-label="Studio summary">
-              <span><strong>03</strong> draft directions</span>
-              <span><strong>02</strong> approved audiences</span>
-              <span><strong>01</strong> human gate</span>
-            </div>
-          </div>
+    <section id="overview" class="hero" aria-label="Content Creator controls">
           <div class="hero-actions">
             <button id="run-fictional-test" class="primary-button" type="button">
-              <span aria-hidden="true">✦</span> Run fictional test mode
+              <span aria-hidden="true">✦</span> Generate test drafts
             </button>
-            <p><span class="gold-dot"></span>Fictional data only · no publishing or outreach</p>
+            <button id="regenerate-drafts" class="secondary-button" type="button" disabled>Regenerate drafts</button>
+            <p><span class="gold-dot"></span>Uses the selected fictional research brief. Offline templates may repeat; prior reviews are preserved.</p>
           </div>
         </section><section class="workspace-strip" aria-label="Workspace status">
           <div class="workspace-stat">
@@ -91,7 +77,7 @@
           </div>
 
           <p id="result-summary" class="section-summary" aria-live="polite">
-            Run fictional test mode to preview three compact, review-only draft packages.
+            Generate test drafts to create three review-only packages.
           </p>
           <p id="demo-error" class="error" role="alert" hidden></p>
           <div id="result-diagnostic" class="result-diagnostic" role="status" aria-live="polite" hidden>
@@ -103,7 +89,7 @@
           <div id="empty-state" class="empty-state">
             <span class="empty-icon" aria-hidden="true">✦</span>
             <strong>Your draft queue is ready</strong>
-            <span>Run the fictional test mode above to see three distinct TikTok angles.</span>
+            <span>Choose Generate test drafts to begin.</span>
           </div>
           <div id="reset-confirmation" class="reset-confirmation" role="dialog" aria-modal="true" aria-labelledby="reset-confirmation-title" hidden>
             <strong id="reset-confirmation-title">Reset the active review?</strong>
@@ -124,8 +110,8 @@
     <section id="campaign" class="campaign-section" aria-labelledby="campaign-heading">
           <div class="campaign-heading">
             <div>
-              <p class="eyebrow">14-DAY TIKTOK GROWTH PILOT</p>
-              <h2 id="campaign-heading">Plan the conversation, measure the count</h2>
+              
+              <h3 id="campaign-heading">Account connection &amp; growth plan</h3>
               <p class="campaign-intro">A draft-only planning layer for genuine audience growth. It does not publish, follow, comment, message, or promise results.</p>
             </div>
             <span class="status-badge muted">Manual approval only</span>
@@ -162,10 +148,12 @@
             <div>
               <span class="modal-label">TikTok connection</span>
               <h3 id="tiktok-connection-heading">Not connected</h3>
+              <p class="live-follower-stat">Live follower count: <strong id="dashboard-followers">Not connected</strong></p>
               <p id="tiktok-connection-note">Official API setup is required before follower statistics can be read. No account connection is attempted in this local pilot.</p>
               <div class="tiktok-actions">
                 <button id="connect-tiktok" class="secondary-button" type="button" hidden>Connect TikTok</button>
                 <button id="sync-tiktok-followers" class="secondary-button" type="button" hidden>Sync follower count</button>
+                <button id="open-views" class="secondary-button" type="button" aria-expanded="false" aria-controls="views-panel">Views</button>
               </div>
             </div>
             <ul id="tiktok-permissions" class="permission-list">
@@ -176,6 +164,13 @@
             </ul>
           </div>
 
+          <section id="views-panel" class="views-panel" aria-labelledby="views-title" hidden>
+            <h3 id="views-title">Video views</h3>
+            <p id="views-note" role="status">Connect TikTok and authorize video access to see views on your public videos.</p>
+            <div class="tiktok-actions"><button id="authorize-video-views" class="secondary-button" type="button" disabled>Authorize video views</button><button id="refresh-video-views" class="secondary-button" type="button" disabled>Refresh views</button></div>
+            <div id="video-views-list" class="review-launch-list"></div>
+            <div class="tiktok-actions"><button id="views-previous" class="secondary-button" type="button" disabled>← Newer videos</button><span id="views-page">Page 1</span><button id="views-next" class="secondary-button" type="button" disabled>Older videos →</button></div>
+          </section>
           <div class="calendar-heading">
             <div>
               <span class="modal-label">14-day content calendar</span>

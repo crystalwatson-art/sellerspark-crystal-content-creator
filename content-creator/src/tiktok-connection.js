@@ -5,6 +5,7 @@ export const TIKTOK_CONNECTION_PLAN = Object.freeze({
   provider: "TikTok for Developers official APIs",
   requiredProducts: ["Login Kit", "User Info API"],
   readOnlyScopes: ["user.info.basic", "user.info.stats"],
+  optionalVideoViewsScope: "video.list",
   optionalDraftHandoffScope: "video.upload",
   directPublishScope: "video.publish",
   directPublishEnabled: false,
@@ -31,3 +32,4 @@ export function isTikTokConnectionReady(config = {}) {
     && config.authorizedScopes?.includes("user.info.stats")
   );
 }
+

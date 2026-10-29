@@ -40,3 +40,12 @@ test("former preview forwards query and fragment to the one working interface", 
   assert.match(html, /location\.replace\('\/'\+location\.search\+location\.hash\)/);
   assert.doesNotMatch(html, /route-view|data:image/);
 });
+
+test("one calendar, regeneration and video views replace duplicate presentation blocks", async () => {
+  const html = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
+  assert.equal((html.match(/id="campaign-calendar"/g) || []).length, 1);
+  assert.doesNotMatch(html, /mini-calendar|open-followers|followers-panel/);
+  for (const id of ["regenerate-drafts", "open-views", "views-panel", "authorize-video-views", "refresh-video-views", "video-views-list", "views-next", "views-previous"]) {
+    assert.match(html, new RegExp('id="' + id + '"'));
+  }
+});

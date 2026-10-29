@@ -8,6 +8,7 @@ const audiencePill = document.querySelector("#audience-pill");
 const summary = document.querySelector("#result-summary");
 const resultDiagnostic = document.querySelector("#result-diagnostic");
 const runTestButton = document.querySelector("#run-fictional-test");
+const regenerateButton = document.querySelector("#regenerate-drafts");
 const writerStatusValue = document.querySelector("#writer-status-value");
 const writerExplanation = document.querySelector("#writer-explanation");
 const writerNextStep = document.querySelector("#writer-next-step");
@@ -32,6 +33,15 @@ const tiktokConnectionHeading = document.querySelector("#tiktok-connection-headi
 const tiktokConnectionNote = document.querySelector("#tiktok-connection-note");
 const connectTikTok = document.querySelector("#connect-tiktok");
 const syncTikTokFollowers = document.querySelector("#sync-tiktok-followers");
+const openVideoViews = document.querySelector("#open-views");
+const viewsPanel = document.querySelector("#views-panel");
+const viewsNote = document.querySelector("#views-note");
+const videoViewsList = document.querySelector("#video-views-list");
+const authorizeVideoViews = document.querySelector("#authorize-video-views");
+const refreshVideoViews = document.querySelector("#refresh-video-views");
+const previousVideoViews = document.querySelector("#views-previous");
+const nextVideoViews = document.querySelector("#views-next");
+const videoViewsPage = document.querySelector("#views-page");
 const authStatus = document.querySelector("#auth-status");
 const authForm = document.querySelector("#auth-form");
 const authEmail = document.querySelector("#auth-email");
@@ -93,7 +103,14 @@ let activeRequestController = null;
 let requestSequence = 0;
 let reviewActionInFlight = false;
 let recoveryMode = false;
+let videoPages = [];
+let videoPageIndex = 0;
+let videoViewsAccess = false;
+let videoViewsLoading = false;
+let videoViewsRequest = 0;
+let videoViewsOwner = null;
 const authClient = new BrowserSupabaseAuth();
+videoViewsOwner = authClient.session?.userId || null;
 
 const WORKSPACE_STORAGE_KEY = "sellerspark-listing-review-workspaces-v2";
 const LEGACY_WORKSPACE_STORAGE_KEY = "sellerspark-listing-review-workspace-v1";
@@ -309,6 +326,73 @@ function renderTikTokStatus(status = {}) {
   connectTikTok.textContent = connected ? "TikTok connected" : "Connect TikTok";
   syncTikTokFollowers.hidden = false;
   syncTikTokFollowers.disabled = !connected;
+  videoViewsAccess = connected && Boolean(authClient.session) && Array.isArray(status.scopes) && status.scopes.includes("video.list");
+  authorizeVideoViews.hidden = videoViewsAccess;
+  authorizeVideoViews.disabled = !configured || !authClient.session;
+  if (!videoViewsAccess) {
+    videoPages = [];
+    videoPageIndex = 0;
+    videoViewsList.replaceChildren();
+    viewsNote.textContent = !configured ? "Finish the TikTok connection setup before reading video views."
+      : !authClient.session ? "Sign in, connect TikTok, and authorize video access to see views."
+      : "Choose Authorize video views to grant read-only access to your public videos. TikTok must approve this permission for the app.";
+  }
+  renderVideoViewControls();
+}
+
+function renderVideoViewControls() {
+  refreshVideoViews.disabled = !videoViewsAccess || videoViewsLoading;
+  previousVideoViews.disabled = videoViewsLoading || videoPageIndex === 0;
+  nextVideoViews.disabled = !videoViewsAccess || videoViewsLoading || !videoPages[videoPageIndex]?.hasMore;
+  videoViewsPage.textContent = "Page " + (videoPageIndex + 1);
+}
+
+function renderVideoViews() {
+  videoViewsList.replaceChildren();
+  const page = videoPages[videoPageIndex];
+  for (const video of page?.videos || []) {
+    const row = document.createElement("article");
+    row.className = "video-views-row";
+    const title = document.createElement("strong");
+    title.textContent = video.title || "Untitled video";
+    const count = document.createElement("span");
+    count.textContent = video.viewCount.toLocaleString("en-US") + " views";
+    row.append(title, count);
+    videoViewsList.append(row);
+  }
+  if (page) viewsNote.textContent = page.videos.length
+    ? "Views on your public videos · updated " + new Date(page.observedAt).toLocaleString() + ". These are per-video counts, not profile visits."
+    : "TikTok returned no public videos on this page.";
+  renderVideoViewControls();
+}
+
+async function loadVideoViews(cursor = null, pageIndex = 0) {
+  if (!videoViewsAccess || videoViewsLoading) return;
+  const requestId = ++videoViewsRequest;
+  videoViewsLoading = true;
+  viewsNote.textContent = "Reading video views from TikTok…";
+  renderVideoViewControls();
+  try {
+    const suffix = cursor === null ? "" : "?cursor=" + encodeURIComponent(cursor);
+    const response = await authClient.authorizedFetch("/api/tiktok/video-views" + suffix, { cache: "no-store" });
+    const payload = await response.json();
+    if (requestId !== videoViewsRequest) return;
+    if (!response.ok || !Array.isArray(payload.videos)) {
+      viewsNote.textContent = payload.message || "Video views could not be loaded. Your draft workspace is unchanged.";
+      return;
+    }
+    if (pageIndex === 0) videoPages = [];
+    videoPages[pageIndex] = payload;
+    videoPageIndex = pageIndex;
+    renderVideoViews();
+  } catch {
+    if (requestId === videoViewsRequest) viewsNote.textContent = "Video views are temporarily unavailable. Try again later.";
+  } finally {
+    if (requestId === videoViewsRequest) {
+      videoViewsLoading = false;
+      renderVideoViewControls();
+    }
+  }
 }
 
 async function refreshTikTokStatus() {
@@ -331,14 +415,17 @@ async function refreshTikTokStatus() {
   }
 }
 
-async function startTikTokAuthorization() {
+async function startTikTokAuthorization({ includeVideoViews = false } = {}) {
   if (!authClient.session) {
     setAuthError("Sign in before connecting TikTok.");
     return;
   }
   connectTikTok.disabled = true;
   try {
-    const response = await authClient.authorizedFetch("/api/tiktok/oauth/start", { method: "POST" });
+    const response = await authClient.authorizedFetch("/api/tiktok/oauth/start", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ includeVideoViews: includeVideoViews === true })
+    });
     const payload = await response.json();
     if (!response.ok || typeof payload.authorizationUrl !== "string") {
       tiktokConnectionNote.textContent = payload.message || "TikTok authorization could not be started safely.";
@@ -599,6 +686,7 @@ function persistWorkspace() {
 function restoreWorkspaceSnapshot(saved) {
   if (!saved || !Array.isArray(saved.drafts) || !saved.listingReview) {
     currentDrafts = [];
+    regenerateButton.disabled = true;
     currentEditorialQuality = null;
     currentListingReview = null;
     currentReviewId = null;
@@ -667,6 +755,7 @@ function referenceLabel(reference) {
 }
 
 function renderDraftCards() {
+  regenerateButton.disabled = Boolean(activeRequestController) || currentDrafts.length === 0;
   drafts.replaceChildren();
   currentDrafts.forEach((draft, index) => {
     const card = document.createElement("article");
@@ -972,6 +1061,7 @@ function resetWorkspace() {
 }
 
 function clearActiveWorkspace() {
+  regenerateButton.disabled = true;
   requestSequence += 1;
   activeRequestController?.abort();
   activeRequestController = null;
@@ -1115,6 +1205,8 @@ async function runReviewAction(action, note = "Human reviewer requested this act
 
 async function runFictionalTest() {
   if (activeRequestController) return;
+  const hadDrafts = currentDrafts.length > 0;
+  const previousSummary = summary.textContent;
   currentWorkspaceAudience = isSupportedAudience(audienceValue.value)
     ? audienceValue.value
     : DEFAULT_RESEARCH_AUDIENCE;
@@ -1126,6 +1218,7 @@ async function runFictionalTest() {
   setStatus("Creating drafts…", "muted");
   summary.textContent = "Running the fictional Content Creator test.";
   runTestButton.disabled = true;
+  regenerateButton.disabled = true;
   audienceValue.disabled = true;
 
   try {
@@ -1140,19 +1233,30 @@ async function runFictionalTest() {
     const result = await response.json();
     if (requestId !== requestSequence) return;
     if (!response.ok) {
+      if (hadDrafts) summary.textContent = previousSummary;
       setDemoError(result.message || "The local demo rejected the fictional brief.");
       setStatus("Request error", "error");
       return;
     }
+    if (hadDrafts && (result.status !== "ready_for_review" || !Array.isArray(result.drafts) || !result.drafts.length)) {
+      summary.textContent = previousSummary;
+      setStatus("Previous drafts kept", "warning");
+      setDemoError("Regeneration did not produce usable drafts. Your previous review is unchanged.");
+      renderWriterDiagnostic(result);
+      return;
+    }
+    if (Array.isArray(result.drafts) && result.drafts.length) archiveWorkspace();
     renderResult(result);
   } catch (error) {
     if (error?.name === "AbortError" || requestId !== requestSequence) return;
+    if (hadDrafts) summary.textContent = previousSummary;
     setDemoError("The fictional test mode is not reachable. Start it with npm run start.");
     setStatus("Demo unavailable", "error");
   } finally {
     if (requestId === requestSequence) {
       activeRequestController = null;
       runTestButton.disabled = false;
+      regenerateButton.disabled = currentDrafts.length === 0;
       audienceValue.disabled = false;
     }
   }
@@ -1226,8 +1330,22 @@ authSignOut.addEventListener("click", async () => {
   if (currentPersistenceStatus === "supabase") setDemoError("You are signed out. Sign in again to continue this saved review.");
   renderTikTokStatus({ status: "not_connected", scopes: [] });
 });
-connectTikTok.addEventListener("click", startTikTokAuthorization);
+connectTikTok.addEventListener("click", () => startTikTokAuthorization());
 syncTikTokFollowers.addEventListener("click", syncTikTokFollowerCount);
+openVideoViews.addEventListener("click", () => {
+  viewsPanel.hidden = !viewsPanel.hidden;
+  openVideoViews.setAttribute("aria-expanded", String(!viewsPanel.hidden));
+  if (!viewsPanel.hidden && videoViewsAccess && !videoPages.length) void loadVideoViews();
+});
+authorizeVideoViews.addEventListener("click", () => startTikTokAuthorization({ includeVideoViews: true }));
+refreshVideoViews.addEventListener("click", () => loadVideoViews());
+previousVideoViews.addEventListener("click", () => {
+  if (videoPageIndex > 0) { videoPageIndex -= 1; renderVideoViews(); }
+});
+nextVideoViews.addEventListener("click", () => {
+  if (videoPages[videoPageIndex + 1]) { videoPageIndex += 1; renderVideoViews(); }
+  else if (videoPages[videoPageIndex]?.hasMore) void loadVideoViews(videoPages[videoPageIndex].cursor, videoPageIndex + 1);
+});
 
 window.SellerSparkContentCreator = Object.freeze({
   requestBrief: requestContentBrief,
@@ -1239,6 +1357,7 @@ window.SellerSparkContentCreator = Object.freeze({
   }
 });
 runTestButton.addEventListener("click", runFictionalTest);
+regenerateButton.addEventListener("click", runFictionalTest);
 document.querySelector("#modal-close").addEventListener("click", closeDraft);
 document.querySelector("#modal-close-footer").addEventListener("click", closeDraft);
 document.querySelector(".modal-backdrop").addEventListener("click", closeDraft);
@@ -1274,5 +1393,18 @@ authClient.onAuthStateChange((session) => {
   if (session && currentReviewId && currentPersistenceStatus === "supabase") void refreshReviewFromServer();
 });
 authClient.onAuthStateChange(() => void refreshTikTokStatus());
+authClient.onAuthStateChange((session) => {
+  const nextOwner = session?.userId || null;
+  if (nextOwner && nextOwner === videoViewsOwner) return;
+  videoViewsOwner = nextOwner;
+  videoViewsRequest += 1;
+  videoViewsLoading = false;
+  videoViewsAccess = false;
+  videoPages = [];
+  videoPageIndex = 0;
+  videoViewsList.replaceChildren();
+  viewsNote.textContent = "Connect TikTok and authorize video access to see views.";
+  renderVideoViewControls();
+});
 void initializeAuth();
 
