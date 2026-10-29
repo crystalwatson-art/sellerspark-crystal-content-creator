@@ -37,6 +37,14 @@ const assets = new Map([
   ["/growth-pilot.js", { file: path.join(publicRoot, "growth-pilot.js"), type: "text/javascript; charset=utf-8" }],
   ["/supabase-auth.js", { file: path.join(publicRoot, "supabase-auth.js"), type: "text/javascript; charset=utf-8" }],
   ["/styles.css", { file: path.join(publicRoot, "styles.css"), type: "text/css; charset=utf-8" }],
+  ["/penthouse-studio.js", { file: path.join(publicRoot, "penthouse-studio.js"), type: "text/javascript; charset=utf-8" }],
+  ["/studio-navigation.js", { file: path.join(publicRoot, "studio-navigation.js"), type: "text/javascript; charset=utf-8" }],
+  ["/calendar-state.js", { file: path.join(publicRoot, "calendar-state.js"), type: "text/javascript; charset=utf-8" }],
+  ["/calendar-ui.js", { file: path.join(publicRoot, "calendar-ui.js"), type: "text/javascript; charset=utf-8" }],
+  ["/penthouse-workspace.css", { file: path.join(publicRoot, "penthouse-workspace.css"), type: "text/css; charset=utf-8" }],
+  ["/penthouse-preview.html", { file: path.join(publicRoot, "penthouse-preview.html"), type: "text/html; charset=utf-8" }],
+  ["/assets/penthouse-night.webp", { file: path.join(publicRoot, "assets/penthouse-night.webp"), type: "image/webp" }],
+  ["/assets/penthouse-day.webp", { file: path.join(publicRoot, "assets/penthouse-day.webp"), type: "image/webp" }],
   ["/fixtures/fictional-research-brief.json", { file: fixturePath, type: "application/json; charset=utf-8" }],
   ["/fixtures/fictional-brooklyn-townhouse-brief.json", { file: brooklynFixturePath, type: "application/json; charset=utf-8" }]
 ]);

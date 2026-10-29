@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const htmlPath = new URL("../public/index.html", import.meta.url);
-const stylesPath = new URL("../public/styles.css", import.meta.url);
+const stylesPath = new URL("../public/penthouse-workspace.css", import.meta.url);
 
 test("Studio presentation keeps Crystal ownership and the multi-agent workflow visible", async () => {
   const html = await readFile(htmlPath, "utf8");
@@ -19,11 +19,11 @@ test("Studio presentation keeps Crystal ownership and the multi-agent workflow v
     assert.match(html, new RegExp(label));
   }
   assert.match(html, /Nothing publishes automatically/);
-  assert.match(styles, /--bg: #080d1d/);
+  assert.match(styles, /--surface:rgba\(11,15,35,\.10\)/);
   assert.match(styles, /--violet:/);
   assert.match(styles, /--gold:/);
-  assert.match(styles, /\[hidden\] \{ display: none !important; \}/);
+  assert.match(styles, /\[hidden\]\{display:none!important\}/);
   assert.match(styles, /\.workflow-track/);
-  assert.match(styles, /@media \(max-width: 600px\)/);
+  assert.match(styles, /@media\(max-width:600px\)/);
 });
 

@@ -215,6 +215,9 @@ const writerDiagnostics = Object.freeze({
 function setDemoError(message = "") {
   demoError.textContent = message;
   demoError.hidden = !message;
+  const visibleError = document.querySelector("#modal-error");
+  visibleError.textContent = message;
+  visibleError.hidden = !message;
 }
 
 function setAuthError(message = "") {
@@ -258,6 +261,7 @@ function renderAuthState(session = authClient.session) {
   const signedIn = Boolean(session?.accessToken);
   authEmail.hidden = signedIn;
   authPassword.hidden = signedIn;
+  authPassword.closest(".password-field").hidden = signedIn;
   authSignIn.hidden = signedIn;
   authSignOut.hidden = !signedIn;
   authStatus.textContent = signedIn
@@ -534,20 +538,7 @@ function initializeTheme() {
 }
 
 function renderGrowthCalendar(calendar) {
-  campaignCalendar.replaceChildren();
-  calendar.forEach((item) => {
-    const card = document.createElement("article");
-    card.className = "calendar-card";
-    const day = document.createElement("span");
-    day.className = "calendar-day";
-    day.textContent = "Day " + String(item.day).padStart(2, "0");
-    const focus = document.createElement("strong");
-    focus.textContent = item.focus;
-    const format = document.createElement("span");
-    format.textContent = item.format + " · Draft only";
-    card.append(day, focus, format);
-    campaignCalendar.append(card);
-  });
+  window.dispatchEvent(new CustomEvent("sellerspark:calendar-prompts", { detail: clone(calendar) }));
 }
 
 function isSupportedAudience(value) {
@@ -790,16 +781,18 @@ function renderDraftCards() {
     preview.textContent = "Preview draft →";
     preview.addEventListener("click", (event) => {
       event.stopPropagation();
+      setReviewMode("creator");
       openDraft(index);
     });
     cardBottom.append(sourceCount, preview);
 
     card.append(cardTop, title, excerpt, cardBottom);
-    card.addEventListener("click", () => openDraft(index));
+    card.addEventListener("click", () => { setReviewMode("creator"); openDraft(index); });
     card.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        openDraft(index);
+        setReviewMode("creator");
+      openDraft(index);
       }
     });
     drafts.append(card);
@@ -976,6 +969,16 @@ function renderModal() {
   modalCopy.textContent = "Copy";
 }
 
+function setReviewMode(mode) {
+  modal.dataset.mode = ["creator", "optimizer", "approval"].includes(mode) ? mode : "creator";
+  document.querySelector("#optimizer-review-heading").textContent = modal.dataset.mode === "approval"
+    ? "Review the draft and make your decision"
+    : "Original content beside a proposed revision";
+  const next = document.querySelector("#modal-next-step");
+  next.href = modal.dataset.mode === "creator" ? "#optimizer" : "#approval";
+  next.textContent = modal.dataset.mode === "creator" ? "Open Listing Optimizer →" : "Review & approve →";
+}
+
 function openDraft(index) {
   if (!currentDrafts[index]) return;
   activeDraftIndex = index;
@@ -1026,10 +1029,12 @@ function requestReset() {
     return;
   }
   resetConfirmation.hidden = false;
+  resetConfirmation.showModal();
   resetConfirm.focus();
 }
 
 function resetWorkspace() {
+  regenerateButton.disabled = true;
   requestSequence += 1;
   activeRequestController?.abort();
   activeRequestController = null;
@@ -1057,6 +1062,7 @@ function resetWorkspace() {
   setStatus("Ready to test", "muted");
   resultDiagnostic.hidden = true;
   setDemoError();
+  resetConfirmation.close();
   resetConfirmation.hidden = true;
 }
 
@@ -1250,7 +1256,7 @@ async function runFictionalTest() {
   } catch (error) {
     if (error?.name === "AbortError" || requestId !== requestSequence) return;
     if (hadDrafts) summary.textContent = previousSummary;
-    setDemoError("The fictional test mode is not reachable. Start it with npm run start.");
+    setDemoError("Draft generation could not be reached. Your saved work is unchanged; please try again shortly.");
     setStatus("Demo unavailable", "error");
   } finally {
     if (requestId === requestSequence) {
@@ -1267,6 +1273,7 @@ themeToggle.addEventListener("click", () => {
 });
 resetButton.addEventListener("click", requestReset);
 resetCancel.addEventListener("click", () => {
+  resetConfirmation.close();
   resetConfirmation.hidden = true;
   resetButton.focus();
 });
@@ -1349,9 +1356,16 @@ nextVideoViews.addEventListener("click", () => {
 
 window.SellerSparkContentCreator = Object.freeze({
   requestBrief: requestContentBrief,
-  getDraftSummaries: () => currentDrafts.map((draft, index) => ({ index, hook: draft.hook, angle: draft.angle })),
-  openReview: (index) => {
+  getWorkspaceIdentity: () => ({ owner: authClient.session?.userId || "demo", audience: currentWorkspaceAudience }),
+  getCalendarPrompts: () => createGrowthPilotView({ audienceMode: campaignAudienceMode.value }).calendar,
+  getDraftSummaries: () => currentDrafts.map((draft, index) => ({ index, hook: draft.hook, angle: draft.angle, status: currentListingReview?.reviews?.[index]?.status || "pending" })),
+  getCalendarDrafts: () => currentDrafts.map((draft, index) => ({
+    index, ref: `${currentReviewId || "legacy"}:${currentListingReview?.reviews?.[index]?.draftId || index}`,
+    status: currentListingReview?.reviews?.[index]?.status || "pending", draft: clone(draft)
+  })),
+  openReview: (index, mode = "approval") => {
     if (!Number.isInteger(index) || index < 0 || index >= currentDrafts.length) return false;
+    setReviewMode(mode);
     openDraft(index);
     return true;
   }
@@ -1374,6 +1388,8 @@ modalNext.addEventListener("click", () => {
   }
 });
 modalCopy.addEventListener("click", copyActiveDraft);
+document.querySelector("#modal-next-step").addEventListener("click", closeDraft);
+resetConfirmation.addEventListener("cancel", () => { resetConfirmation.hidden = true; });
 optimizerAccept.addEventListener("click", () => runReviewAction("accept", "Human reviewer accepted this proposed revision for the next approval step."));
 optimizerReject.addEventListener("click", () => runReviewAction("reject", "Human reviewer rejected this proposed revision; the original remains the working draft."));
 optimizerRevision.addEventListener("click", () => runReviewAction("request_revision", "Human reviewer requested a revision."));

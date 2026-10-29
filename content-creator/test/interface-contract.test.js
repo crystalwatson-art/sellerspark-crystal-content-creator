@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 
 const htmlPath = new URL("../public/index.html", import.meta.url);
 const appPath = new URL("../public/app.js", import.meta.url);
-const stylesPath = new URL("../public/styles.css", import.meta.url);
+const stylesPath = new URL("../public/penthouse-workspace.css", import.meta.url);
 
 test("dashboard exposes fictional mode and popup controls without a JSON editor", async () => {
   const html = await readFile(htmlPath, "utf8");
@@ -52,7 +52,7 @@ test("dashboard exposes fictional mode and popup controls without a JSON editor"
   assert.match(html, /Human approval is required/);
   assert.doesNotMatch(html, /Structured research brief/);
   assert.doesNotMatch(html, /Brief JSON/);
-  assert.doesNotMatch(html, /<textarea\b/);
+  assert.doesNotMatch(html, /<textarea[^>]*(?:json|research-brief)/i);
   assert.doesNotMatch(html, /Show structured handoff JSON/);
   assert.doesNotMatch(html, /SellerSpark AI/);
   assert.match(html, /Generate test drafts/);
@@ -126,6 +126,7 @@ test("client wiring includes reset, theme, popup navigation, and contained close
 test("mobile audience status remains fully readable at the compact breakpoint", async () => {
   const styles = await readFile(stylesPath, "utf8");
 
-  assert.match(styles, /\.workspace-stat:nth-child\(2\) \.audience-select \{ font-size: 0\.72rem; \}/);
+  assert.match(styles, /@media\(max-width:600px\)/);
+  assert.match(styles, /\.audience-select\{font-size:\.8rem;white-space:normal\}/);
 });
 
