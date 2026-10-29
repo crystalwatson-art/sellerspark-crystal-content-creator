@@ -304,8 +304,11 @@ function renderTikTokStatus(status = {}) {
   } else {
     tiktokConnectionNote.textContent = "Official API setup is not configured for this environment. The fictional demo remains available without sign-in.";
   }
-  connectTikTok.hidden = !configured || !authClient.session || connected;
-  syncTikTokFollowers.hidden = !connected;
+  connectTikTok.hidden = false;
+  connectTikTok.disabled = !configured || !authClient.session || connected;
+  connectTikTok.textContent = connected ? "TikTok connected" : "Connect TikTok";
+  syncTikTokFollowers.hidden = false;
+  syncTikTokFollowers.disabled = !connected;
 }
 
 async function refreshTikTokStatus() {
