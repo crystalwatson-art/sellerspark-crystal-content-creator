@@ -82,5 +82,6 @@ document.querySelector("#reset-button").addEventListener("click", () => {
 document.querySelector("#theme-toggle").addEventListener("click", () => {
   localStorage.setItem("sellerspark-penthouse-theme", document.documentElement.dataset.theme === "light" ? "day" : "night");
 });
+document.querySelector("#run-fictional-test").addEventListener("click", () => { location.hash = "creator"; });
 refreshAccount(); refreshLocation(); refreshFollowers(); route();
 
