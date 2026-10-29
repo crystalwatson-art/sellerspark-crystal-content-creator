@@ -360,6 +360,9 @@ async function syncTikTokFollowerCount() {
     }
     currentFollowers.value = String(payload.followerCount);
     renderGrowthPilot();
+    window.dispatchEvent(new CustomEvent("sellerspark:tiktok-metric", {
+      detail: { followerCount: payload.followerCount, observedAt: payload.observedAt }
+    }));
     growthNote.textContent = "Follower count synced from TikTok at " + new Date(payload.observedAt).toLocaleString() + ". This measures progress; it does not predict growth.";
   } catch (error) {
     tiktokConnectionNote.textContent = authClientErrorMessage(error);
@@ -428,15 +431,16 @@ function setTheme(theme) {
   document.documentElement.dataset.theme = isDark ? "dark" : "light";
   themeToggle.setAttribute("aria-pressed", String(isDark));
   themeToggle.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
-  themeToggle.querySelector(".theme-label").textContent = isDark ? "Light mode" : "Dark mode";
+  themeToggle.querySelector(".theme-label").textContent = isDark ? "Day view" : "Night view";
   themeToggle.querySelector(".theme-icon").textContent = isDark ? "☼" : "◐";
   localStorage.setItem("sellerspark-theme", isDark ? "dark" : "light");
 }
 
 function initializeTheme() {
+  const penthouseTheme = localStorage.getItem("sellerspark-penthouse-theme");
   const savedTheme = localStorage.getItem("sellerspark-theme");
   const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
-  setTheme(savedTheme || (prefersDark ? "dark" : "light"));
+  setTheme(penthouseTheme ? (penthouseTheme === "day" ? "light" : "dark") : savedTheme || (prefersDark ? "dark" : "light"));
 }
 
 function renderGrowthCalendar(calendar) {
@@ -1222,7 +1226,15 @@ authSignOut.addEventListener("click", async () => {
 connectTikTok.addEventListener("click", startTikTokAuthorization);
 syncTikTokFollowers.addEventListener("click", syncTikTokFollowerCount);
 
-window.SellerSparkContentCreator = Object.freeze({ requestBrief: requestContentBrief });
+window.SellerSparkContentCreator = Object.freeze({
+  requestBrief: requestContentBrief,
+  getDraftSummaries: () => currentDrafts.map((draft, index) => ({ index, hook: draft.hook, angle: draft.angle })),
+  openReview: (index) => {
+    if (!Number.isInteger(index) || index < 0 || index >= currentDrafts.length) return false;
+    openDraft(index);
+    return true;
+  }
+});
 runTestButton.addEventListener("click", runFictionalTest);
 document.querySelector("#modal-close").addEventListener("click", closeDraft);
 document.querySelector("#modal-close-footer").addEventListener("click", closeDraft);
@@ -1260,3 +1272,4 @@ authClient.onAuthStateChange((session) => {
 });
 authClient.onAuthStateChange(() => void refreshTikTokStatus());
 void initializeAuth();
+

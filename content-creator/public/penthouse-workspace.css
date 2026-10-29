@@ -1,0 +1,29 @@
+/* Working controls inside Crystal's approved open-skyline penthouse. */
+body{background:#0a1831;isolation:isolate}
+main.stage{display:block;min-width:0}
+.scene{z-index:-2}.scene-dim{z-index:-1}
+.shell>.topbar{flex-wrap:wrap;height:auto;min-height:64px;gap:12px;padding:12px 20px}
+.top-actions{flex-wrap:wrap;gap:9px}
+.theme-button .theme-label{color:inherit}
+.shell>.footer{border:0;padding:10px 0;margin-top:12px}
+.subview>.hero,.subview>.workspace-strip,.subview>.workflow-section,.subview>.drafts-section,.subview>.campaign-section{margin-top:20px;border-radius:18px;background:rgba(10,15,34,.56);border:1px solid var(--border);backdrop-filter:blur(5px);box-shadow:none}
+.subview>.hero{min-height:0;padding:24px;grid-template-columns:minmax(0,1fr) auto}
+.subview>.hero .hero-copy{display:none}.subview>.hero .hero-actions{grid-column:1/-1}
+.subview>.workspace-strip{display:flex;flex-wrap:wrap;padding:18px;gap:20px}
+.subview>.workflow-section{padding:22px}.subview .draft-card{background:rgba(15,21,45,.76)}
+.subview .campaign-section,.subview .drafts-section{padding:26px}
+.subview .tiktok-connection{background:rgba(15,21,45,.65)}
+.module .auth-panel{display:block;max-width:none}
+.module .auth-form,.module .auth-recovery-form{margin-top:18px;display:flex;flex-wrap:wrap;gap:12px}
+.module .auth-form input,.module .auth-recovery-form input{min-height:44px;max-width:100%;color:var(--ink);background:var(--panel)}
+.module .auth-status{color:var(--ink);font-size:.95rem}
+.review-launch-list{display:grid;gap:12px;margin:18px 0}
+.review-launch{display:grid;gap:9px;text-align:left;padding:18px;border-radius:12px;border:1px solid var(--border);background:rgba(15,21,45,.65);color:var(--ink)}
+.review-launch span{font-size:.8rem;color:var(--muted)}.review-launch:hover{border-color:var(--gold)}
+.text-link{text-decoration:underline;text-underline-offset:3px}.subview .module{max-width:1100px}
+.modal{z-index:100}.modal-dialog{max-height:90dvh}.home-view{min-height:660px}
+:root[data-theme=light] .subview>.hero,:root[data-theme=light] .subview>.workspace-strip,:root[data-theme=light] .subview>.workflow-section,:root[data-theme=light] .subview>.drafts-section,:root[data-theme=light] .subview>.campaign-section{background:rgba(255,255,255,.72)}
+:root[data-theme=light] .subview .draft-card,:root[data-theme=light] .subview .tiktok-connection,:root[data-theme=light] .review-launch{background:rgba(255,255,255,.82)}
+:root[data-theme=light] .subview .intro,:root[data-theme=light] .subview .campaign-intro{color:#41384f}
+@media(max-width:780px){.shell>.topbar{align-items:flex-start;padding:12px}.top-actions{justify-content:flex-start}.subview>.hero{grid-template-columns:1fr}.subview .campaign-section,.subview .drafts-section{padding:18px}.home-view{min-height:720px}}
+@media(prefers-reduced-transparency:reduce){.subview>.hero,.subview>.workspace-strip,.subview>.workflow-section,.subview>.drafts-section,.subview>.campaign-section{background:var(--panel);backdrop-filter:none}}

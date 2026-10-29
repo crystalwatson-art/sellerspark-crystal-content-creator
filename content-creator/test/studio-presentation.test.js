@@ -9,7 +9,10 @@ test("Studio presentation keeps Crystal ownership and the multi-agent workflow v
   const html = await readFile(htmlPath, "utf8");
   const styles = await readFile(stylesPath, "utf8");
 
-  assert.match(html, /class="sidebar"/);
+  assert.doesNotMatch(html, /class="sidebar"/);
+  assert.match(html, /id="view-home"/);
+  assert.match(html, /class="scene"/);
+  assert.match(html, /id="studio-account-link"/);
   assert.match(html, />Crystal<\/strong>/);
   assert.match(html, /id="workflow"/);
   for (const label of ["Content Generator", "Router", "Validation", "Handoff", "Listing Optimizer", "Human approval gate"]) {
@@ -23,3 +26,4 @@ test("Studio presentation keeps Crystal ownership and the multi-agent workflow v
   assert.match(styles, /\.workflow-track/);
   assert.match(styles, /@media \(max-width: 600px\)/);
 });
+

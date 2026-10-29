@@ -1,131 +1,24 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SellerSpark · Crystal's Content Creator</title>
-    <link rel="stylesheet" href="/styles.css">
-    <link rel="stylesheet" href="/penthouse-studio.css">
-  </head>
-  <body>
-    <div class="app-shell">
-      <header class="topbar">
-        <a class="brand" href="/" aria-label="SellerSpark Content Creator home">
-          <span class="brand-mark">S</span>
-          <span>SellerSpark</span>
-          <span class="brand-divider">/</span>
-          <span class="brand-muted">Studio</span>
-        </a>
-        <div class="topbar-actions">
-          <span class="workspace-label"><span class="status-dot"></span>Local workspace</span>
-          <button id="theme-toggle" class="icon-button" type="button" aria-pressed="false" aria-label="Switch to dark mode">
-            <span class="theme-icon" aria-hidden="true">◐</span>
-            <span class="theme-label">Dark mode</span>
-          </button>
-          <div id="auth-panel" class="auth-panel" aria-live="polite">
-            <span id="auth-status" class="auth-status">Fictional demo available without sign-in</span>
-            <form id="auth-form" class="auth-form" hidden>
-              <label class="sr-only" for="auth-email">Email</label>
-              <input id="auth-email" name="email" type="email" autocomplete="email" placeholder="Email">
-              <label class="sr-only" for="auth-password">Password</label>
-              <span class="password-field">
-                <input id="auth-password" name="password" type="password" autocomplete="current-password" placeholder="Password">
-                <button class="password-toggle" type="button" data-password-toggle="auth-password" data-password-label="password" aria-label="Show password" aria-pressed="false">
-                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
-                </button>
-              </span>
-              <button id="auth-sign-in" class="secondary-button" type="submit">Sign in</button>
-              <button id="auth-sign-out" class="secondary-button" type="button" hidden>Sign out</button>
-            </form>
-            <form id="auth-recovery-form" class="auth-recovery-form" hidden>
-              <p id="auth-recovery-label" class="auth-recovery-label">Set a new SellerSpark password</p>
-              <label class="sr-only" for="auth-recovery-password">New password</label>
-              <span class="password-field">
-                <input id="auth-recovery-password" name="new-password" type="password" autocomplete="new-password" placeholder="New password">
-                <button class="password-toggle" type="button" data-password-toggle="auth-recovery-password" data-password-label="new password" aria-label="Show new password" aria-pressed="false">
-                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
-                </button>
-              </span>
-              <label class="sr-only" for="auth-recovery-confirm">Confirm new password</label>
-              <span class="password-field">
-                <input id="auth-recovery-confirm" name="confirm-password" type="password" autocomplete="new-password" placeholder="Confirm password">
-                <button class="password-toggle" type="button" data-password-toggle="auth-recovery-confirm" data-password-label="password confirmation" aria-label="Show password confirmation" aria-pressed="false">
-                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
-                </button>
-              </span>
-              <button id="auth-recovery-submit" class="secondary-button" type="submit">Set password</button>
-            </form>
-            <p id="auth-error" class="auth-error" role="alert" hidden></p>
-          </div>
-          <button id="reset-button" class="reset-button" type="button">Reset</button>
+<html lang="en" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SellerSpark — Penthouse Studio</title><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/penthouse-design.css"><link rel="stylesheet" href="/penthouse-workspace.css"></head>
+<body><div class="scene" aria-hidden="true"></div><div class="scene-dim" aria-hidden="true"></div>
+<div class="shell"><header class="topbar glass"><a class="brand" href="#home" aria-label="SellerSpark studio home"><span class="brand-emblem">S</span><strong>SellerSpark</strong><span class="brand-divider">/</span><small>STUDIO</small></a>
+<div class="top-actions"><a class="overview-button" href="#home" data-route="home">◈ Overview</a><a id="studio-account-link" class="overview-button" href="#account">Sign in</a><button id="theme-toggle" class="theme-button" type="button" aria-pressed="false" aria-label="Switch to daylight view"><span class="theme-icon" aria-hidden="true">☀</span><span class="theme-label">Day view</span></button><button id="reset-button" class="reset-button" type="button">Reset review</button></div></header>
+<div class="layout"><main id="main" class="stage" tabindex="-1"><section id="view-home" class="route-view home-view" aria-labelledby="home-title">
+        <div class="home-top">
+          <div class="greeting glass"><div class="eyebrow">SELLERSPARK <span>•</span> PRIVATE CREATIVE STUDIO</div><h1 id="home-title">Welcome to your <em>studio.</em></h1><p>Thoughtful content. Clear decisions. Your view of Manhattan.</p></div>
+          <div class="status glass" aria-live="polite"><span class="status-label">TIKTOK FOLLOWERS <b>·</b> GOAL 100</span><strong id="dashboard-followers">Not connected</strong><a href="#growth">View connection status <span aria-hidden="true">↗</span></a></div>
         </div>
-      </header>
-
-      <div class="studio-layout">
-        <aside class="sidebar" aria-label="Studio navigation">
-          <div class="sidebar-kicker">SellerSpark Studio</div>
-          <nav class="sidebar-nav" aria-label="Workspace sections">
-            <a class="nav-item active" href="#studio"><span class="nav-icon" aria-hidden="true">✦</span><span>Overview</span></a>
-            <a class="nav-item" href="#creator"><span class="nav-icon" aria-hidden="true">▣</span><span>Content Generator</span></a>
-            <a class="nav-item" href="#tiktok"><span class="nav-icon" aria-hidden="true">◷</span><span>Growth pilot</span></a>
-            <a class="nav-item" href="#approval"><span class="nav-icon" aria-hidden="true">⌘</span><span>Workflow</span></a>
-          </nav>
-          <div class="sidebar-divider"></div>
-          <div class="sidebar-note">
-            <span class="sidebar-note-mark" aria-hidden="true">✓</span>
-            <div><strong>Human-led by design</strong><span>Every draft stays reviewable.</span></div>
-          </div>
-          <div class="profile-card">
-            <span class="profile-avatar" aria-hidden="true">C</span>
-            <span><strong>Crystal</strong><small>Workspace owner</small></span>
-            <span class="profile-status" aria-label="Online"></span>
-          </div>
-        </aside>
-
-        <main>\n
-        <section id="studio-home" class="studio-dashboard" aria-labelledby="studio-home-heading">
-          <div class="studio-dashboard-header">
-            <span class="studio-kicker">SellerSpark · Private Studio</span>
-            <h1 id="studio-home-heading">Your city. Your creative studio.</h1>
-            <p>A quieter place to create, review, and plan—with Manhattan always in view.</p>
-          </div>
-          <div class="studio-control-bar" aria-label="Studio preferences">
-            <label for="studio-location">Location
-              <select id="studio-location"><option value="lic">Long Island City (LIC)</option><option value="brooklyn">Brooklyn</option></select>
-            </label>
-            <label for="studio-audience">Audience
-              <select id="studio-audience"><option value="sellers">Sellers</option><option value="buyers">Buyers</option></select>
-            </label>
-            <div class="studio-counter" aria-live="polite"><small>TikTok followers · goal 100</small><strong id="studio-live-count">Not connected</strong></div>
-          </div>
-          <div class="studio-bottom">
-            <div class="studio-calendar-strip"><span>14-day TikTok growth planner · Drafts only</span><a href="#tiktok">Open calendar →</a></div>
-            <nav class="studio-card-grid" aria-label="Studio workspaces">
-              <a class="studio-card" href="#creator"><span class="studio-card-arrow" aria-hidden="true">↗</span><span><strong>Content Creator</strong><small>Research-based ideas and draft packages</small></span></a>
-              <a class="studio-card" href="#optimizer"><span class="studio-card-arrow" aria-hidden="true">↗</span><span><strong>Listing Optimizer</strong><small>Improve drafts without losing their history</small></span></a>
-              <a class="studio-card" href="#tiktok"><span class="studio-card-arrow" aria-hidden="true">↗</span><span><strong>TikTok Growth</strong><small>14-day calendar and real follower connection</small></span></a>
-              <a class="studio-card" href="#approval"><span class="studio-card-arrow" aria-hidden="true">↗</span><span><strong>Human Approval</strong><small>Review before any outside action</small></span></a>
-            </nav>
-          </div>
-        </section>
-        <section id="studio-optimizer" class="studio-view" aria-labelledby="studio-optimizer-title">
-          <a href="#studio" class="studio-back">← Studio home</a>
-          <div class="studio-kicker">SellerSpark / Listing Optimizer</div>
-          <h2 id="studio-optimizer-title">Make every draft stronger.</h2>
-          <p>Compare the original draft with suggested improvements, inspect evidence warnings, and preserve revision history.</p>
-          <p class="studio-note">The working optimizer is available inside each generated draft's review window. Create or open a draft first; this page does not invent a saved review.</p>
-          <a href="#creator" class="primary-button">Go to Content Creator →</a>
-        </section>
-        <section id="studio-approval" class="studio-view" aria-labelledby="studio-approval-title">
-          <a href="#studio" class="studio-back">← Studio home</a>
-          <div class="studio-kicker">SellerSpark / Human Approval</div>
-          <h2 id="studio-approval-title">Your decision comes first.</h2>
-          <p>Review the original, proposed revision, factual warnings, and history before accepting or rejecting changes.</p>
-          <p class="studio-note">Approval controls remain inside the existing draft review window. No posting, outreach, or automatic approval is enabled.</p>
-          <a href="#creator" class="primary-button">Open draft workspace →</a>
-        </section>
-
-        <section id="overview" class="hero" aria-labelledby="page-title">
+        <div class="quick-controls glass" aria-label="Workspace preferences"><label>Location<select id="location"><option value="lic">Long Island City (LIC)</option><option value="brooklyn">Brooklyn</option></select></label><label>Audience<select id="audience"><option value="sellers">Sellers</option><option value="buyers" disabled>Buyers · research not available</option></select></label><span class="controls-hint">Seller research · human review required</span></div>
+        <div class="home-bottom">
+          <div class="calendar glass" aria-label="14-day TikTok draft calendar"><div class="calendar-head"><span>14-DAY CONTENT CALENDAR</span><a href="#growth">View planner ↗</a></div><div class="calendar-days" id="mini-calendar"></div></div>
+          <nav class="four-cards" aria-label="Open your workspace"><a class="feature glass" href="#creator"><span class="feature-index">01 / CREATE</span><span class="feature-open" aria-hidden="true">↗</span><div><strong>Content Creator</strong><small>Ideas, scripts &amp; drafts</small></div></a><a class="feature glass" href="#optimizer"><span class="feature-index">02 / IMPROVE</span><span class="feature-open" aria-hidden="true">↗</span><div><strong>Listing Optimizer</strong><small>Review &amp; revisions</small></div></a><a class="feature glass" href="#growth"><span class="feature-index">03 / GROW</span><span class="feature-open" aria-hidden="true">↗</span><div><strong>TikTok Growth</strong><small>Calendar &amp; real metrics</small></div></a><a class="feature glass" href="#approval"><span class="feature-index">04 / APPROVE</span><span class="feature-open" aria-hidden="true">↗</span><div><strong>Human Approval</strong><small>Every decision stays yours</small></div></a></nav>
+        </div>
+      </section>
+<section id="view-creator" class="route-view subview" hidden>
+    <a class="back" href="#home">← Back to studio</a>
+    <div class="subheading glass"><span class="eyebrow">SELLERSPARK / CREATOR</span><h2>Ideas worth sharing.</h2><p>Create drafts, inspect sources, and preserve every review.</p></div>
+    <section id="overview" class="hero" aria-labelledby="page-title">
           <div class="hero-copy">
             <p class="eyebrow"><span class="eyebrow-dot"></span>CRYSTAL'S STUDIO · TIKTOK WORKSPACE</p>
             <h1 id="page-title">Turn TikTok Attention Into <span>Listing Opportunities.</span></h1>
@@ -145,9 +38,7 @@
             </button>
             <p><span class="gold-dot"></span>Fictional data only · no publishing or outreach</p>
           </div>
-        </section>
-
-        <section class="workspace-strip" aria-label="Workspace status">
+        </section><section class="workspace-strip" aria-label="Workspace status">
           <div class="workspace-stat">
             <span class="stat-label">Workflow</span>
             <strong>Content Creator</strong>
@@ -169,9 +60,7 @@
             <span class="approval-icon" aria-hidden="true">✓</span>
             <span><strong>Human review required</strong><small>Nothing is published automatically.</small></span>
           </div>
-        </section>
-
-        <section id="workflow" class="workflow-section" aria-labelledby="workflow-heading">
+        </section><section id="workflow" class="workflow-section" aria-labelledby="workflow-heading">
           <div class="section-heading workflow-heading">
             <div>
               <p class="eyebrow">MULTI-AGENT WORKFLOW</p>
@@ -192,9 +81,47 @@
             <span class="workflow-arrow" aria-hidden="true">→</span>
             <article class="workflow-node workflow-node-approval"><span class="workflow-number">06</span><strong>Human approval gate</strong><small>Nothing publishes automatically</small></article>
           </div>
-        </section>
+        </section><section id="draft-queue" class="drafts-section" aria-labelledby="drafts-heading">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">DRAFT QUEUE</p>
+              <h2 id="drafts-heading">Three ways into the conversation</h2>
+            </div>
+            <div id="audience-pill" class="audience-pill">Audience pending</div>
+          </div>
 
-        <section id="campaign" class="campaign-section" aria-labelledby="campaign-heading">
+          <p id="result-summary" class="section-summary" aria-live="polite">
+            Run fictional test mode to preview three compact, review-only draft packages.
+          </p>
+          <p id="demo-error" class="error" role="alert" hidden></p>
+          <div id="result-diagnostic" class="result-diagnostic" role="status" aria-live="polite" hidden>
+            <strong>Writer status: <span id="writer-status-value"></span></strong>
+            <span id="writer-explanation"></span>
+            <span><strong>Next step:</strong> <span id="writer-next-step"></span></span>
+          </div>
+          <div id="drafts" class="draft-grid"></div>
+          <div id="empty-state" class="empty-state">
+            <span class="empty-icon" aria-hidden="true">✦</span>
+            <strong>Your draft queue is ready</strong>
+            <span>Run the fictional test mode above to see three distinct TikTok angles.</span>
+          </div>
+          <div id="reset-confirmation" class="reset-confirmation" role="dialog" aria-modal="true" aria-labelledby="reset-confirmation-title" hidden>
+            <strong id="reset-confirmation-title">Reset the active review?</strong>
+            <span>The active view will clear. Saved review history will remain on this browser.</span>
+            <div class="reset-confirmation-actions">
+              <button id="reset-cancel" class="secondary-button" type="button">Keep review</button>
+              <button id="reset-confirm" class="review-reject" type="button">Reset active view</button>
+            </div>
+          </div>
+        </section></section>
+<section id="view-optimizer" class="route-view subview" hidden>
+    <a class="back" href="#home">← Back to studio</a>
+    <div class="subheading glass"><span class="eyebrow">SELLERSPARK / OPTIMIZER</span><h2>Make every word count.</h2><p>Improve content without losing the original or its history.</p></div>
+    <div class="module glass"><h3>Choose a draft to review</h3><p>Open a draft to compare its original and revision, inspect evidence and history, and make your decision.</p><div id="optimizer-draft-list" class="review-launch-list"></div><p id="optimizer-empty">No drafts in this audience yet. <a class="text-link" href="#creator">Open Content Creator</a> to create a fictional test or restore the current workspace.</p><a class="secondary-button" href="#creator">Open Content Creator →</a></div></section>
+<section id="view-growth" class="route-view subview" hidden>
+    <a class="back" href="#home">← Back to studio</a>
+    <div class="subheading glass"><span class="eyebrow">SELLERSPARK / GROWTH</span><h2>Grow with intention.</h2><p>Plan the next two weeks and connect your account for verified TikTok statistics.</p></div>
+    <section id="campaign" class="campaign-section" aria-labelledby="campaign-heading">
           <div class="campaign-heading">
             <div>
               <p class="eyebrow">14-DAY TIKTOK GROWTH PILOT</p>
@@ -257,60 +184,51 @@
             <span class="status-badge muted">No auto-scheduling</span>
           </div>
           <div id="campaign-calendar" class="campaign-calendar"></div>
-        </section>
-
-        <section id="draft-queue" class="drafts-section" aria-labelledby="drafts-heading">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">DRAFT QUEUE</p>
-              <h2 id="drafts-heading">Three ways into the conversation</h2>
-            </div>
-            <div id="audience-pill" class="audience-pill">Audience pending</div>
-          </div>
-
-          <p id="result-summary" class="section-summary" aria-live="polite">
-            Run fictional test mode to preview three compact, review-only draft packages.
-          </p>
-          <p id="demo-error" class="error" role="alert" hidden></p>
-          <div id="result-diagnostic" class="result-diagnostic" role="status" aria-live="polite" hidden>
-            <strong>Writer status: <span id="writer-status-value"></span></strong>
-            <span id="writer-explanation"></span>
-            <span><strong>Next step:</strong> <span id="writer-next-step"></span></span>
-          </div>
-          <div class="concept-gallery" aria-label="Illustrative sample content directions">
-            <div class="concept-gallery-label">DESIGN PREVIEW · SAMPLE CONTENT IDEAS · NOT GENERATED OUTPUT</div>
-            <div class="concept-grid">
-              <article class="concept-card"><div class="concept-art concept-art-one"><span>01 / VIDEO CONCEPT</span></div><h3>The Hidden Value</h3><p>Highlight a homeowner question worth exploring before listing.</p><small>Hook · Short script · Caption · Hashtags</small></article>
-              <article class="concept-card"><div class="concept-art concept-art-two"><span>02 / VIDEO CONCEPT</span></div><h3>Market Perspective</h3><p>Turn a topic into a clear, responsible conversation starter.</p><small>Hook · Short script · Caption · Hashtags</small></article>
-              <article class="concept-card"><div class="concept-art concept-art-three"><span>03 / VIDEO CONCEPT</span></div><h3>Homeowner Tip</h3><p>Share a practical preparation question and a thoughtful next step.</p><small>Hook · Short script · Caption · Hashtags</small></article>
-            </div>
-            <p class="concept-notice">These cards demonstrate the intended layout. Select <strong>Run fictional test mode</strong> to generate real reviewable demo drafts.</p>
-          </div>
-          <div id="drafts" class="draft-grid"></div>
-          <div id="empty-state" class="empty-state">
-            <span class="empty-icon" aria-hidden="true">✦</span>
-            <strong>Your draft queue is ready</strong>
-            <span>Run the fictional test mode above to see three distinct TikTok angles.</span>
-          </div>
-          <div id="reset-confirmation" class="reset-confirmation" role="dialog" aria-modal="true" aria-labelledby="reset-confirmation-title" hidden>
-            <strong id="reset-confirmation-title">Reset the active review?</strong>
-            <span>The active view will clear. Saved review history will remain on this browser.</span>
-            <div class="reset-confirmation-actions">
-              <button id="reset-cancel" class="secondary-button" type="button">Keep review</button>
-              <button id="reset-confirm" class="review-reject" type="button">Reset active view</button>
-            </div>
-          </div>
-        </section>
-        </main>
-      </div>
-
-      <footer class="footer">
-        <span>SellerSpark · Crystal's Content Creator</span>
-        <span>No research gathering, optimizer actions, publishing, or customer contact.</span>
-      </footer>
-    </div>
-
-    <div id="draft-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+        </section></section>
+<section id="view-approval" class="route-view subview" hidden>
+    <a class="back" href="#home">← Back to studio</a>
+    <div class="subheading glass"><span class="eyebrow">SELLERSPARK / APPROVAL</span><h2>Nothing moves without you.</h2><p>Accept, reject, request a revision, or restore the original. Approval does not publish.</p></div>
+    <div class="module glass"><h3>Choose a draft to review</h3><p>Open a draft to compare its original and revision, inspect evidence and history, and make your decision.</p><div id="approval-draft-list" class="review-launch-list"></div><p id="approval-empty">No drafts in this audience yet. <a class="text-link" href="#creator">Open Content Creator</a> to create a fictional test or restore the current workspace.</p><a class="secondary-button" href="#creator">Open Content Creator →</a></div></section>
+<section id="view-account" class="route-view subview" hidden>
+    <a class="back" href="#home">← Back to studio</a>
+    <div class="subheading glass"><span class="eyebrow">SELLERSPARK / ACCOUNT</span><h2>Your private workspace.</h2><p>Sign in to save reviews to your account. Fictional tests remain available without sign-in.</p></div>
+    <div class="module glass"><div id="auth-panel" class="auth-panel" aria-live="polite">
+            <span id="auth-status" class="auth-status">Fictional demo available without sign-in</span>
+            <form id="auth-form" class="auth-form" hidden>
+              <label class="sr-only" for="auth-email">Email</label>
+              <input id="auth-email" name="email" type="email" autocomplete="email" placeholder="Email">
+              <label class="sr-only" for="auth-password">Password</label>
+              <span class="password-field">
+                <input id="auth-password" name="password" type="password" autocomplete="current-password" placeholder="Password">
+                <button class="password-toggle" type="button" data-password-toggle="auth-password" data-password-label="password" aria-label="Show password" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
+                </button>
+              </span>
+              <button id="auth-sign-in" class="secondary-button" type="submit">Sign in</button>
+              <button id="auth-sign-out" class="secondary-button" type="button" hidden>Sign out</button>
+            </form>
+            <form id="auth-recovery-form" class="auth-recovery-form" hidden>
+              <p id="auth-recovery-label" class="auth-recovery-label">Set a new SellerSpark password</p>
+              <label class="sr-only" for="auth-recovery-password">New password</label>
+              <span class="password-field">
+                <input id="auth-recovery-password" name="new-password" type="password" autocomplete="new-password" placeholder="New password">
+                <button class="password-toggle" type="button" data-password-toggle="auth-recovery-password" data-password-label="new password" aria-label="Show new password" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
+                </button>
+              </span>
+              <label class="sr-only" for="auth-recovery-confirm">Confirm new password</label>
+              <span class="password-field">
+                <input id="auth-recovery-confirm" name="confirm-password" type="password" autocomplete="new-password" placeholder="Confirm password">
+                <button class="password-toggle" type="button" data-password-toggle="auth-recovery-confirm" data-password-label="password confirmation" aria-label="Show password confirmation" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
+                </button>
+              </span>
+              <button id="auth-recovery-submit" class="secondary-button" type="submit">Set password</button>
+            </form>
+            <p id="auth-error" class="auth-error" role="alert" hidden></p>
+          </div><p>Workspace owner: <strong>Crystal</strong></p></div></section></main></div>
+<footer class="footer"><span>SellerSpark · Crystal's private studio</span><span>Human approval required · Nothing publishes automatically</span></footer></div>
+<div id="draft-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
       <div class="modal-backdrop" data-close-modal="true"></div>
       <section class="modal-dialog" role="document">
         <header class="modal-header">
@@ -443,8 +361,4 @@
         </footer>
       </section>
     </div>
-
-    <script type="module" src="/app.js"></script>
-    <script type="module" src="/penthouse-studio.js"></script>
-  </body>
-</html>
+<script type="module" src="/app.js"></script><script type="module" src="/penthouse-studio.js"></script></body></html>
