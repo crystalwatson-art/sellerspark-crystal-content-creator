@@ -1,0 +1,73 @@
+{
+  "generatedAt": "2026-10-30T23:07:29.077Z",
+  "execution": "not_run",
+  "metric": "Automated contract checks, not semantic or real-world factual verification",
+  "totalCases": 10,
+  "completed": 0,
+  "successful": 0,
+  "successRate": null,
+  "peerRedTeam": "pending",
+  "agentContributionAblation": "pending",
+  "results": [
+    {
+      "id": "lic-timing",
+      "status": "not_run",
+      "reason": "provider_not_configured",
+      "success": null
+    },
+    {
+      "id": "lic-preparation",
+      "status": "not_run",
+      "reason": "provider_not_configured",
+      "success": null
+    },
+    {
+      "id": "lic-first-meeting",
+      "status": "not_run",
+      "reason": "provider_not_configured",
+      "success": null
+    },
+    {
+      "id": "lic-home-story",
+      "status": "not_run",
+      "reason": "provider_not_configured",
+      "success": null
+    },
+    {
+      "id": "lic-next-chapter",
+      "status": "not_run",
+      "reason": "provider_not_configured",
+      "success": null
+    },
+    {
+      "id": "brooklyn-timing",
+      "status": "not_run",
+      "reason": "provider_not_configured",
+      "success": null
+    },
+    {
+      "id": "brooklyn-details",
+      "status": "not_run",
+      "reason": "provider_not_configured",
+      "success": null
+    },
+    {
+      "id": "brooklyn-low-pressure",
+      "status": "not_run",
+      "reason": "provider_not_configured",
+      "success": null
+    },
+    {
+      "id": "brooklyn-checklist",
+      "status": "not_run",
+      "reason": "provider_not_configured",
+      "success": null
+    },
+    {
+      "id": "brooklyn-followup",
+      "status": "not_run",
+      "reason": "provider_not_configured",
+      "success": null
+    }
+  ]
+}

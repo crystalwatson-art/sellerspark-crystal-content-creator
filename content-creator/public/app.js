@@ -7,6 +7,18 @@ const statusValue = document.querySelector("#status-value");
 const audienceValue = document.querySelector("#audience-value");
 const audiencePill = document.querySelector("#audience-pill");
 const summary = document.querySelector("#result-summary");
+let generationMode = "sample";
+async function initializeAgentStatus() {
+  try {
+    const response = await fetch("/api/agent-status", { cache: "no-store" });
+    if (!response.ok) return;
+    const status = await response.json();
+    generationMode = status.mode === "agents" ? "agents" : "sample";
+    document.querySelector("#generation-mode").textContent = generationMode === "agents"
+      ? "AI creates three drafts and checks them with the Optimizer. Sign in to save your work. The supplied research brief is fictional; nothing publishes automatically."
+      : "Sample mode: live AI is not connected yet. Generate creates sample ideas from a fictional brief. Earlier drafts stay in your history.";
+  } catch { /* generation remains explicitly sample until the host confirms otherwise */ }
+}
 const resultDiagnostic = document.querySelector("#result-diagnostic");
 const runTestButton = document.querySelector("#run-fictional-test");
 const regenerateButton = document.querySelector("#regenerate-drafts");
@@ -1088,6 +1100,18 @@ function renderModal() {
   modalCopy.textContent = "Copy approved content";
   modalCopy.hidden = activeReview()?.status !== "accepted";
   modalScript.classList.toggle("updated-wording", ["rewrite_current", "regenerate_current"].includes(activeReview()?.lastCardAction));
+  const agentRun = activeReview()?.agentRuns?.at(-1) || currentListingReview?.agentRun;
+  const tracePanel = document.querySelector("#agent-run-details");
+  tracePanel.hidden = !agentRun;
+  if (agentRun) {
+    document.querySelector("#agent-run-summary").textContent = "How the AI checked this draft";
+    document.querySelector("#agent-run-status").textContent = agentRun.modelCalls + " model decisions · " + agentRun.revisionHandoffs + " revision handoffs · " + (agentRun.stopReason === "ready_for_human_review" ? "Ready for your review" : "Stopped safely");
+    renderList(document.querySelector("#agent-run-events"), agentRun.trace.map(event => {
+      const role = event.agent === "content_creator" ? "Content Creator" : event.agent === "listing_optimizer" ? "Optimizer" : "System";
+      const description = event.event === "tool_selected" ? "chose " + event.tool.replaceAll("_", " ") : event.event === "handoff_sent" ? "sent the draft and context" : event.event === "handoff_received" ? "received the same draft and context" : event.event.replaceAll("_", " ");
+      return role + ": " + description + (event.ok === false ? " — check failed" : "");
+    }), "No execution events available.");
+  }
 }
 
 function setReviewMode(mode) {
@@ -1364,7 +1388,7 @@ async function runFictionalTest() {
   activeRequestController = new AbortController();
   setDemoError();
   setStatus("Creating drafts…", "muted");
-  summary.textContent = "Running the fictional Content Creator test.";
+  summary.textContent = generationMode === "agents" ? "The Content Creator and Optimizer are preparing your drafts…" : "Creating sample ideas from the fictional brief…";
   runTestButton.disabled = true;
   regenerateButton.disabled = true;
   audienceValue.disabled = true;
@@ -1623,3 +1647,4 @@ for (const child of [...body.children]) if (child !== controls) supporting.appen
 body.replaceChildren(scriptSection, captionSection, controls, supporting);
 supporting.append(optimizerWarningsBlock);
 renderEarlierSets();
+void initializeAgentStatus();

@@ -8,6 +8,9 @@ import { createServer } from '../src/server.js';
 import { ReviewStore } from '../src/review-store.js';
 import { SupabaseReviewStore } from '../src/supabase-review-store.js';
 import { SupabaseAuthVerifier } from '../src/supabase-auth.js';
+import { createAgentSystem } from '../src/agent-system.js';
+import { createContentDraft } from '../src/content-creator.js';
+import brief from '../fixtures/fictional-research-brief.json' with { type: 'json' };
 
 const owner = '11111111-1111-4111-8111-111111111111';
 const reply = (status, value) => ({ ok: status < 400, status, json: async () => value });
@@ -33,7 +36,18 @@ test('signed-in Generate saves decisions and a fresh browser resumes them withou
   } }).init();
   const demo = await new ReviewStore({ filePath: path.join(dir, 'demo.json') }).init();
   const verifier = new SupabaseAuthVerifier({ url: 'https://mock.supabase.co', anonKey: 'public-test-key', fetchImpl: async () => reply(200, { id: owner }) });
-  const server = createServer({ reviewStore: store, demoReviewStore: demo, authVerifier: verifier, providerMode: 'template', authConfig: { enabled: true, url: 'https://mock.supabase.co', anonKey: 'public-test-key' } });
+  const agentSystem = createAgentSystem({ model: { configured: true, provider: 'test_double', model: 'scripted-test-only', async decide(input) {
+    const step = input.observations.length;
+    if (input.role === 'listing_optimizer') return { action: ['inspect_handoff','check_drafts','finish'][step], input: {} };
+    if (!step) return { action: 'read_brief', input: {} };
+    if (step === 1) {
+      const drafts = structuredClone(input.context.task.currentDrafts || createContentDraft(brief).drafts).map(draft => ({ ...draft, supportingClaimIds: [] }));
+      if (input.context.task.currentDrafts) { drafts[0].hook = 'Name the next question you want answered.'; drafts[0].script = 'Keep one question ready for your next meeting. Write down the explanation and identify what you still need to learn.'; }
+      return { action: 'check_drafts', input: { drafts } };
+    }
+    return { action: 'send_to_optimizer', input: { confidence:0.8, uncertainties:['Fictional source notes.'] } };
+  } } });
+  const server = createServer({ reviewStore: store, demoReviewStore: demo, authVerifier: verifier, providerMode: 'agents', agentSystem, authConfig: { enabled: true, url: 'https://mock.supabase.co', anonKey: 'public-test-key' } });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const base = 'http://127.0.0.1:' + server.address().port;
   const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
@@ -64,15 +78,20 @@ test('signed-in Generate saves decisions and a fresh browser resumes them withou
   assert.equal(rows[0].owner_id, owner);
   assert.match($('result-summary').textContent, /Saved to your account/);
   window.SellerSparkContentCreator.openReview(0, 'approval');
+  assert.equal($('agent-run-details').hidden, false);
+  assert.match($('agent-run-status').textContent, /6 model decisions/);
+  assert.match($('agent-run-events').textContent, /Optimizer: received the same draft and context/);
   $('card-regenerate').click();
   await waitFor(() => rows[0].listing_review.reviews[0].cardVersion === 2 && !$('card-regenerate').disabled);
   const generated = rows[0].listing_review.reviews[0].working.script;
+  assert.equal(rows[0].listing_review.reviews[0].agentRuns.length,1);
   $('optimizer-revision').click();
   $('card-revised-script').value = 'My personally revised wording for this draft.';
   $('card-save-revision').click();
   await waitFor(() => rows[0].listing_review.reviews[0].working.script !== generated && !$('optimizer-accept').disabled);
   assert.equal(rows[0].listing_review.reviews[0].working.script, 'My personally revised wording for this draft.');
   assert.ok(rows[0].listing_review.reviews[0].cardVersions.length >= 2);
+  assert.equal(rows[0].listing_review.agentRun.modelCalls,6);
   $('optimizer-accept').click();
   await waitFor(() => rows[0].listing_review.reviews[0].status === 'accepted' && $('optimizer-review-status').textContent === 'Accepted');
   const savedHook = rows[0].listing_review.reviews[0].working.hook;

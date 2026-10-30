@@ -1,5 +1,43 @@
 # SellerSpark — Crystal's Content Creator
 
+## Current independent build — October 30, 2026
+
+The integrated studio now includes a model-directed **Content Creator** and
+**Listing Optimizer**. Their local tools, structured feedback handoffs, separate
+permissions, two-revision limit, stopping conditions and safe execution trace
+are described in [agent/architecture.md](agent/architecture.md).
+This is Crystal's independent implementation; it does not call a collaborator's
+Research Agent or require shared repository integration.
+
+The deployment currently remains in clearly labeled **sample mode** until its
+owner configures the server-only `OPENROUTER_API_KEY` for Preview. With that
+personal key present and no explicit legacy `CONTENT_CREATOR_PROVIDER` override,
+the configured handler selects `agents` automatically. The default model is
+`openrouter/free`; paid model IDs are rejected. Never put the key in browser code,
+source control, a report or chat. Existing Groq/Gemini/OpenRouter writer adapters
+remain intact for their earlier supported configurations.
+
+AI generation requires SellerSpark sign-in. The agent roles have no account,
+database, publishing or messaging tools; the authenticated server alone saves
+the review after both agents finish. Human acceptance enables copying and does
+not publish. A fictional input remains fictional even when a real model writes
+the draft. Review text, decisions, versions and execution events persist with
+the owner-scoped review. Calendar planning remains local to the browser.
+
+Verification: 208 automated tests pass, including the model-decision protocol,
+permission failures, bounded feedback loops and UI → API → simulated database
+→ new browser session resume. Those tests use controlled model responses,
+not a live-model or rendered-Chrome claim. See
+[the implementation report](reports/two-agent-implementation-20261030.md).
+Run `node scripts/evaluate-agents.js` in a privately configured environment for
+the ten-case live evaluation; it preserves failures and reports `not_run` if no
+provider is configured. Contribution ablation, human semantic grading and peer
+red-team review remain separate required evidence, not inferred from unit tests.
+
+Earlier component documentation below records the development history. Where
+it describes unconfigured migrations or a future Optimizer, use the current
+implementation report and architecture above for the latest state.
+
 This local Content Creator component accepts a structured research brief and
 turns it into exactly three TikTok draft packages for:
 
@@ -258,3 +296,4 @@ is cleared when the server restarts; no database or external storage is used.
 
 Automated tests inject mocked Responses API results. No live or paid OpenAI
 or Groq request is made by the tests, demo, or default server mode.
+

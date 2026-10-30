@@ -14,7 +14,7 @@ export function sampleCardContent(current, variant = 0) {
   return { ...clone(current), hook: idea[0], script: idea[1], caption: idea[2], videoConcept: idea[2], takeaway: idea[2], reasonToFollow: 'Practical questions to help prepare for a real estate conversation.', suggestedNextStep: 'Save your question and bring it to your real estate professional when you are ready.' };
 }
 export const CARD_ACTIONS = new Set(['approve_current', 'reject_current', 'rewrite_current', 'regenerate_current', 'undo_current']);
-export function applyCardFlowAction(state, { action, draftId, note = '' }, { fictional = false } = {}) {
+export function applyCardFlowAction(state, { action, draftId, note = '' }, { fictional = false, replacement = null } = {}) {
   const next = clone(state);
   const review = next.reviews.find(item => item.draftId === draftId);
   const fail = reason => ({ ok: false, reason, state: clone(state) });
@@ -29,7 +29,8 @@ export function applyCardFlowAction(state, { action, draftId, note = '' }, { fic
     const isSuggestion = ['Shorter', 'Warmer', 'More professional', 'Stronger opening'].includes(input.preset);
     if (isSuggestion && attempts >= 2) return fail('revision_limit_reached');
     if (isSuggestion) attempts++;
-    if (input.preset === 'Shorter') working.script = working.script.match(/[^.!?]+[.!?]+/g)?.slice(0,1).join('').trim() || working.script.split(' ').slice(0,18).join(' ');
+    if (replacement) working = { ...working, ...clone(replacement) };
+    else if (input.preset === 'Shorter') working.script = working.script.match(/[^.!?]+[.!?]+/g)?.slice(0,1).join('').trim() || working.script.split(' ').slice(0,18).join(' ');
     else if (input.preset === 'Warmer') working.script = 'Take this one step at a time. ' + working.script;
     else if (input.preset === 'More professional') working.script = 'Prepare for your next real estate conversation. ' + working.script;
     else if (input.preset === 'Stronger opening') { working.hook = 'What matters most before you decide?'; working.script = 'Start with the question you need answered most. ' + working.script; }
@@ -38,10 +39,13 @@ export function applyCardFlowAction(state, { action, draftId, note = '' }, { fic
     if (working.script === review.working.script && working.hook === review.working.hook) return fail('no_change');
   }
   if (action === 'regenerate_current') {
-    if (!fictional) return fail('revision_unavailable');
-    let variant = review.sampleVariant ?? ((review.cardVersion || 1) - 1);
-    do { variant++; working = sampleCardContent(review.working, variant); } while (working.hook === review.working.hook);
-    review.sampleVariant = variant;
+    if (replacement) working = { ...working, ...clone(replacement) };
+    else {
+      if (!fictional) return fail('revision_unavailable');
+      let variant = review.sampleVariant ?? ((review.cardVersion || 1) - 1);
+      do { variant++; working = sampleCardContent(review.working, variant); } while (working.hook === review.working.hook);
+      review.sampleVariant = variant;
+    }
     attempts = 0;
   }
   review.cardUndo ||= [];

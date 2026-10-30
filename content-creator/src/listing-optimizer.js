@@ -294,7 +294,8 @@ export function adaptContentResultToListingReview(contentResult, options = {}) {
     automaticallyPublished: false,
     customerContacted: false,
     publicationDisabled: true,
-    evaluator: options.evaluatorName || "handoff_hygiene_only"
+    evaluator: options.evaluatorName || "handoff_hygiene_only",
+    ...(contentResult?.agentRun ? { agentRun: clone(contentResult.agentRun) } : {})
   };
 }
 
@@ -445,3 +446,4 @@ export function createListingReviewSession(contentResult, options = {}) {
     }
   };
 }
+

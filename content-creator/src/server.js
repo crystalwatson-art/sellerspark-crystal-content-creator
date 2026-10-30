@@ -16,6 +16,8 @@ import { ReviewStore } from "./review-store.js";
 import { SupabaseReviewStore } from "./supabase-review-store.js";
 import { SupabaseAuthVerifier } from "./supabase-auth.js";
 import { createRevisionGenerator } from "./revision-generator.js";
+import { createAgentModel } from "./agent-model.js";
+import { createAgentSystem } from "./agent-system.js";
 import { createGrowthPilot, createCampaignMetadata } from "./growth-pilot.js";
 import { getTikTokConnectionPlan } from "./tiktok-connection.js";
 import {
@@ -154,7 +156,8 @@ export function createServer({
   groqWriter = null,
   geminiWriter = null,
   openRouterWriter = null,
-  tiktokIntegration = null
+  tiktokIntegration = null,
+  agentSystem = null
 } = {}) {
   if (!reviewStore) throw new Error("createServer requires a ReviewStore.");
 
@@ -195,7 +198,8 @@ export function createServer({
     return { store: reviewStore, record, actorId: userId, actorToken: accessToken, persistenceStatus: "supabase" };
   }
 
-  async function contentResultFor(brief) {
+  async function contentResultFor(brief, options = {}) {
+    if (providerMode === "agents" && agentSystem) return decorateCampaignResult(await agentSystem.generate(brief, options), brief);
     if (providerMode === "template") return decorateCampaignResult(createContentDraft(brief), brief);
     if (providerMode === "groq" && groqWriter) {
       return decorateCampaignResult(await generateWithFailover({
@@ -229,6 +233,11 @@ export function createServer({
   const server = http.createServer(async (request, response) => {
     try {
     const url = new URL(request.url, "http://127.0.0.1");
+
+    if (request.method === "GET" && url.pathname === "/api/agent-status") {
+      sendJson(response, 200, { mode: providerMode === "agents" ? "agents" : providerMode === "template" ? "sample" : "writer", configured: Boolean(agentSystem?.configured), humanApprovalRequired: true });
+      return;
+    }
 
     if (request.method === "GET" && assets.has(url.pathname)) {
       const asset = assets.get(url.pathname);
@@ -407,20 +416,24 @@ export function createServer({
       let storedResult;
       try {
         if (isFictionalDemoBrief(brief) && !request.headers.authorization) {
+          if (providerMode === "agents") {
+            sendJson(response, 401, { status: "error", message: "Sign in to SellerSpark to generate and save AI drafts." });
+            return;
+          }
           if (!demoReviewStore) {
             sendJson(response, 503, { status: "error", message: "The fictional demo is not configured safely." });
             return;
           }
           result = await contentResultFor(brief);
-          if (isFictionalDemoBrief(brief) && Number.isInteger(brief.sampleSet) && brief.sampleSet > 0 && Array.isArray(result.drafts)) result.drafts = result.drafts.map((draft, i) => sampleCardContent(draft, brief.sampleSet + i));
+          if (providerMode === "template" && isFictionalDemoBrief(brief) && Number.isInteger(brief.sampleSet) && brief.sampleSet > 0 && Array.isArray(result.drafts)) result.drafts = result.drafts.map((draft, i) => sampleCardContent(draft, brief.sampleSet + i));
           storedResult = await withListingReviewUsing(result, brief, {
             store: demoReviewStore,
             persistenceStatus: "fictional_demo_store"
           });
         } else {
           const { userId, accessToken } = await authenticate(request);
-          result = await contentResultFor(brief);
-          if (isFictionalDemoBrief(brief) && Number.isInteger(brief.sampleSet) && brief.sampleSet > 0 && Array.isArray(result.drafts)) result.drafts = result.drafts.map((draft, i) => sampleCardContent(draft, brief.sampleSet + i));
+          result = await contentResultFor(brief, { historyScope: userId });
+          if (providerMode === "template" && isFictionalDemoBrief(brief) && Number.isInteger(brief.sampleSet) && brief.sampleSet > 0 && Array.isArray(result.drafts)) result.drafts = result.drafts.map((draft, i) => sampleCardContent(draft, brief.sampleSet + i));
           storedResult = await withListingReviewUsing(result, brief, {
             store: reviewStore,
             actorId: userId,
@@ -513,8 +526,25 @@ export function createServer({
       try {
         const updateOptions = context.actorId ? { actorId: context.actorId, actorToken: context.actorToken } : undefined;
         const updated = await context.store.update(id, actionInput.expectedVersion, async (next) => {
+          let replacement = null, agentRun = null;
+          let revisionInput = null;
+          if (actionInput.action === "rewrite_current") {
+            try { revisionInput = JSON.parse(actionInput.note); } catch { /* shared action validator reports invalid input */ }
+          }
+          if (providerMode === "agents" && agentSystem && (actionInput.action === "regenerate_current" || revisionInput?.preset)) {
+            const review = next.listingReview.reviews.find(item => item.draftId === actionInput.draftId);
+            if (!review) throw Object.assign(new Error(safeActionMessage("draft_not_found")), { code: "draft_not_found" });
+            if (revisionInput?.preset && (review.automaticRevisionAttempts || 0) >= 2) throw Object.assign(new Error(safeActionMessage("revision_limit_reached")), { code: "revision_limit_reached" });
+            if (revisionInput?.preset && !["Shorter", "Warmer", "More professional", "Stronger opening"].includes(revisionInput.preset)) throw Object.assign(new Error(safeActionMessage("invalid_revision")), { code: "invalid_revision" });
+            const currentDrafts = createContentDraft(next.brief).drafts.map((draft, i) => ({ ...draft, ...next.listingReview.reviews[i].working, supportingClaimIds: (draft.claimsUsed || []).map(claim => claim.sourceId || claim.sourceRefId || claim.referenceId) }));
+            const generated = await agentSystem.generate(next.brief, { currentDrafts, targetDraftId: actionInput.draftId, historyScope: context.actorId || "review:" + id, instruction: revisionInput?.preset ? "Revise this card's wording: " + revisionInput.preset : "Replace only this card with an entirely different idea grounded in its topic." });
+            if (generated.status !== "ready_for_review") throw Object.assign(new Error(generated.missingInformation?.at(-1) || safeActionMessage("revision_unavailable")), { code: "revision_unavailable" });
+            const target = generated.drafts.find(draft => draft.id === actionInput.draftId);
+            replacement = Object.fromEntries(["hook","script","caption","takeaway","videoConcept","suggestedScenes","hashtags","suggestedNextStep","reasonToFollow"].map(field => [field, target[field]]));
+            agentRun = generated.agentRun;
+          }
           const result = CARD_ACTIONS.has(actionInput.action)
-            ? applyCardFlowAction(next.listingReview, actionInput, { fictional: next.researchVerification?.status === "fictional_test_only" })
+            ? applyCardFlowAction(next.listingReview, actionInput, { fictional: next.researchVerification?.status === "fictional_test_only", replacement })
             : await applyListingReviewAction(
             next.listingReview,
             { action: actionInput.action, draftId: actionInput.draftId, note: actionInput.note },
@@ -531,6 +561,11 @@ export function createServer({
             throw error;
           }
           next.listingReview = result.state;
+          if (agentRun) {
+            const review = next.listingReview.reviews.find(item => item.draftId === actionInput.draftId);
+            review.agentRuns ||= [];
+            review.agentRuns.push(agentRun);
+          }
         }, updateOptions);
         sendJson(response, 200, {
           status: "ok",
@@ -580,9 +615,10 @@ export function createRequestHandler(options = {}) {
 }
 
 export async function createConfiguredRequestHandler() {
-  const providerMode = process.env.CONTENT_CREATOR_PROVIDER || "template";
+  const providerMode = process.env.CONTENT_CREATOR_PROVIDER || (process.env.OPENROUTER_API_KEY ? "agents" : "template");
   const backupProvider = process.env.CONTENT_CREATOR_BACKUP_PROVIDER || "none";
   const draftHistory = createDraftHistory();
+  const agentSystem = providerMode === "agents" ? createAgentSystem({ model: createAgentModel({ apiKey: process.env.OPENROUTER_API_KEY, model: process.env.OPENROUTER_MODEL || DEFAULT_OPENROUTER_MODEL }), history: draftHistory, budgetMs: 55000 }) : null;
   const openAIWriter = providerMode === "openai"
     ? createOpenAIWriter({ apiKey: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL, history: draftHistory })
     : null;
@@ -651,7 +687,7 @@ export async function createConfiguredRequestHandler() {
     : providerMode === "openai" && openAIWriter
       ? createRevisionGenerator({ primaryWriter: openAIWriter, logger: logProviderFailure })
       : null;
-  return createRequestHandler({ reviewStore, demoReviewStore, authVerifier, authConfig, revisionGenerator, providerMode, openAIWriter, groqWriter, geminiWriter, openRouterWriter, tiktokIntegration });
+  return createRequestHandler({ reviewStore, demoReviewStore, authVerifier, authConfig, revisionGenerator, providerMode, openAIWriter, groqWriter, geminiWriter, openRouterWriter, tiktokIntegration, agentSystem });
 }
 
 export async function startServer({ port = Number(process.env.PORT || 3000) } = {}) {

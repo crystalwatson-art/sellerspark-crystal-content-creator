@@ -1,0 +1,12 @@
+[
+  {"id":"lic-timing","audience":"lic_condo_owner","questions":["Which timing questions should I ask before deciding to sell?","What should I write down before an introductory conversation?","How do I decide what information I still need?"]},
+  {"id":"lic-preparation","audience":"lic_condo_owner","questions":["Which unit details can I personally confirm?","Which preparation notes should I bring to a professional?","How can I separate known details from unanswered questions?"]},
+  {"id":"lic-first-meeting","audience":"lic_condo_owner","questions":["What would make a first meeting useful?","Which question do sellers forget to prepare?","What should I ask before choosing a next step?"]},
+  {"id":"lic-home-story","audience":"lic_condo_owner","questions":["How do I describe a favorite room truthfully?","Which everyday details should I confirm instead of guessing?","How do I choose the most useful firsthand detail to share?"]},
+  {"id":"lic-next-chapter","audience":"lic_condo_owner","questions":["What do I want a move to make possible?","How do I avoid making a rushed decision?","Which priorities should guide my next conversation?"]},
+  {"id":"brooklyn-timing","audience":"brooklyn_townhouse_owner","questions":["Which timing questions should I prepare before discussing a sale?","What might I forget to ask in a first meeting?","How do I identify the information I need before deciding?"]},
+  {"id":"brooklyn-details","audience":"brooklyn_townhouse_owner","questions":["Which home details do I know firsthand?","How do I avoid including an unconfirmed detail?","What should I verify with a professional before describing my home?"]},
+  {"id":"brooklyn-low-pressure","audience":"brooklyn_townhouse_owner","questions":["How can I start a low-pressure seller conversation?","What preparation mistake makes a meeting harder to follow?","How do I choose a useful question without committing to sell?"]},
+  {"id":"brooklyn-checklist","audience":"brooklyn_townhouse_owner","questions":["What belongs in my own list of seller questions?","How do I avoid confusing facts with assumptions?","How can I organize the questions I still need answered?"]},
+  {"id":"brooklyn-followup","audience":"brooklyn_townhouse_owner","questions":["How should I keep notes from an introductory conversation?","Which follow-up question should I avoid forgetting?","How do I decide what to ask next after hearing an explanation?"]}
+]

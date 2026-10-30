@@ -303,7 +303,7 @@ function hasUnsafeViewerLanguage(text) {
     UNSUPPORTED_PROMISE_LANGUAGE.some((pattern) => pattern.test(text));
 }
 
-function validateModelOutput(output, brief, baseline) {
+export function validateModelOutput(output, brief, baseline) {
   if (!output || !Array.isArray(output.drafts) || output.drafts.length !== REQUIRED_DRAFT_COUNT) {
     return "AI writer did not return exactly three drafts";
   }
@@ -360,7 +360,7 @@ function validationReasonCode(message) {
   return "output_rejected";
 }
 
-function mergeModelDrafts(brief, baseline, output) {
+export function mergeModelDrafts(brief, baseline, output) {
   return output.drafts.map((modelDraft, index) => {
     const original = baseline.drafts[index];
     const allowedClaimIds = new Set((original.claimsUsed ?? []).map(claimId).filter(Boolean));
@@ -628,3 +628,4 @@ export function createOpenAIWriter(options = {}) {
 }
 
 export { CREATIVE_ANGLES };
+
