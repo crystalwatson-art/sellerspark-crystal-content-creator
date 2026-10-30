@@ -181,8 +181,10 @@ export class SupabaseTikTokConnectionStore {
         owner_id: ownerId,
         token_blob: this.cipher.encrypt(token),
         granted_scopes: token.grantedScopes,
-        expires_at: new Date(token.accessTokenExpiresAt).toISOString(),
-        updated_at: new Date().toISOString()
+        // Let PostgreSQL assign both timestamp defaults on first insert.
+        // A client timestamp arrives before DB-created created_at and violates
+        // the table check updated_at >= created_at.
+        expires_at: new Date(token.accessTokenExpiresAt).toISOString()
       })
     });
     if (!response?.ok) return safeStorageError(response);
@@ -356,7 +358,15 @@ export function createTikTokIntegration({
     } catch {
       throw tiktokError("provider_unavailable", "TikTok authorization is temporarily unavailable.");
     }
-    if (!response?.ok) throw tiktokError("provider_unavailable", "TikTok authorization was not accepted.");
+    if (!response?.ok) {
+      let failure;
+      try { failure = await response.json(); } catch { /* Never display raw provider text. */ }
+      const code = failure?.error === "invalid_client" ? "provider_client_invalid"
+        : failure?.error === "invalid_grant" ? "provider_code_invalid" : "provider_unavailable";
+      throw tiktokError(code, code === "provider_client_invalid"
+        ? "TikTok rejected the app credentials. Check SellerSpark's app settings."
+        : "TikTok authorization was not accepted.");
+    }
     let payload;
     try {
       payload = await response.json();
@@ -552,7 +562,7 @@ export function safeTikTokError(error) {
   const allowed = new Set([
     "not_configured", "authorization_required", "authorization_failed", "authorization_state_invalid",
     "authorization_denied", "authorization_code_missing", "provider_unavailable", "provider_invalid_response",
-    "storage_unavailable", "storage_corrupt", "scope_missing", "not_connected", "human_approval_required",
+    "provider_client_invalid", "provider_code_invalid", "storage_unavailable", "storage_corrupt", "scope_missing", "not_connected", "human_approval_required",
     "invalid_video_url", "invalid_cursor"
   ]);
   return {

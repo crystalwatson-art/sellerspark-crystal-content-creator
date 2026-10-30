@@ -1,3 +1,4 @@
+import { CARD_ACTIONS, applyCardFlowAction, sampleCardContent } from "../public/card-flow-state.js";
 import http from "node:http";
 import { readFile } from "node:fs/promises";
 import os from "node:os";
@@ -31,6 +32,7 @@ const fixturePath = path.join(projectRoot, "fixtures", "fictional-research-brief
 const brooklynFixturePath = path.join(projectRoot, "fixtures", "fictional-brooklyn-townhouse-brief.json");
 
 const assets = new Map([
+  ["/card-flow-state.js", { file: path.join(publicRoot, "card-flow-state.js"), type: "text/javascript; charset=utf-8" }],
   ["/proposals/card-flow.html", { file: path.join(publicRoot, "proposals", "card-flow.html"), type: "text/html; charset=utf-8" }],
   ["/", { file: path.join(publicRoot, "index.html"), type: "text/html; charset=utf-8" }],
   ["/index.html", { file: path.join(publicRoot, "index.html"), type: "text/html; charset=utf-8" }],
@@ -104,6 +106,9 @@ function safeReviewContentResult(record) {
 function safeActionMessage(reason) {
   const messages = {
     draft_not_found: "That draft is no longer available in this review.",
+    invalid_revision: "Enter revised script text or choose a suggested change.",
+    no_change: "This wording is already as short as this suggestion can make it. Edit the script or choose another suggestion.",
+    nothing_to_undo: "There is no earlier change to undo.",
     revision_unavailable: "A safe revision was not available. The original draft was kept.",
     revision_limit_reached: "The maximum of two automatic revision attempts has been reached.",
     unknown_action: "That review action is not supported.",
@@ -290,7 +295,7 @@ export function createServer({
         });
         if (wantsJson) sendJson(response, 200, outcome);
         else {
-          response.writeHead(303, { Location: "/?tiktok=connected", "Cache-Control": "no-store" });
+          response.writeHead(303, { Location: "/?tiktok=connected#growth", "Cache-Control": "no-store" });
           response.end();
         }
       } catch (error) {
@@ -298,7 +303,7 @@ export function createServer({
         if (wantsJson) {
           sendJson(response, safe.code === "not_configured" ? 503 : 422, { status: "error", message: safe.message });
         } else {
-          response.writeHead(303, { Location: "/?tiktok=error", "Cache-Control": "no-store" });
+          response.writeHead(303, { Location: "/?tiktok=error&reason=" + encodeURIComponent(safe.code) + "#growth", "Cache-Control": "no-store" });
           response.end();
         }
       }
@@ -406,6 +411,7 @@ export function createServer({
             return;
           }
           result = await contentResultFor(brief);
+          if (isFictionalDemoBrief(brief) && Number.isInteger(brief.sampleSet) && brief.sampleSet > 0 && Array.isArray(result.drafts)) result.drafts = result.drafts.map((draft, i) => sampleCardContent(draft, brief.sampleSet + i));
           storedResult = await withListingReviewUsing(result, brief, {
             store: demoReviewStore,
             persistenceStatus: "fictional_demo_store"
@@ -413,6 +419,7 @@ export function createServer({
         } else {
           const { userId, accessToken } = await authenticate(request);
           result = await contentResultFor(brief);
+          if (isFictionalDemoBrief(brief) && Number.isInteger(brief.sampleSet) && brief.sampleSet > 0 && Array.isArray(result.drafts)) result.drafts = result.drafts.map((draft, i) => sampleCardContent(draft, brief.sampleSet + i));
           storedResult = await withListingReviewUsing(result, brief, {
             store: reviewStore,
             actorId: userId,
@@ -505,7 +512,9 @@ export function createServer({
       try {
         const updateOptions = context.actorId ? { actorId: context.actorId, actorToken: context.actorToken } : undefined;
         const updated = await context.store.update(id, actionInput.expectedVersion, async (next) => {
-          const result = await applyListingReviewAction(
+          const result = CARD_ACTIONS.has(actionInput.action)
+            ? applyCardFlowAction(next.listingReview, actionInput, { fictional: next.researchVerification?.status === "fictional_test_only" })
+            : await applyListingReviewAction(
             next.listingReview,
             { action: actionInput.action, draftId: actionInput.draftId, note: actionInput.note },
             {

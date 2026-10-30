@@ -15,7 +15,7 @@ function jsonResponse(body, status = 200) {
   return { ok: status >= 200 && status < 300, status, async json() { return body; } };
 }
 
-async function startServerForTest() {
+async function startServerForTest({ tokenFailure = null } = {}) {
   const directory = await mkdtemp(path.join(os.tmpdir(), "sellerspark-tiktok-api-"));
   const store = await new ReviewStore({ filePath: path.join(directory, "reviews.json") }).init();
   const tokenStore = new MemoryTikTokConnectionStore();
@@ -33,6 +33,9 @@ async function startServerForTest() {
     tokenStore,
     stateStore: new MemoryTikTokOAuthStateStore(),
     fetchImpl: async (url) => {
+      if (String(url).includes('/oauth/token/')) return tokenFailure
+        ? jsonResponse({error:tokenFailure, error_description:'DO NOT EXPOSE provider private detail'},400)
+        : jsonResponse({access_token:'synthetic-callback-token',refresh_token:'synthetic-refresh',expires_in:3600,refresh_expires_in:86400,scope:'user.info.basic,user.info.stats'});
       if (String(url).includes("/user/info/")) return jsonResponse({ data: { user: { follower_count: 37 } } });
       return jsonResponse({ data: { publish_id: "fictional-draft-id" } });
     }
@@ -129,3 +132,25 @@ test("video views are authenticated and follower permission alone cannot read vi
   assert.equal((await badPage.json()).code, "invalid_cursor");
 });
 
+
+
+test('OAuth returns to Growth, records a successful connection and strips private callback fields', async t => {
+  const running = await startServerForTest(); t.after(() => running.server.close());
+  const start = await fetch(running.base + '/api/tiktok/oauth/start', {method:'POST',headers:{authorization:'Bearer '+supabaseToken}});
+  const url = new URL((await start.json()).authorizationUrl);
+  const callback = await fetch(running.base + '/api/tiktok/oauth/callback?code=synthetic-code&state='+url.searchParams.get('state'),{redirect:'manual'});
+  assert.equal(callback.status,303);
+  assert.equal(callback.headers.get('location'),'/?tiktok=connected#growth');
+  assert.doesNotMatch(callback.headers.get('location'),/synthetic|state=|code=/);
+  const replay = await fetch(running.base + '/api/tiktok/oauth/callback?code=synthetic-code&state='+url.searchParams.get('state'),{redirect:'manual'});
+  assert.equal(replay.headers.get('location'),'/?tiktok=error&reason=authorization_state_invalid#growth');
+});
+
+test('TikTok app-credential rejection has a safe actionable reason and returns to Growth', async t => {
+  const running = await startServerForTest({tokenFailure:'invalid_client'}); t.after(() => running.server.close());
+  const start = await fetch(running.base + '/api/tiktok/oauth/start', {method:'POST',headers:{authorization:'Bearer '+supabaseToken}});
+  const url = new URL((await start.json()).authorizationUrl);
+  const callback = await fetch(running.base+'/api/tiktok/oauth/callback?code=synthetic-code&state='+url.searchParams.get('state'),{redirect:'manual'});
+  assert.equal(callback.headers.get('location'),'/?tiktok=error&reason=provider_client_invalid#growth');
+  assert.doesNotMatch(callback.headers.get('location'),/DO NOT EXPOSE|test-client-secret|synthetic-code/);
+});

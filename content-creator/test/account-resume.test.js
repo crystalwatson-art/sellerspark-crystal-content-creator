@@ -40,8 +40,8 @@ test('signed-in Generate saves decisions and a fresh browser resumes them withou
   const nativeFetch = globalThis.fetch;
   const original = Object.fromEntries(['window','document','location','localStorage','sessionStorage','MutationObserver','CustomEvent','Event'].map(key => [key, globalThis[key]]));
   let dom;
-  function installBrowser() {
-    dom = new JSDOM(html, { url: base + '/#creator', pretendToBeVisual: true });
+  function installBrowser(route = "/#creator") {
+    dom = new JSDOM(html, { url: base + route, pretendToBeVisual: true });
     const w = dom.window;
     w.matchMedia = () => ({ matches: false });
     w.HTMLDialogElement.prototype.close = function () { this.open = false; };
@@ -64,6 +64,15 @@ test('signed-in Generate saves decisions and a fresh browser resumes them withou
   assert.equal(rows[0].owner_id, owner);
   assert.match($('result-summary').textContent, /Saved to your account/);
   window.SellerSparkContentCreator.openReview(0, 'approval');
+  $('card-regenerate').click();
+  await waitFor(() => rows[0].listing_review.reviews[0].cardVersion === 2 && !$('card-regenerate').disabled);
+  const generated = rows[0].listing_review.reviews[0].working.script;
+  $('optimizer-revision').click();
+  $('card-revised-script').value = 'My personally revised wording for this draft.';
+  $('card-save-revision').click();
+  await waitFor(() => rows[0].listing_review.reviews[0].working.script !== generated && !$('optimizer-accept').disabled);
+  assert.equal(rows[0].listing_review.reviews[0].working.script, 'My personally revised wording for this draft.');
+  assert.ok(rows[0].listing_review.reviews[0].cardVersions.length >= 2);
   $('optimizer-accept').click();
   await waitFor(() => rows[0].listing_review.reviews[0].status === 'accepted' && $('optimizer-review-status').textContent === 'Accepted');
   const savedHook = rows[0].listing_review.reviews[0].working.hook;
@@ -76,4 +85,14 @@ test('signed-in Generate saves decisions and a fresh browser resumes them withou
   assert.equal(window.SellerSparkContentCreator.getDraftSummaries()[0].hook, savedHook);
   assert.match($('result-summary').textContent, /Saved to your account/);
   assert.equal(rows.length, 1, 'resuming must not create a duplicate review');
+  assert.equal(rows[0].listing_review.reviews[0].working.script, 'My personally revised wording for this draft.');
+  assert.ok(rows[0].listing_review.reviews[0].cardVersions.length >= 2);
+  dom.window.close();
+  $ = installBrowser('/?tiktok=error&reason=provider_client_invalid#home');
+  await import('../public/app.js?account-resume-callback');
+  await waitFor(() => $('auth-status').textContent.startsWith('Signed in'));
+  assert.equal(location.hash, '#growth');
+  assert.equal(location.search, '');
+  assert.match($('tiktok-return-status').textContent, /app credentials/);
+  assert.equal($('tiktok-return-status').hidden, false);
 });

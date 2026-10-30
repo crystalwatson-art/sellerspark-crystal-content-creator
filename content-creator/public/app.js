@@ -1,3 +1,4 @@
+import { CARD_ACTIONS, applyCardFlowAction } from "./card-flow-state.js";
 import { BrowserSupabaseAuth, authClientErrorMessage } from "./supabase-auth.js";
 import { createGrowthPilotView } from "./growth-pilot.js";
 
@@ -31,6 +32,34 @@ const campaignCalendar = document.querySelector("#campaign-calendar");
 const calendarNote = document.querySelector("#calendar-note");
 const tiktokConnectionHeading = document.querySelector("#tiktok-connection-heading");
 const tiktokConnectionNote = document.querySelector("#tiktok-connection-note");
+const tiktokReturnStatus = document.querySelector("#tiktok-return-status");
+const tiktokReturnParams = new URLSearchParams(globalThis.location.search);
+if (tiktokReturnParams.has("tiktok")) {
+  const result = tiktokReturnParams.get("tiktok");
+  const reason = tiktokReturnParams.get("reason");
+  const messages = {
+    not_configured: "TikTok could not connect because this app's connection settings are incomplete.",
+    authorization_state_invalid: "This TikTok connection attempt expired or was already used. Start a fresh connection.",
+    authorization_denied: "TikTok permission was not granted. Your account has not been connected.",
+    provider_client_invalid: "TikTok rejected SellerSpark's app credentials. The app settings need correction before retrying.",
+    provider_code_invalid: "TikTok could not accept this sign-in attempt. Start a fresh connection.",
+    provider_unavailable: "TikTok could not complete the connection. Your account has not been connected.",
+    provider_invalid_response: "TikTok returned an incomplete connection response. Your account has not been connected.",
+    storage_unavailable: "TikTok authorization returned, but SellerSpark could not save the connection.",
+    storage_corrupt: "SellerSpark could not read the saved TikTok connection."
+  };
+  tiktokReturnStatus.hidden = false;
+  tiktokReturnStatus.textContent = result === "connected"
+    ? "TikTok authorization completed. Checking your saved connection…"
+    : messages[reason] || "TikTok connection did not complete. Your account has not been connected.";
+  tiktokReturnStatus.classList.toggle("error", result !== "connected");
+  // Show the result in its own panel so connection refresh cannot overwrite it.
+  const cleanUrl = new URL(globalThis.location.href);
+  cleanUrl.searchParams.delete("tiktok");
+  cleanUrl.searchParams.delete("reason");
+  cleanUrl.hash = "growth";
+  globalThis.window.history.replaceState({}, "", cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+}
 const connectTikTok = document.querySelector("#connect-tiktok");
 const syncTikTokFollowers = document.querySelector("#sync-tiktok-followers");
 const openVideoViews = document.querySelector("#open-views");
@@ -385,6 +414,9 @@ async function initializeAuth() {
 function renderTikTokStatus(status = {}) {
   const state = status.status || "not_configured";
   const connected = state === "connected";
+  if (tiktokReturnParams.get("tiktok") === "connected") tiktokReturnStatus.textContent = connected
+    ? "TikTok is connected. You can now sync your follower count."
+    : "TikTok authorization returned. Sign in to SellerSpark here to check the saved connection.";
   const configured = state !== "not_configured";
   tiktokConnectionHeading.textContent = connected ? "Connected" : configured ? "Not connected" : "Not configured";
   if (connected) {
@@ -790,9 +822,10 @@ function archiveWorkspace() {
       savedAt: new Date().toISOString(),
       audience: currentListingReview.audience,
       audienceLabel: currentListingReview.audienceLabel,
+      workspace: workspaceSnapshot(),
       reviews: clone(currentListingReview.reviews)
     });
-    localStorage.setItem(REVIEW_ARCHIVE_STORAGE_KEY, JSON.stringify(archive.slice(0, 10)));
+    localStorage.setItem(REVIEW_ARCHIVE_STORAGE_KEY, JSON.stringify(archive));
   } catch {
     // Do not block a reset if browser storage is unavailable.
   }
@@ -861,7 +894,10 @@ function renderDraftCards() {
     });
     cardBottom.append(sourceCount, preview);
 
-    card.append(cardTop, title, excerpt, cardBottom);
+    const state = document.createElement("span"); state.className = "review-state";
+    const record = currentListingReview?.reviews?.[index];
+    state.textContent = record?.status === "accepted" ? "Approved" : record?.status === "rejected" ? "Rejected · try another idea" : record?.status === "revision_requested" ? "Updated · needs approval" : "Ready to review";
+    card.append(cardTop, title, excerpt, state, cardBottom);
     card.addEventListener("click", () => { setReviewMode("creator"); openDraft(index); });
     card.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
@@ -908,6 +944,7 @@ function renderResult(result) {
   }
   renderDraftCards();
   persistWorkspace();
+  renderEarlierSets();
 }
 
 function renderList(parent, values, emptyText) {
@@ -927,7 +964,7 @@ function renderList(parent, values, emptyText) {
 
 function renderEditorialQuality() {
   const quality = currentEditorialQuality?.drafts?.[activeDraftIndex];
-  if (!quality) {
+  if (!quality || (activeReview()?.cardVersion || 1) > 1) {
     modalQuality.hidden = true;
     return;
   }
@@ -1002,14 +1039,16 @@ function renderOptimizerReview() {
   optimizerWarningsBlock.hidden = warnings.length === 0;
   renderList(
     optimizerHistory,
-    review.revisionHistory.map((item) => reviewStatusLabel(item.action) + ": " + (item.note || "Review action recorded.")),
+    [...(review.cardVersions || []).map(item => "Version " + item.cardVersion + " · " + reviewStatusLabel(item.status) + "\n" + item.working.script), ...review.revisionHistory.map((item) => reviewStatusLabel(item.action) + ": " + (item.note || "Review action recorded."))],
     "No review actions yet."
   );
-  optimizerHistoryBlock.hidden = review.revisionHistory.length === 0;
+  optimizerHistoryBlock.hidden = review.revisionHistory.length === 0 && !review.cardVersions?.length;
   const busy = reviewActionInFlight;
-  optimizerAccept.disabled = busy || !review.proposed || review.status === "accepted";
+  optimizerAccept.disabled = busy || review.status === "accepted";
   optimizerReject.disabled = busy || review.status === "rejected";
-  optimizerRevision.disabled = busy || !review.proposed || review.automaticRevisionAttempts >= (currentListingReview.revisionLimit || 2);
+  optimizerRevision.disabled = busy;
+  document.querySelector("#card-regenerate").disabled = busy;
+  document.querySelector("#card-undo").disabled = busy || !review.cardUndo?.length;
   optimizerRestore.disabled = busy || JSON.stringify(review.working) === JSON.stringify(review.original);
 }
 
@@ -1017,7 +1056,7 @@ function renderModal() {
   const draft = currentDrafts[activeDraftIndex];
   if (!draft) return;
 
-  modalNumber.textContent = "DRAFT " + String(activeDraftIndex + 1).padStart(2, "0");
+  modalNumber.textContent = "DRAFT " + String(activeDraftIndex + 1).padStart(2, "0") + " · VERSION " + (activeReview()?.cardVersion || 1);
   modalAngle.textContent = draft.angle;
   modalTitle.textContent = draft.hook;
   modalAudience.textContent = draft.audienceLabel;
@@ -1042,14 +1081,17 @@ function renderModal() {
   modalPosition.textContent = "Draft " + String(activeDraftIndex + 1) + " of " + String(currentDrafts.length);
   modalPrevious.disabled = activeDraftIndex === 0;
   modalNext.disabled = activeDraftIndex === currentDrafts.length - 1;
-  modalCopy.textContent = "Copy";
+  modalCopy.textContent = "Copy approved content";
+  modalCopy.hidden = activeReview()?.status !== "accepted";
+  modalScript.classList.toggle("updated-wording", ["rewrite_current", "regenerate_current"].includes(activeReview()?.lastCardAction));
 }
 
 function setReviewMode(mode) {
   modal.dataset.mode = ["creator", "optimizer", "approval"].includes(mode) ? mode : "creator";
+  document.querySelector("#card-revise-panel").hidden = true;
   document.querySelector("#optimizer-review-heading").textContent = modal.dataset.mode === "approval"
     ? "Review the draft and make your decision"
-    : "Original content beside a proposed revision";
+    : "Shape this draft";
   const next = document.querySelector("#modal-next-step");
   next.href = modal.dataset.mode === "creator" ? "#optimizer" : "#approval";
   next.textContent = modal.dataset.mode === "creator" ? "Open Listing Optimizer →" : "Review & approve →";
@@ -1076,7 +1118,7 @@ function closeDraft() {
 
 function copyActiveDraft() {
   const draft = currentDrafts[activeDraftIndex];
-  if (!draft) return;
+  if (!draft || activeReview()?.status !== "accepted") return;
   const copyText = [
     draft.hook,
     "\nScript: " + draft.script,
@@ -1250,16 +1292,22 @@ async function refreshReviewFromServer() {
 async function runReviewAction(action, note = "Human reviewer requested this action.") {
   const review = activeReview();
   if (!review || reviewActionInFlight) return;
-  if (!currentReviewId || !Number.isInteger(currentReviewVersion)) {
+  if ((!currentReviewId || !Number.isInteger(currentReviewVersion)) && !(currentPersistenceStatus === "fictional_demo_store" && CARD_ACTIONS.has(action))) {
     setDemoError("This saved review is from an older local session. Run the fictional test again before using review controls.");
     return;
   }
+  const actionOwner = authClient.session?.userId;
+  const actionReviewId = currentReviewId;
   reviewActionInFlight = true;
+  document.querySelector("#card-action-feedback").textContent = "Saving your change…";
   renderOptimizerReview();
   try {
     if (currentPersistenceStatus === "fictional_demo_store") {
-      const outcome = applyFictionalReviewAction(action, review.draftId, note);
+      const outcome = CARD_ACTIONS.has(action)
+        ? (() => { const result = applyCardFlowAction(currentListingReview, { action, draftId: review.draftId, note }, { fictional: true }); return { ...result, listingReview: result.state, message: result.reason === "no_change" ? "This is already short. Edit the script or choose another suggestion." : "That change could not be applied." }; })()
+        : applyFictionalReviewAction(action, review.draftId, note);
       if (!outcome.ok) {
+        document.querySelector("#card-action-feedback").textContent = outcome.message;
         setDemoError(outcome.message);
         return;
       }
@@ -1274,7 +1322,9 @@ async function runReviewAction(action, note = "Human reviewer requested this act
       body: JSON.stringify({ action, draftId: review.draftId, note, expectedVersion: currentReviewVersion })
     });
     const payload = await response.json();
+    if (actionOwner !== authClient.session?.userId || actionReviewId !== currentReviewId) return;
     if (!response.ok) {
+      document.querySelector("#card-action-feedback").textContent = payload.message || "The review action could not be completed.";
       setDemoError(payload.message || "The review action could not be completed.");
       if (response.status === 409) await refreshReviewFromServer();
       return;
@@ -1288,10 +1338,15 @@ async function runReviewAction(action, note = "Human reviewer requested this act
       : "The local review store is not reachable. Your current browser copy was not changed.");
   } finally {
     reviewActionInFlight = false;
+    if (!demoError.textContent) {
+      document.querySelector("#card-revise-panel").hidden = true;
+      document.querySelector("#card-action-feedback").textContent = ({approve_current:"Approved. Copy is now available.", reject_current:"Marked as unwanted. Regenerate this card for a different idea.", rewrite_current:"Wording updated on this card. Review the highlighted script.", regenerate_current:"Only this card was replaced with a different sample idea. Review it before accepting.", undo_current:"Previous version restored."})[action] || "Saved.";
+    }
     renderOptimizerReview();
   }
 }
 
+let generationSet = Number(readStorageObject("sellerspark-sample-set-v1", 0)) || 0;
 async function runFictionalTest() {
   if (activeRequestController) return;
   const hadDrafts = currentDrafts.length > 0;
@@ -1315,6 +1370,8 @@ async function runFictionalTest() {
     const briefResponse = await fetch(fixturePath, { signal: activeRequestController.signal });
     if (!briefResponse.ok) throw new Error("fictional fixture unavailable");
     const brief = await briefResponse.json();
+    brief.sampleSet = generationSet++;
+    writeStorageObject("sellerspark-sample-set-v1", generationSet);
     brief.campaignAudienceMode = campaignAudienceMode.value;
     brief.startingFollowers = startingFollowers.value === "" ? null : Number(startingFollowers.value);
     brief.currentFollowers = currentFollowers.value === "" ? null : Number(currentFollowers.value);
@@ -1475,9 +1532,17 @@ modalNext.addEventListener("click", () => {
 modalCopy.addEventListener("click", copyActiveDraft);
 document.querySelector("#modal-next-step").addEventListener("click", closeDraft);
 resetConfirmation.addEventListener("cancel", () => { resetConfirmation.hidden = true; });
-optimizerAccept.addEventListener("click", () => runReviewAction("accept", "Human reviewer accepted this proposed revision for the next approval step."));
-optimizerReject.addEventListener("click", () => runReviewAction("reject", "Human reviewer rejected this proposed revision; the original remains the working draft."));
-optimizerRevision.addEventListener("click", () => runReviewAction("request_revision", "Human reviewer requested a revision."));
+optimizerAccept.addEventListener("click", () => runReviewAction("approve_current"));
+optimizerReject.addEventListener("click", () => runReviewAction("reject_current"));
+optimizerRevision.addEventListener("click", () => {
+  document.querySelector("#card-revise-panel").hidden = false;
+  document.querySelector("#card-revised-script").value = currentDrafts[activeDraftIndex].script;
+  document.querySelector("#card-revised-script").focus();
+});
+document.querySelector("#card-save-revision").addEventListener("click", () => runReviewAction("rewrite_current", JSON.stringify({ script: document.querySelector("#card-revised-script").value })));
+for (const button of document.querySelector("#card-revise-choices").children) button.addEventListener("click", () => runReviewAction("rewrite_current", JSON.stringify({ preset: button.textContent })));
+document.querySelector("#card-regenerate").addEventListener("click", () => runReviewAction("regenerate_current"));
+document.querySelector("#card-undo").addEventListener("click", () => runReviewAction("undo_current"));
 optimizerRestore.addEventListener("click", () => runReviewAction("restore_original", "Human reviewer restored the original draft."));
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !modal.hidden) closeDraft();
@@ -1523,3 +1588,42 @@ authClient.onAuthStateChange((session) => {
 });
 void initializeAuth();
 
+
+function renderEarlierSets() {
+  const list = document.querySelector("#earlier-set-list");
+  list.replaceChildren();
+  if (authClient.session) {
+    const link = document.createElement("a"); link.href = "#account"; link.className = "secondary-button"; link.textContent = "Open your saved draft sets in Account →"; list.append(link); return;
+  }
+  const archive = readStorageObject(REVIEW_ARCHIVE_STORAGE_KEY, []);
+  if (!Array.isArray(archive) || !archive.length) { list.textContent = "Earlier sets will appear here after you generate another set."; return; }
+  for (const item of archive) {
+    const button = document.createElement("button"); button.className = "secondary-button"; button.type = "button";
+    button.textContent = (item.audienceLabel || "Earlier draft set") + " · " + new Date(item.savedAt).toLocaleString();
+    button.addEventListener("click", () => {
+      archiveWorkspace();
+      const saved = item.workspace || { drafts: item.reviews.map(r => ({ ...r.working, id:r.draftId, audience:r.audience, audienceLabel:r.audienceLabel })), listingReview:{ reviews:item.reviews, audience:item.audience, audienceLabel:item.audienceLabel }, audience:item.audience };
+      currentWorkspaceAudience = saved.audience || currentWorkspaceAudience;
+      restoreWorkspaceSnapshot(saved); persistWorkspace(); renderEarlierSets();
+    }); list.append(button);
+  }
+}
+const placementControl = document.querySelector("#card-placement");
+placementControl.addEventListener("change", () => { document.documentElement.dataset.cardPlacement = placementControl.value; writeStorageObject("sellerspark-card-placement-v1", placementControl.value); });
+document.querySelector("#card-scale").addEventListener("input", event => { document.documentElement.style.setProperty("--card-scale", Number(event.target.value) / 100); writeStorageObject("sellerspark-card-scale-v1", Number(event.target.value)); });
+const savedPlacement = readStorageObject("sellerspark-card-placement-v1", "low");
+placementControl.value = ["low", "left", "right"].includes(savedPlacement) ? savedPlacement : "low";
+document.documentElement.dataset.cardPlacement = placementControl.value;
+const savedScale = Number(readStorageObject("sellerspark-card-scale-v1", 90));
+if (savedScale >= 80 && savedScale <= 110) { document.querySelector("#card-scale").value = savedScale; document.documentElement.style.setProperty("--card-scale", savedScale / 100); }
+// Put the main copy first; the supporting material remains available on demand.
+const body = document.querySelector(".modal-body");
+const scriptSection = document.querySelector("#modal-script").closest("section");
+const captionSection = document.querySelector("#modal-caption").closest("section");
+const controls = document.querySelector("#optimizer-review");
+const supporting = document.createElement("details"); supporting.className = "card-supporting";
+const supportingLabel = document.createElement("summary"); supportingLabel.textContent = "Scenes, references and other details"; supporting.append(supportingLabel);
+for (const child of [...body.children]) if (child !== controls) supporting.append(child);
+body.replaceChildren(scriptSection, captionSection, controls, supporting);
+supporting.append(optimizerWarningsBlock);
+renderEarlierSets();

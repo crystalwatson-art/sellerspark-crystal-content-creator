@@ -19,7 +19,7 @@ test("Studio presentation keeps Crystal ownership and the multi-agent workflow v
     assert.match(html, new RegExp(label));
   }
   assert.match(html, /Nothing publishes automatically/);
-  assert.match(styles, /--surface:rgba\(11,15,35,\.10\)/);
+  assert.match(styles, /--surface:rgba\(20,27,45,\.48\)/);
   assert.match(styles, /--violet:/);
   assert.match(styles, /--gold:/);
   assert.match(styles, /\[hidden\]\{display:none!important\}/);

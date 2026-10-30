@@ -267,3 +267,19 @@ test("OAuth state replay and expiry are rejected by the local state contract", a
   now = 2001;
   assert.equal(await store.consume("expired-state"), null);
 });
+
+
+test('first TikTok save uses database timestamp defaults instead of an earlier client update time', async () => {
+  let inserted;
+  const databaseClock = Date.now() + 1000;
+  const store = new SupabaseTikTokConnectionStore({url:'https://example.supabase.co',serverKey,cipher:createTokenCipher(encryptionKey),fetchImpl:async(_url,options)=>{
+    const body = JSON.parse(options.body);
+    // Model the actual live PostgreSQL defaults and CHECK constraint.
+    const row = {created_at:new Date(databaseClock).toISOString(),updated_at:new Date(databaseClock).toISOString(),...body};
+    if(Date.parse(row.updated_at)<Date.parse(row.created_at))return jsonResponse({},400);
+    inserted=row;return jsonResponse([]);
+  }});
+  await store.save(userA,{accessToken:'synthetic',refreshToken:'synthetic-refresh',accessTokenExpiresAt:Date.now()+3600000,grantedScopes:[TIKTOK_SCOPES.identity]});
+  assert.equal(inserted.updated_at,inserted.created_at);
+  assert.equal(inserted.owner_id,userA);
+});
