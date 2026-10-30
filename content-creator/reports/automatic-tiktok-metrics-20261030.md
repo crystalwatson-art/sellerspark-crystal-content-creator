@@ -43,6 +43,14 @@ read-only metric, goal recalculation, persistence across a fresh session and
 locations, invalid-goal preservation, and omission of video requests without
 consent. Controlled TikTok/database responses are explicitly test doubles.
 
+The first rendered-browser automatic-refresh pass exposed a startup race: the
+browser `pageshow` event could start polling using a remembered session before
+the auth configuration was loaded. The controller now also requires configured
+auth, and the `pageshow` handler checks that boundary. The integration test holds
+the auth-config response, dispatches `pageshow`, proves no premature metric call
+occurs, then releases configuration and observes automatic loading immediately.
+The targeted automatic-metric tests pass after this correction.
+
 Before this update, a real signed-in browser pass on the stable private studio
 confirmed **Connected**, and the actual follower-count endpoint returned **0**.
 The successful refresh was repeated after the preceding agent deployment at

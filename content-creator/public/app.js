@@ -161,7 +161,7 @@ let tikTokConnected = false;
 const authClient = new BrowserSupabaseAuth();
 videoViewsOwner = authClient.session?.userId || null;
 const tikTokAutoSync = createTikTokAutoSync({
-  hasSession: () => Boolean(authClient.session) && !recoveryMode,
+  hasSession: () => authClient.enabled && Boolean(authClient.session) && !recoveryMode,
   isVisible: () => document.visibilityState !== "hidden",
   schedule: (callback, delay) => window.setTimeout(callback, delay),
   cancel: timer => window.clearTimeout(timer),
@@ -1669,7 +1669,7 @@ authClient.onAuthStateChange((session) => {
 document.addEventListener("visibilitychange", () => { if (document.visibilityState !== "hidden") void tikTokAutoSync.refreshNow(); });
 window.addEventListener("focus", () => void tikTokAutoSync.refreshNow());
 window.addEventListener("pagehide", () => tikTokAutoSync.stop());
-window.addEventListener("pageshow", () => { if (authClient.session && !recoveryMode) void tikTokAutoSync.start(); });
+window.addEventListener("pageshow", () => { if (authClient.enabled && authClient.session && !recoveryMode) void tikTokAutoSync.start(); });
 void initializeAuth();
 
 

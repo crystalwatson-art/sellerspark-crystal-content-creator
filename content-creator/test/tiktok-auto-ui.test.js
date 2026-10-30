@@ -27,11 +27,13 @@ test('signed-in studio automatically reads followers and video views, preserves 
   const html=await readFile(new URL('../public/index.html',import.meta.url),'utf8');
   const original=Object.fromEntries(['window','document','location','localStorage','sessionStorage','CustomEvent','Event'].map(key=>[key,globalThis[key]]));
   const nativeFetch=globalThis.fetch; let dom;
+  let releaseConfig;
+  const configGate = new Promise(resolve => { releaseConfig = resolve; });
   const install = saved => {
     dom=new JSDOM(html,{url:base+'/#growth',pretendToBeVisual:true});
     dom.window.matchMedia=()=>({matches:false});
     for(const key of Object.keys(original)) globalThis[key]=key==='window'?dom.window:dom.window[key];
-    globalThis.fetch=(url,options)=>nativeFetch(new URL(url,base),options);
+    globalThis.fetch=async (url,options)=>{ const target = new URL(url,base); if (target.pathname === '/api/auth-config') await configGate; return nativeFetch(target,options); };
     sessionStorage.setItem('sellerspark-supabase-session-v1',JSON.stringify({accessToken:'synthetic-test-session',userId:'owner',expiresAt:Date.now()+3600000}));
     for(const [key,value] of saved || []) localStorage.setItem(key,value);
     return id=>document.getElementById(id);
@@ -39,6 +41,9 @@ test('signed-in studio automatically reads followers and video views, preserves 
   t.after(async()=>{dom?.window.close();globalThis.fetch=nativeFetch;for(const [key,value] of Object.entries(original)) if(value===undefined)delete globalThis[key];else globalThis[key]=value;await new Promise(resolve=>server.close(resolve));await rm(dir,{recursive:true,force:true});});
   let $=install();
   await import('../public/app.js?tiktok-auto-first');
+  window.dispatchEvent(new Event('pageshow'));
+  assert.equal(followerCalls,0,'page-show must not start metric refresh before auth configuration');
+  releaseConfig();
   await waitFor(()=>followerCalls===1 && $('current-followers').value==='125' && $('video-views-list').textContent.includes('456 views'));
   assert.equal(viewCalls,1,'video counts load without a refresh button click');
   assert.equal($('current-followers').readOnly,true);
