@@ -59,7 +59,20 @@ live follower API boundary, not the new timer by itself. A rendered-browser pass
 of the automatic update follows deployment; authorized live video-count access
 still requires the user's separate consent.
 
-## Existing agent checkpoint
+## Rendered browser result — 7:51 PM Eastern
+
+The corrected build (190ea01976b36089e1ee7d56b124f42935046b55,
+deployment dpl_4J1tyeidbXQxUjqnhpuLynJo7DXR) was assigned to the existing stable
+private alias. In a fresh signed-in Chrome tab, reloading the studio
+automatically produced **Connected**, follower count **0**, and a successful
+TikTok update timestamp without pressing Refresh. The current-follower field is
+read-only. Changing the target to **250**, saving and reloading restored **250
+total followers**. The original target **100** was restored after testing.
+The updated studio tab was left open. Video-view permission is not yet granted:
+the visible one-time consent control is present, and no live video-view result
+is claimed. The provider key for live AI remains unconfigured.
+
+## Existing agent checkpoint (unchanged)
 
 The Content Creator/Optimizer loops are saved in parent commit
 c05d7bf7fa6d3fb6b16e639a790637c2d2901945 and remain included. The host still lacks
