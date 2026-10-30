@@ -1047,6 +1047,10 @@ function renderOptimizerReview() {
   optimizerAccept.disabled = busy || review.status === "accepted";
   optimizerReject.disabled = busy || review.status === "rejected";
   optimizerRevision.disabled = busy;
+  for (const button of document.querySelector("#card-revise-choices").children) button.disabled = busy || (review.automaticRevisionAttempts || 0) >= 2;
+  document.querySelector("#card-revise-help").textContent = (review.automaticRevisionAttempts || 0) >= 2
+    ? "Two suggested rewrites have been used. You can edit the script directly, undo a change, or regenerate this sample card."
+    : "Choose a suggestion, or edit the script directly. Changes appear on this card and need your approval again.";
   document.querySelector("#card-regenerate").disabled = busy;
   document.querySelector("#card-undo").disabled = busy || !review.cardUndo?.length;
   optimizerRestore.disabled = busy || JSON.stringify(review.working) === JSON.stringify(review.original);
@@ -1304,7 +1308,7 @@ async function runReviewAction(action, note = "Human reviewer requested this act
   try {
     if (currentPersistenceStatus === "fictional_demo_store") {
       const outcome = CARD_ACTIONS.has(action)
-        ? (() => { const result = applyCardFlowAction(currentListingReview, { action, draftId: review.draftId, note }, { fictional: true }); return { ...result, listingReview: result.state, message: result.reason === "no_change" ? "This is already short. Edit the script or choose another suggestion." : "That change could not be applied." }; })()
+        ? (() => { const result = applyCardFlowAction(currentListingReview, { action, draftId: review.draftId, note }, { fictional: true }); return { ...result, listingReview: result.state, message: result.reason === "no_change" ? "This is already short. Edit the script or choose another suggestion." : result.reason === "revision_limit_reached" ? "Two suggested rewrites have been used. Edit the script directly or regenerate this card." : result.reason === "unsupported_claims" ? "Resolve missing evidence or unsupported claims before acceptance." : "That change could not be applied." }; })()
         : applyFictionalReviewAction(action, review.draftId, note);
       if (!outcome.ok) {
         document.querySelector("#card-action-feedback").textContent = outcome.message;
@@ -1608,14 +1612,6 @@ function renderEarlierSets() {
     }); list.append(button);
   }
 }
-const placementControl = document.querySelector("#card-placement");
-placementControl.addEventListener("change", () => { document.documentElement.dataset.cardPlacement = placementControl.value; writeStorageObject("sellerspark-card-placement-v1", placementControl.value); });
-document.querySelector("#card-scale").addEventListener("input", event => { document.documentElement.style.setProperty("--card-scale", Number(event.target.value) / 100); writeStorageObject("sellerspark-card-scale-v1", Number(event.target.value)); });
-const savedPlacement = readStorageObject("sellerspark-card-placement-v1", "low");
-placementControl.value = ["low", "left", "right"].includes(savedPlacement) ? savedPlacement : "low";
-document.documentElement.dataset.cardPlacement = placementControl.value;
-const savedScale = Number(readStorageObject("sellerspark-card-scale-v1", 90));
-if (savedScale >= 80 && savedScale <= 110) { document.querySelector("#card-scale").value = savedScale; document.documentElement.style.setProperty("--card-scale", savedScale / 100); }
 // Put the main copy first; the supporting material remains available on demand.
 const body = document.querySelector(".modal-body");
 const scriptSection = document.querySelector("#modal-script").closest("section");

@@ -21,9 +21,14 @@ export function applyCardFlowAction(state, { action, draftId, note = '' }, { fic
   if (!review) return fail('draft_not_found');
   if (!CARD_ACTIONS.has(action)) return fail('unknown_action');
   let working = clone(review.working);
+  let attempts = review.automaticRevisionAttempts || 0;
+  if (action === 'approve_current' && (review.unsupportedClaims?.length || review.missingEvidence?.length)) return fail('unsupported_claims');
   if (action === 'rewrite_current') {
     let input;
     try { input = JSON.parse(note); } catch { return fail('invalid_revision'); }
+    const isSuggestion = ['Shorter', 'Warmer', 'More professional', 'Stronger opening'].includes(input.preset);
+    if (isSuggestion && attempts >= 2) return fail('revision_limit_reached');
+    if (isSuggestion) attempts++;
     if (input.preset === 'Shorter') working.script = working.script.match(/[^.!?]+[.!?]+/g)?.slice(0,1).join('').trim() || working.script.split(' ').slice(0,18).join(' ');
     else if (input.preset === 'Warmer') working.script = 'Take this one step at a time. ' + working.script;
     else if (input.preset === 'More professional') working.script = 'Prepare for your next real estate conversation. ' + working.script;
@@ -37,10 +42,11 @@ export function applyCardFlowAction(state, { action, draftId, note = '' }, { fic
     let variant = review.sampleVariant ?? ((review.cardVersion || 1) - 1);
     do { variant++; working = sampleCardContent(review.working, variant); } while (working.hook === review.working.hook);
     review.sampleVariant = variant;
+    attempts = 0;
   }
   review.cardUndo ||= [];
   review.cardVersions ||= [];
-  const snapshot = { working: clone(review.working), status: review.status, cardVersion: review.cardVersion || 1 };
+  const snapshot = { working: clone(review.working), status: review.status, cardVersion: review.cardVersion || 1, automaticRevisionAttempts: review.automaticRevisionAttempts || 0 };
   if (action === 'undo_current') {
     const previous = review.cardUndo.pop();
     if (!previous) return fail('nothing_to_undo');
@@ -50,6 +56,7 @@ export function applyCardFlowAction(state, { action, draftId, note = '' }, { fic
     review.cardUndo.push(snapshot);
     review.cardVersions.push({ ...snapshot, event: action, at: new Date().toISOString() });
     review.working = working;
+    review.automaticRevisionAttempts = attempts;
     review.status = action === 'approve_current' ? 'accepted' : action === 'reject_current' ? 'rejected' : 'revision_requested';
     if (['rewrite_current', 'regenerate_current'].includes(action)) review.cardVersion = (review.cardVersion || 1) + 1;
   }

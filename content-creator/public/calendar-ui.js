@@ -1,4 +1,4 @@
-import { DAY_LABELS, localDateKey, parseLocalDate, calendarDates, calendarStorageKey, readCalendar, saveCalendar, cleanPlan, popupTint } from './calendar-state.js';
+import { DAY_LABELS, localDateKey, parseLocalDate, calendarDates, calendarStorageKey, readCalendar, saveCalendar, cleanPlan } from './calendar-state.js';
 
 export function initializeCalendar(app) {
   const $ = id => document.getElementById(id);
@@ -157,19 +157,9 @@ export function initializeCalendar(app) {
   window.addEventListener('hashchange',()=>{close();hidePreview();});
   window.addEventListener('resize',hidePreview);
   window.addEventListener('scroll',hidePreview,{passive:true});
-  const opacity=$('popup-opacity'),opacityValue=$('popup-opacity-value'),still=$('reduce-motion');
-  function applyOpacity(value) {
-    const tint=popupTint(value);opacity.value=tint;opacityValue.textContent=`${tint}%`;
-    document.documentElement.style.setProperty('--popup-alpha',String(tint/100));
-  }
-  let initial=70;
-  try {const value=localStorage.getItem('sellerspark-popup-tint-v1');if(value!==null)initial=value;still.checked=localStorage.getItem('sellerspark-still-cards-v1')==='true';} catch {}
-  applyOpacity(initial);
+  const still=$('reduce-motion');
+  try {still.checked=localStorage.getItem('sellerspark-still-cards-v1')==='true';} catch {}
   document.documentElement.dataset.motion=still.checked?'still':'gentle';
-  opacity.addEventListener('input',()=>{
-    applyOpacity(opacity.value);
-    try {localStorage.setItem('sellerspark-popup-tint-v1',opacity.value);} catch {}
-  });
   still.addEventListener('change',()=>{
     document.documentElement.dataset.motion=still.checked?'still':'gentle';
     try {localStorage.setItem('sellerspark-still-cards-v1',String(still.checked));} catch {}

@@ -106,6 +106,7 @@ function safeReviewContentResult(record) {
 function safeActionMessage(reason) {
   const messages = {
     draft_not_found: "That draft is no longer available in this review.",
+    unsupported_claims: "Resolve the missing evidence or unsupported claims before accepting this draft.",
     invalid_revision: "Enter revised script text or choose a suggested change.",
     no_change: "This wording is already as short as this suggestion can make it. Edit the script or choose another suggestion.",
     nothing_to_undo: "There is no earlier change to undo.",

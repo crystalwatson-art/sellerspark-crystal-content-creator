@@ -26,3 +26,14 @@ test('reject marks the current text and preserves it; real briefs do not receive
   assert.equal(unavailable.ok,false);assert.deepEqual(unavailable.state,original);
   assert.deepEqual(original,state(),'actions never mutate their input');
 });
+
+test('suggested rewrites stop at two while direct human editing remains available; missing evidence blocks acceptance', () => {
+  let value = state();
+  for (let i=0;i<2;i++) value=applyCardFlowAction(value,{action:'rewrite_current',draftId:'one',note:JSON.stringify({preset:'Warmer'})}).state;
+  const stopped=applyCardFlowAction(value,{action:'rewrite_current',draftId:'one',note:JSON.stringify({preset:'Warmer'})});
+  assert.equal(stopped.ok,false);assert.equal(stopped.reason,'revision_limit_reached');
+  const manual=applyCardFlowAction(value,{action:'rewrite_current',draftId:'one',note:JSON.stringify({script:'My own reviewed script.'})});
+  assert.equal(manual.ok,true);assert.equal(manual.state.reviews[0].automaticRevisionAttempts,2);
+  manual.state.reviews[0].missingEvidence=['A source is required'];
+  assert.equal(applyCardFlowAction(manual.state,{action:'approve_current',draftId:'one'}).reason,'unsupported_claims');
+});

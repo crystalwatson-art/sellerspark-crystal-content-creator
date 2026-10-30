@@ -39,6 +39,9 @@ test('approved studio activates generation, distinct review surfaces and local i
     globalThis.fetch=realFetch;
     if(descriptor)Object.defineProperty(globalThis,'navigator',descriptor);
   });
+  localStorage.setItem('sellerspark-card-placement-v1','"right"');
+  localStorage.setItem('sellerspark-card-scale-v1','110');
+  localStorage.setItem('sellerspark-popup-tint-v1','25');
   await import('../public/penthouse-studio.js');
   const $=id=>window.document.getElementById(id);
   const click=id=>$(id).click();
@@ -87,8 +90,10 @@ test('approved studio activates generation, distinct review surfaces and local i
   assert.notDeepEqual(window.SellerSparkContentCreator.getDraftSummaries().map(d=>d.hook),oldSet);
   assert.ok($('earlier-set-list').children.length>0);
   assert.equal($('regenerate-drafts').hidden,true);
-  $('card-placement').value='right';change('card-placement');
-  assert.equal(window.document.documentElement.dataset.cardPlacement,'right');
+  assert.equal($('card-placement'),null);
+  assert.equal($('card-scale'),null);
+  assert.equal(window.document.documentElement.dataset.cardPlacement,undefined);
+  assert.equal(window.document.documentElement.style.getPropertyValue('--card-scale'),'');
   window.location.hash='growth';await waitFor(()=>$('view-growth').hidden===false,'growth route');
   const first=window.document.querySelector('.calendar-card');first.click();assert.equal($('calendar-dialog').open,true);
   assert.equal($('calendar-draft').options.length,4);
@@ -106,9 +111,8 @@ test('approved studio activates generation, distinct review surfaces and local i
   assert.ok(planned.style.getPropertyValue('--rx'));planned.dispatchEvent(new window.Event('pointerleave'));assert.equal(planned.style.getPropertyValue('--rx'),'');
   click('open-views');assert.equal($('views-panel').hidden,false);assert.equal($('authorize-video-views').disabled,true);
   assert.equal($('connect-tiktok').disabled,true);
-  $('popup-opacity').value='85';$('popup-opacity').dispatchEvent(new window.Event('input',{bubbles:true}));
-  assert.equal(window.document.documentElement.style.getPropertyValue('--popup-alpha'),'0.85');
-  assert.equal(localStorage.getItem('sellerspark-popup-tint-v1'),'85');
+  assert.equal($('popup-opacity'),null);
+  assert.equal(window.document.documentElement.style.getPropertyValue('--popup-alpha'),'');
   $('reduce-motion').checked=true;change('reduce-motion');
   assert.equal(window.document.documentElement.dataset.motion,'still');
   const previousCalendarKey=[...Array(localStorage.length)].map((_,i)=>localStorage.key(i)).find(x=>x.startsWith('sellerspark-calendar-v1:'));
