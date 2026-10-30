@@ -46,6 +46,8 @@ const authStatus = document.querySelector("#auth-status");
 const authForm = document.querySelector("#auth-form");
 const authEmail = document.querySelector("#auth-email");
 const authPassword = document.querySelector("#auth-password");
+const authRemember = document.querySelector("#auth-remember");
+const authRememberOption = document.querySelector("#auth-remember-option");
 const authSignIn = document.querySelector("#auth-sign-in");
 const authSignOut = document.querySelector("#auth-sign-out");
 const authRecoveryForm = document.querySelector("#auth-recovery-form");
@@ -263,6 +265,7 @@ function renderAuthState(session = authClient.session) {
   authPassword.hidden = signedIn;
   authPassword.closest(".password-field").hidden = signedIn;
   authSignIn.hidden = signedIn;
+  authRememberOption.hidden = signedIn;
   authSignOut.hidden = !signedIn;
   authStatus.textContent = signedIn
     ? "Signed in · saved reviews use your account"
@@ -1381,7 +1384,8 @@ authForm.addEventListener("submit", async (event) => {
   setAuthError();
   authSignIn.disabled = true;
   try {
-    await authClient.signIn(authEmail.value, authPassword.value);
+    await authClient.signIn(authEmail.value, authPassword.value, { remember: authRemember.checked });
+    authRemember.checked = false;
     authPassword.value = "";
     renderAuthState(authClient.session);
     if (currentPersistenceStatus === "supabase" && currentReviewId) await refreshReviewFromServer();

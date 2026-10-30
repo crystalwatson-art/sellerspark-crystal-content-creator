@@ -176,3 +176,56 @@ test("password update failures expose safe messages and clear an unauthorized re
   );
   assert.equal(client.session, null);
 });
+
+
+test("remembered sign-in survives a new browser session, rotates tokens and signs out completely", async () => {
+  const persistentStorage = storage();
+  const tabStorage = storage();
+  let now = 1_000_000;
+  const options = {
+    url: "https://example.supabase.co", anonKey: "public-test-key", persistentStorage,
+    clock: () => now,
+    fetchImpl: async (url) => response(200, {
+      access_token: String(url).includes("refresh_token") ? "rotated-access" : "initial-access",
+      refresh_token: "synthetic-refresh", expires_in: 60, user: { id: userId }
+    })
+  };
+  const first = new BrowserSupabaseAuth({ ...options, storage: tabStorage });
+  await first.signIn("fictional@example.invalid", "synthetic-password", { remember: true });
+  assert.equal(tabStorage.values.size, 0);
+  assert.equal(persistentStorage.values.size, 1);
+  assert.ok(![...persistentStorage.values.values()].join("").includes("synthetic-password"));
+  now += 60_000;
+  const reopened = new BrowserSupabaseAuth({ ...options, storage: storage() });
+  assert.equal((await reopened.getSession()).accessToken, "rotated-access");
+  const again = new BrowserSupabaseAuth({ ...options, storage: storage() });
+  assert.equal(again.session.accessToken, "rotated-access");
+  await again.signOut();
+  assert.equal(persistentStorage.values.size, 0);
+  assert.equal(new BrowserSupabaseAuth({ ...options, storage: storage() }).session, null);
+});
+
+test("unchecked sign-in stays temporary and clears an earlier remembered account", async () => {
+  const persistentStorage = storage();
+  const tabStorage = storage();
+  const options = { url: "https://example.supabase.co", anonKey: "public-test-key", persistentStorage,
+    fetchImpl: async () => response(200, { access_token: "synthetic-access", refresh_token: "synthetic-refresh", expires_in: 3600 }) };
+  const client = new BrowserSupabaseAuth({ ...options, storage: tabStorage });
+  await client.signIn("fictional@example.invalid", "synthetic-password", { remember: true });
+  await client.signIn("fictional@example.invalid", "synthetic-password");
+  assert.equal(persistentStorage.values.size, 0);
+  assert.equal(tabStorage.values.size, 1);
+  assert.equal(new BrowserSupabaseAuth({ ...options, storage: storage() }).session, null);
+});
+
+test("recovery sessions remain temporary even after remembered sign-in", async () => {
+  const persistentStorage = storage();
+  const tabStorage = storage();
+  const client = new BrowserSupabaseAuth({ url: "https://example.supabase.co", anonKey: "public-test-key",
+    storage: tabStorage, persistentStorage,
+    fetchImpl: async () => response(200, { access_token: "synthetic-access", expires_in: 3600 }) });
+  await client.signIn("fictional@example.invalid", "synthetic-password", { remember: true });
+  client.restoreRecoverySession({ hash: "#type=recovery&access_token=synthetic-recovery&expires_in=3600" });
+  assert.equal(persistentStorage.values.size, 0);
+  assert.equal(tabStorage.values.size, 1);
+});

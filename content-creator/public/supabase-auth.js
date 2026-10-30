@@ -1,5 +1,9 @@
 const SESSION_KEY = "sellerspark-supabase-session-v1";
 
+function browserStorage(name) {
+  try { return globalThis[name]; } catch { return null; }
+}
+
 function clientError(code, message) {
   const error = new Error(message);
   error.code = code;
@@ -30,13 +34,19 @@ function numberFromParam(value) {
 }
 
 export class BrowserSupabaseAuth {
-  constructor({ url = "", anonKey = "", fetchImpl = globalThis.fetch?.bind(globalThis), storage = globalThis.sessionStorage, clock = () => Date.now() } = {}) {
+  constructor({ url = "", anonKey = "", fetchImpl = globalThis.fetch?.bind(globalThis), storage = browserStorage("sessionStorage"), persistentStorage = browserStorage("localStorage"), clock = () => Date.now() } = {}) {
     this.fetchImpl = fetchImpl;
     this.storage = storage;
+    this.persistentStorage = persistentStorage;
     this.clock = clock;
     this.listeners = new Set();
     this.configure({ url, anonKey });
-    this.session = this.readStoredSession();
+    this.session = this.readStoredSession(this.storage);
+    this.rememberSession = false;
+    if (!this.session) {
+      this.session = this.readStoredSession(this.persistentStorage);
+      this.rememberSession = Boolean(this.session);
+    }
   }
 
   configure({ url = "", anonKey = "" } = {}) {
@@ -48,9 +58,9 @@ export class BrowserSupabaseAuth {
     return Boolean(this.url && this.anonKey && typeof this.fetchImpl === "function");
   }
 
-  readStoredSession() {
+  readStoredSession(storage = this.storage) {
     try {
-      const parsed = JSON.parse(this.storage?.getItem(SESSION_KEY) || "null");
+      const parsed = JSON.parse(storage?.getItem(SESSION_KEY) || "null");
       return parsed?.accessToken ? parsed : null;
     } catch {
       return null;
@@ -59,11 +69,17 @@ export class BrowserSupabaseAuth {
 
   saveSession(session) {
     this.session = session;
-    try {
-      if (session) this.storage?.setItem(SESSION_KEY, JSON.stringify(session));
-      else this.storage?.removeItem(SESSION_KEY);
-    } catch {
-      // The session remains usable in memory when browser storage is unavailable.
+    // Clear both stores so an older remembered account cannot return after sign-out.
+    for (const storage of [this.storage, this.persistentStorage]) {
+      try { storage?.removeItem(SESSION_KEY); } catch { /* Storage may be blocked. */ }
+    }
+    if (session) {
+      const target = this.rememberSession ? this.persistentStorage : this.storage;
+      try { target?.setItem(SESSION_KEY, JSON.stringify(session)); } catch {
+        // The current session remains usable in memory if storage is unavailable.
+      }
+    } else {
+      this.rememberSession = false;
     }
     this.listeners.forEach((listener) => listener(session));
   }
@@ -83,7 +99,7 @@ export class BrowserSupabaseAuth {
     return headers;
   }
 
-  async signIn(email, password) {
+  async signIn(email, password, { remember = false } = {}) {
     if (!this.enabled) throw clientError("auth_not_configured", "Sign-in is not configured for this preview.");
     if (typeof email !== "string" || !email.trim() || typeof password !== "string" || !password) {
       throw clientError("auth_input_required", "Enter your email and password to sign in.");
@@ -106,6 +122,7 @@ export class BrowserSupabaseAuth {
       throw clientError("auth_failed", "Sign-in did not return a usable session.");
     }
     const session = normalizedSession(payload, this.clock);
+    this.rememberSession = remember === true;
     this.saveSession(session);
     return session;
   }
@@ -134,6 +151,7 @@ export class BrowserSupabaseAuth {
     if (!session.expiresAt || session.expiresAt <= this.clock()) {
       throw clientError("auth_failed", "The password-recovery link is incomplete or expired.");
     }
+    this.rememberSession = false;
     this.saveSession(session);
     return session;
   }
@@ -229,3 +247,4 @@ export function authClientErrorMessage(error) {
   if (error?.code === "auth_unavailable") return "Authentication is temporarily unavailable. Try again later.";
   return error?.message || "Authentication could not be completed safely.";
 }
+
