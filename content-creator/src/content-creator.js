@@ -17,7 +17,7 @@ const CREATIVE_ANGLES = Object.freeze([
     takeaway: "Writing the exact question — {question} — and why its answer matters can make a broad seller concern easier to discuss.",
     caption: "The first step can be a question, not a commitment. Follow for more practical NYC seller guidance.",
     reasonToFollow: "Follow for more practical NYC seller questions you can bring to a future conversation.",
-    suggestedNextStep: "Contact Shalinthia with this question when you are ready for a respectful seller conversation about your home.",
+    suggestedNextStep: "Contact your real estate professional with this question when you are ready for a respectful seller conversation about your home.",
     videoConcept: "Direct-to-camera explainer for {property} owners that turns one supplied question into a focused first conversation.",
     suggestedScenes: [
       "Opening: show the supplied seller question as large on-screen text.",
@@ -32,7 +32,7 @@ const CREATIVE_ANGLES = Object.freeze([
     takeaway: "Pair the supplied seller question — {question} — with one property detail you want explained before the conversation.",
     caption: "A question becomes more useful when you pair it with one detail you want explained. Follow for more NYC seller prompts.",
     reasonToFollow: "Follow for more NYC seller prompts that turn broad concerns into useful questions.",
-    suggestedNextStep: "Contact Shalinthia with the question you wrote down if you want help sorting out what to ask next.",
+    suggestedNextStep: "Contact your real estate professional with the question you wrote down if you want help sorting out what to ask next.",
     videoConcept: "Checklist-style short for {property} owners that shows how one written question can prevent a rushed conversation.",
     suggestedScenes: [
       "Opening: hold up a simple checklist labeled before the seller conversation.",
@@ -47,7 +47,7 @@ const CREATIVE_ANGLES = Object.freeze([
     takeaway: "One open question — {question} — can help you choose an informed next conversation without promising to list.",
     caption: "You can gather information before making a decision. Follow for more calm questions for NYC homeowners.",
     reasonToFollow: "Follow for more calm NYC homeowner questions before making a selling decision.",
-    suggestedNextStep: "Contact Shalinthia when you are ready to talk through this question and decide what information you still need.",
+    suggestedNextStep: "Contact your real estate professional when you are ready to talk through this question and decide what information you still need.",
     videoConcept: "Question-led planning prompt for {property} owners that separates what they know from what they still want to learn.",
     suggestedScenes: [
       "Opening: use a calm title card with the supplied question.",

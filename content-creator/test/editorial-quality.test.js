@@ -51,7 +51,7 @@ test("generic scripts stuffed with expected keywords cannot receive a perfect sc
     script: "Write one question before a seller conversation. Note what you know and learn what you need next. This helps Long Island City condo owners prepare.",
     takeaway: "Write one question and note what you need to learn before deciding on a conversation.",
     caption: "Follow for seller guidance and practical homeowner questions.",
-    suggestedNextStep: "Contact Shalinthia for a respectful seller conversation.",
+    suggestedNextStep: "Contact your real estate professional for a respectful seller conversation.",
     sourceRefs: [{ id: "fictional-source-01" }]
   }));
   const quality = evaluate(drafts);
@@ -105,7 +105,7 @@ test("follow invitations without a useful reason to return are flagged", () => {
   const drafts = createContentDraft(fictionalBrief).drafts.map((draft) => ({
     ...draft,
     caption: "Follow me.",
-    suggestedNextStep: "Contact Shalinthia when you are ready."
+    suggestedNextStep: "Contact your real estate professional when you are ready."
   }));
   const quality = evaluate(drafts);
 

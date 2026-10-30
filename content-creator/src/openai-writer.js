@@ -163,7 +163,7 @@ export const WRITER_INSTRUCTIONS = [
   "Write natural, professional, short, spoken TikTok language that a real estate professional can say aloud.",
   "Use minimal emojis: do not add emojis to hooks, scripts, captions, or titles unless they appear in supplied supported text.",
   "Give every draft a clear viewer takeaway that is specific to the supplied question.",
-  "Make each caption give a natural reason to follow Shalinthia for more practical NYC seller guidance; never promise views, followers, leads, or sales.",
+  "Make each caption give a natural reason to follow this account for more practical NYC seller guidance; never promise views, followers, leads, or sales.",
   "Keep each script concise enough to speak comfortably in a short video while retaining the supplied question, angle, source-backed claims, and a scene-by-scene concept.",
   "Make every scene suggestion filmable with simple text, notes, or a checklist; do not copy another creator's script, slogan, voice, or copyrighted material.",
   "Use only the supplied topic questions, titles, and supported claim text.",
