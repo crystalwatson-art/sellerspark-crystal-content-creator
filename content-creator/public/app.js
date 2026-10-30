@@ -274,6 +274,74 @@ function clearRecoveryUrl() {
   globalThis.history.replaceState({}, document.title, globalThis.location.pathname + globalThis.location.search);
 }
 
+let accountHistoryRequest = 0;
+const accountHistory = document.createElement("section");
+accountHistory.className = "module glass";
+accountHistory.setAttribute("aria-label", "Saved drafts");
+document.getElementById("view-account").append(accountHistory);
+
+function openSavedRecord(record) {
+  archiveWorkspace();
+  const review = record.listingReview;
+  renderResult({
+    status: "ready_for_review",
+    audience: review.audience,
+    audienceLabel: review.audienceLabel,
+    drafts: review.reviews.map((item) => ({ ...item.original, ...item.working, id: item.draftId, audience: item.audience, audienceLabel: item.audienceLabel, sourceRefs: item.sourceRefs || [] })),
+    listingReview: review,
+    listingReviewId: record.id,
+    listingReviewVersion: record.version,
+    persistenceStatus: "supabase",
+    writerLabel: "Saved draft history"
+  });
+  summary.textContent = "Saved to your account · You can continue on another device after signing in.";
+}
+
+async function loadAccountHistory({ resume = false } = {}) {
+  const owner = authClient.session?.userId;
+  const sequence = ++accountHistoryRequest;
+  accountHistory.replaceChildren();
+  if (!owner || recoveryMode) { accountHistory.hidden = true; return; }
+  accountHistory.hidden = false;
+  const title = document.createElement("h3");
+  title.textContent = "Continue your saved drafts";
+  const message = document.createElement("p");
+  message.textContent = "Loading your saved drafts…";
+  accountHistory.append(title, message);
+  const workspaceSequence = requestSequence;
+  try {
+    const response = await authClient.authorizedFetch("/api/reviews", { cache: "no-store" });
+    const payload = await response.json();
+    if (sequence !== accountHistoryRequest || owner !== authClient.session?.userId) return;
+    if (!response.ok || !Array.isArray(payload.records)) throw new Error("history unavailable");
+    message.textContent = payload.records.length ? "Your 100 most recently updated sets. Select one to continue." : "No drafts saved to your account yet. Choose Generate to create your first set.";
+    for (const record of payload.records) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "secondary-button";
+      button.textContent = (record.listingReview?.audienceLabel || "Saved drafts") + " · " + new Date(record.updatedAt).toLocaleString();
+      button.addEventListener("click", async () => {
+        if (owner !== authClient.session?.userId) return;
+        button.disabled = true;
+        try {
+          const response = await authClient.authorizedFetch("/api/reviews/" + encodeURIComponent(record.id), { cache: "no-store" });
+          const payload = await response.json();
+          if (owner !== authClient.session?.userId) return;
+          if (!response.ok || !payload.listingReview) throw new Error("review unavailable");
+          openSavedRecord({ ...record, listingReview: payload.listingReview, version: payload.listingReviewVersion });
+          location.hash = "creator";
+        } catch {
+          message.textContent = "This saved set could not be opened. Your current drafts have not changed.";
+        } finally { button.disabled = false; }
+      });
+      accountHistory.append(button);
+    }
+    if (resume && !currentDrafts.length && workspaceSequence === requestSequence && payload.records[0]) openSavedRecord(payload.records[0]);
+  } catch {
+    if (sequence === accountHistoryRequest) message.textContent = "Saved drafts could not be loaded. Your work has not been deleted. Refresh to try again.";
+  }
+}
+
 async function initializeAuth() {
   try {
     const response = await fetch("/api/auth-config", { cache: "no-store" });
@@ -295,6 +363,7 @@ async function initializeAuth() {
         session = await authClient.getSession();
       }
       renderAuthState(session);
+      if (session && !recoveryMode) void loadAccountHistory({ resume: true });
       if (session && currentReviewId && currentPersistenceStatus === "supabase") void refreshReviewFromServer();
       void refreshTikTokStatus();
     } else {
@@ -484,7 +553,7 @@ async function requestContentBrief(brief, signal) {
     body: JSON.stringify(brief),
     signal
   };
-  return isFictionalBrief(brief)
+  return isFictionalBrief(brief) && !authClient.session
     ? fetch("/api/content", options)
     : authClient.authorizedFetch("/api/content", options);
 }
@@ -656,7 +725,9 @@ function workspaceSnapshot() {
 }
 
 function readWorkspaceMap() {
-  const saved = readStorageObject(WORKSPACE_STORAGE_KEY, {});
+  const owner = authClient.session?.userId;
+  const saved = readStorageObject(owner ? WORKSPACE_STORAGE_KEY + ":" + owner : WORKSPACE_STORAGE_KEY, {});
+  if (owner) return saved;
   if (Object.keys(saved).some((key) => isSupportedAudience(key))) return saved;
   const legacy = readStorageObject(LEGACY_WORKSPACE_STORAGE_KEY, null);
   const audience = resolveAudience(legacy?.audience, legacy?.listingReview);
@@ -664,7 +735,8 @@ function readWorkspaceMap() {
 }
 
 function writeWorkspaceMap(map) {
-  writeStorageObject(WORKSPACE_STORAGE_KEY, map);
+  const owner = authClient.session?.userId;
+  writeStorageObject(owner ? WORKSPACE_STORAGE_KEY + ":" + owner : WORKSPACE_STORAGE_KEY, map);
 }
 
 function persistWorkspace() {
@@ -820,6 +892,7 @@ function renderResult(result) {
   summary.textContent = result.status === "ready_for_review"
     ? "Three distinct draft packages are ready for a future reviewer. Human approval is still required. Generated by " + writerLabel + ". Campaign mode: " + (result.campaignAudienceLabel || "Sellers") + "."
     : "The Content Creator stopped with information to resolve before review. Writer: " + writerLabel + ".";
+  if (currentPersistenceStatus === "supabase") summary.textContent += " Saved to your account.";
   setStatus(result.status, result.status === "ready_for_review" ? "success" : "warning");
   renderWriterDiagnostic(result);
   audiencePill.textContent = result.audienceLabel || "Audience needs review";
@@ -1028,6 +1101,12 @@ function requestReset() {
     resetWorkspace();
     return;
   }
+  resetConfirmation.querySelector("h2").textContent = "Clear these drafts from your screen?";
+  resetConfirmation.querySelector("p").textContent = currentPersistenceStatus === "supabase"
+    ? "Your drafts are saved to your account. You can reopen them under Saved drafts after signing in on another device."
+    : "Your earlier drafts will stay on this computer. They may not be available on another device.";
+  resetCancel.textContent = "Keep working";
+  resetConfirm.textContent = "Clear current drafts";
   resetConfirmation.hidden = false;
   resetConfirmation.showModal();
   resetConfirm.focus();
@@ -1102,6 +1181,7 @@ function applyReviewServerState(payload) {
   });
   renderDraftCards();
   persistWorkspace();
+  if (currentPersistenceStatus === "supabase") void loadAccountHistory();
 }
 
 function applyFictionalReviewAction(action, draftId, note) {
@@ -1253,6 +1333,7 @@ async function runFictionalTest() {
     }
     if (Array.isArray(result.drafts) && result.drafts.length) archiveWorkspace();
     renderResult(result);
+    if (currentPersistenceStatus === "supabase") void loadAccountHistory();
   } catch (error) {
     if (error?.name === "AbortError" || requestId !== requestSequence) return;
     if (hadDrafts) summary.textContent = previousSummary;
@@ -1405,6 +1486,20 @@ audienceValue.value = currentWorkspaceAudience;
 restoreGrowthPilot();
 restoreWorkspace();
 authClient.onAuthStateChange((session) => renderAuthState(session));
+let workspaceOwner = authClient.session?.userId || null;
+authClient.onAuthStateChange((session) => {
+  const nextOwner = session?.userId || null;
+  if (nextOwner !== workspaceOwner) {
+    workspaceOwner = nextOwner;
+    requestSequence += 1;
+    activeRequestController?.abort();
+    activeRequestController = null;
+    closeDraft();
+    clearActiveWorkspace();
+    restoreWorkspace();
+  }
+  void loadAccountHistory({ resume: true });
+});
 authClient.onAuthStateChange((session) => {
   if (session && currentReviewId && currentPersistenceStatus === "supabase") void refreshReviewFromServer();
 });

@@ -136,6 +136,19 @@ export class SupabaseReviewStore {
     return rowToRecord(rows[0]);
   }
 
+  async list({ actorId, actorToken } = {}) {
+    this.assertReady();
+    const ownerId = requireActorId(actorId);
+    requireAccessToken(actorToken);
+    const url = new URL(this.endpoint);
+    url.searchParams.set("select", "*");
+    url.searchParams.set("owner_id", "eq." + ownerId);
+    url.searchParams.set("order", "updated_at.desc,id.desc");
+    url.searchParams.set("limit", "100");
+    const rows = await this.request(url, { headers: this.headers(actorToken) });
+    return rows.map(rowToRecord);
+  }
+
   async get(id, { actorId, actorToken } = {}) {
     this.assertReady();
     const ownerId = requireActorId(actorId);
@@ -194,3 +207,4 @@ export class SupabaseReviewStore {
     return rowToRecord(rows[0]);
   }
 }
+

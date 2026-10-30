@@ -192,3 +192,42 @@ test("authenticated content uses the verified owner for persistent review creati
   assert.equal(dbCalls.length, 1);
   assert.match(dbCalls[0].options.body, new RegExp(ownerA));
 });
+
+test("signed-in sample drafts persist and resume only for their verified owner", async (t) => {
+  const rows = [];
+  const running = await startServer({
+    authFetch: async (_url, options) => response(200, { id: options.headers.Authorization.endsWith("owner-b") ? ownerB : ownerA }),
+    dbFetch: async (input, options = {}) => {
+      if (options.method === "POST") {
+        const saved = JSON.parse(options.body);
+        rows.push(saved);
+        return response(201, [saved]);
+      }
+      const url = new URL(input);
+      const owner = url.searchParams.get("owner_id").slice(3);
+      return response(200, rows.filter(row => row.owner_id === owner));
+    }
+  });
+  t.after(() => running.server.close());
+  const created = await fetch(running.base + "/api/content", {
+    method: "POST", headers: { "content-type": "application/json", Authorization: "Bearer owner-a" },
+    body: JSON.stringify(fictionalLicBrief)
+  });
+  const result = await created.json();
+  assert.equal(created.status, 200);
+  assert.equal(result.persistenceStatus, "supabase");
+  assert.equal(rows.length, 1);
+  const unauthorized = await fetch(running.base + "/api/reviews");
+  assert.equal(unauthorized.status, 401);
+  const resumed = await fetch(running.base + "/api/reviews", { headers: { Authorization: "Bearer owner-a", "x-user-id": ownerB } });
+  const history = await resumed.json();
+  assert.equal(history.records[0].id, result.listingReviewId);
+  assert.deepEqual(history.records[0].listingReview, result.listingReview);
+  const other = await fetch(running.base + "/api/reviews", { headers: { Authorization: "Bearer owner-b" } });
+  assert.deepEqual((await other.json()).records, []);
+  const invalid = await startServer({ authFetch: async () => response(401, {}), dbFetch: async () => { throw Error("must not reach database"); } });
+  t.after(() => invalid.server.close());
+  const rejected = await fetch(invalid.base + "/api/content", { method: "POST", headers: { "content-type": "application/json", Authorization: "Bearer invalid" }, body: JSON.stringify(fictionalLicBrief) });
+  assert.equal(rejected.status, 401, "a rejected session must not silently fall back to a local demo");
+});
+

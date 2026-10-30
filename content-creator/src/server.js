@@ -31,6 +31,7 @@ const fixturePath = path.join(projectRoot, "fixtures", "fictional-research-brief
 const brooklynFixturePath = path.join(projectRoot, "fixtures", "fictional-brooklyn-townhouse-brief.json");
 
 const assets = new Map([
+  ["/proposals/card-flow.html", { file: path.join(publicRoot, "proposals", "card-flow.html"), type: "text/html; charset=utf-8" }],
   ["/", { file: path.join(publicRoot, "index.html"), type: "text/html; charset=utf-8" }],
   ["/index.html", { file: path.join(publicRoot, "index.html"), type: "text/html; charset=utf-8" }],
   ["/app.js", { file: path.join(publicRoot, "app.js"), type: "text/javascript; charset=utf-8" }],
@@ -399,7 +400,7 @@ export function createServer({
       let result;
       let storedResult;
       try {
-        if (isFictionalDemoBrief(brief)) {
+        if (isFictionalDemoBrief(brief) && !request.headers.authorization) {
           if (!demoReviewStore) {
             sendJson(response, 503, { status: "error", message: "The fictional demo is not configured safely." });
             return;
@@ -430,6 +431,18 @@ export function createServer({
         throw error;
       }
       sendJson(response, 200, storedResult);
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/reviews") {
+      try {
+        const { userId, accessToken } = await authenticate(request);
+        const records = await reviewStore.list({ actorId: userId, actorToken: accessToken });
+        sendJson(response, 200, { status: "ok", records, persistenceStatus: "supabase" });
+      } catch (error) {
+        const unauthorized = ["authorization_required", "authorization_failed"].includes(error?.code);
+        sendJson(response, unauthorized ? 401 : 503, { status: "error", message: unauthorized ? "Sign in to open your saved drafts." : "Your saved drafts could not be loaded. Please try again." });
+      }
       return;
     }
 

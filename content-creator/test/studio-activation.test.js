@@ -49,7 +49,7 @@ test('approved studio activates generation, distinct review surfaces and local i
   assert.equal(window.document.querySelectorAll('.calendar-card').length,14);
   assert.equal($('run-fictional-test').previousElementSibling.dataset.route,'home');
   assert.equal($('auth-panel').closest('section').parentElement.className,'account-layout');
-  for (const asset of ['/penthouse-workspace.css','/calendar-ui.js','/calendar-state.js','/penthouse-studio.js','/assets/penthouse-night.webp','/assets/penthouse-day.webp']) {
+  for (const asset of ['/proposals/card-flow.html','/penthouse-workspace.css','/calendar-ui.js','/calendar-state.js','/penthouse-studio.js','/assets/penthouse-night.webp','/assets/penthouse-day.webp']) {
     const response=await realFetch(base+asset);assert.equal(response.status,200,asset);
   }
   click('run-fictional-test');

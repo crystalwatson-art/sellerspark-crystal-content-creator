@@ -65,6 +65,19 @@ test("missing or invalid actor identity is rejected before any database request"
   assert.equal(calls.length, 0);
 });
 
+test("saved history requires a verified owner and token and requests a bounded stable order", async () => {
+  const { store, calls } = await makeStore([{ status: 200, body: [row()] }]);
+  await assert.rejects(() => store.list(), { code: "authorization_required" });
+  await assert.rejects(() => store.list({ actorId }), { code: "authorization_required" });
+  assert.equal(calls.length, 0);
+  const saved = await store.list({ actorId, actorToken: "owner-token" });
+  assert.equal(saved[0].id, row().id);
+  const url = new URL(calls[0].url);
+  assert.equal(url.searchParams.get("owner_id"), "eq." + actorId);
+  assert.equal(url.searchParams.get("order"), "updated_at.desc,id.desc");
+  assert.equal(url.searchParams.get("limit"), "100");
+});
+
 test("version checks reject stale updates and keep concurrent work safe", async () => {
   const { store, calls } = await makeStore([
     { status: 200, body: [row()] },
@@ -124,3 +137,4 @@ test("prepared migration enables forced RLS, owner policies, and no anon grants"
   assert.match(sql, /revoke all on table public\.sellerspark_listing_reviews from anon/i);
   assert.doesNotMatch(sql, /service_role|SUPABASE_SECRET_KEY|eyJ[A-Za-z0-9_-]+/i);
 });
+
