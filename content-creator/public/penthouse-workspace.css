@@ -21,3 +21,8 @@ input,select,textarea{border:1px solid var(--border);background:transparent;max-
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}.calendar-card,.feature:hover{transform:none!important}}
 :root[data-motion=still] .calendar-card,:root[data-motion=still] .feature:hover{transform:none}
 @media(prefers-reduced-transparency:reduce){:root{--surface:rgba(11,15,35,.94);--popup:rgba(11,15,35,.98)}:root[data-theme=light]{--surface:rgba(255,255,255,.94);--popup:rgba(255,255,255,.98)}}
+
+/* Keep the queue heading and live status legible over the Day View furniture. */
+:root[data-theme=light] .draft-queue-intro{width:min(100%,850px);padding:18px 22px;margin-bottom:20px;background:rgba(255,250,241,.80);border:1px solid var(--border);border-radius:18px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+:root[data-theme=light] .draft-queue-intro .section-summary{color:var(--ink);margin-bottom:0}
+@media(prefers-reduced-transparency:reduce){:root[data-theme=light] .draft-queue-intro{background:rgba(255,250,241,.94)}}
