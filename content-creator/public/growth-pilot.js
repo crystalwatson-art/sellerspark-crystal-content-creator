@@ -31,25 +31,28 @@ export function normalizeAudienceMode(value) {
   return Object.hasOwn(AUDIENCE_MODES, value) ? value : "sellers";
 }
 
-export function createGrowthPilotView({ audienceMode = "sellers", startingFollowers = "", currentFollowers = "" } = {}) {
+export function createGrowthPilotView({ audienceMode = "sellers", startingFollowers = "", currentFollowers = "", goal = 100 } = {}) {
   const mode = normalizeAudienceMode(audienceMode);
   const starting = countValue(startingFollowers);
   const current = countValue(currentFollowers);
   const errors = [];
+  const validGoal = goal !== "" && Number.isSafeInteger(Number(goal)) && Number(goal) > 0 && Number(goal) <= 1000000000;
+  const target = validGoal ? Number(goal) : 100;
+  if (!validGoal) errors.push("Choose a follower goal from 1 to 1,000,000,000 using a whole number.");
   if (startingFollowers !== "" && startingFollowers !== null && startingFollowers !== undefined && starting === null) errors.push("Starting followers must be a non-negative whole number or left blank.");
   if (currentFollowers !== "" && currentFollowers !== null && currentFollowers !== undefined && current === null) errors.push("Current followers must be a non-negative whole number or left blank.");
   return {
     audienceMode: mode,
     tracker: {
-      goal: 100,
+      goal: target,
       startingFollowers: starting,
       currentFollowers: current,
       netChange: starting !== null && current !== null ? current - starting : null,
-      progressPercent: current === null ? null : Math.min(100, Math.round((current / 100) * 100)),
-      goalReached: current !== null && current >= 100,
+      progressPercent: current === null ? null : Math.min(100, Math.round((current / target) * 100)),
+      goalReached: current !== null && current >= target,
       errors,
       note: current === null
-        ? "Enter the current follower count to measure progress. SellerSpark does not assume a starting count or promise growth."
+        ? "Connect TikTok to load your follower count automatically. No growth is promised."
         : "Progress is a measurement only; it is not a forecast or guarantee of follower growth."
     },
     calendar: FOCUSES.map(([focus, format], index) => ({
@@ -62,3 +65,4 @@ export function createGrowthPilotView({ audienceMode = "sellers", startingFollow
     }))
   };
 }
+

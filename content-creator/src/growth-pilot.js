@@ -45,8 +45,10 @@ export function audienceModeLabel(value) {
 export function buildFollowerTracker({ startingFollowers = null, currentFollowers = null, goal = GROWTH_GOAL_FOLLOWERS } = {}) {
   const starting = countValue(startingFollowers);
   const current = countValue(currentFollowers);
-  const target = Number.isInteger(goal) && goal > 0 ? goal : GROWTH_GOAL_FOLLOWERS;
+  const validGoal = Number.isSafeInteger(goal) && goal > 0 && goal <= 1000000000;
+  const target = validGoal ? goal : GROWTH_GOAL_FOLLOWERS;
   const errors = [];
+  if (!validGoal) errors.push("Choose a follower goal from 1 to 1,000,000,000 using a whole number.");
   if (startingFollowers !== null && startingFollowers !== undefined && starting === null) errors.push("Starting followers must be a non-negative whole number or left blank.");
   if (currentFollowers !== null && currentFollowers !== undefined && current === null) errors.push("Current followers must be a non-negative whole number or left blank.");
 
@@ -79,13 +81,13 @@ export function create14DayCalendar({ audienceMode = "sellers" } = {}) {
   }));
 }
 
-export function createGrowthPilot({ audienceMode = "sellers", startingFollowers = null, currentFollowers = null } = {}) {
+export function createGrowthPilot({ audienceMode = "sellers", startingFollowers = null, currentFollowers = null, goal = GROWTH_GOAL_FOLLOWERS } = {}) {
   const mode = normalizeAudienceMode(audienceMode);
   return {
     audienceMode: mode,
     audienceLabel: audienceModeLabel(mode),
-    goal: GROWTH_GOAL_FOLLOWERS,
-    tracker: buildFollowerTracker({ startingFollowers, currentFollowers }),
+    goal: buildFollowerTracker({ goal }).goal,
+    tracker: buildFollowerTracker({ startingFollowers, currentFollowers, goal }),
     calendar: create14DayCalendar({ audienceMode: mode }),
     safety: {
       humanApprovalRequired: true,
@@ -124,3 +126,4 @@ export function createCampaignMetadata(brief = {}) {
     }
   };
 }
+

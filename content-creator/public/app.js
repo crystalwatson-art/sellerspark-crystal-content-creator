@@ -1,6 +1,7 @@
 import { CARD_ACTIONS, applyCardFlowAction } from "./card-flow-state.js";
 import { BrowserSupabaseAuth, authClientErrorMessage } from "./supabase-auth.js";
 import { createGrowthPilotView } from "./growth-pilot.js";
+import { createTikTokAutoSync } from "./tiktok-auto-sync.js";
 
 const demoError = document.querySelector("#demo-error");
 const statusValue = document.querySelector("#status-value");
@@ -35,6 +36,7 @@ const resetButton = document.querySelector("#reset-button");
 const campaignAudienceMode = document.querySelector("#campaign-audience-mode");
 const startingFollowers = document.querySelector("#starting-followers");
 const currentFollowers = document.querySelector("#current-followers");
+const followerGoal = document.querySelector("#follower-goal");
 const updateGrowthPilot = document.querySelector("#update-growth-pilot");
 const growthGoal = document.querySelector("#growth-goal");
 const growthProgress = document.querySelector("#growth-progress");
@@ -152,14 +154,34 @@ let videoViewsAccess = false;
 let videoViewsLoading = false;
 let videoViewsRequest = 0;
 let videoViewsOwner = null;
+let followerSyncRequest = 0;
+let followerSyncLoading = false;
+let tikTokStatusRequest = 0;
+let tikTokConnected = false;
 const authClient = new BrowserSupabaseAuth();
 videoViewsOwner = authClient.session?.userId || null;
+const tikTokAutoSync = createTikTokAutoSync({
+  hasSession: () => Boolean(authClient.session) && !recoveryMode,
+  isVisible: () => document.visibilityState !== "hidden",
+  schedule: (callback, delay) => window.setTimeout(callback, delay),
+  cancel: timer => window.clearTimeout(timer),
+  refresh: async ({ isCurrent }) => {
+    const status = await refreshTikTokStatus();
+    if (!isCurrent() || status?.status !== "connected") return;
+    await Promise.allSettled([
+      syncTikTokFollowerCount({ isCurrent }),
+      videoViewsAccess ? loadVideoViews(videoPages[videoPageIndex]?.requestCursor ?? null, videoPageIndex, { isCurrent }) : Promise.resolve()
+    ]);
+  }
+});
 
 const WORKSPACE_STORAGE_KEY = "sellerspark-listing-review-workspaces-v2";
 const LEGACY_WORKSPACE_STORAGE_KEY = "sellerspark-listing-review-workspace-v1";
 const REVIEW_ARCHIVE_STORAGE_KEY = "sellerspark-listing-review-archive-v1";
 const GROWTH_PILOT_STORAGE_KEY = "sellerspark-growth-pilot-by-audience-v2";
 const LEGACY_GROWTH_PILOT_STORAGE_KEY = "sellerspark-growth-pilot-v1";
+const growthPilotStorageKey = () => "sellerspark-growth-pilot-v3:" + (authClient.session?.userId || "guest");
+const followerGoalStorageKey = () => "sellerspark-follower-goal-v1:" + (authClient.session?.userId || "guest");
 const AUDIENCE_SELECTION_STORAGE_KEY = "sellerspark-selected-research-audience-v1";
 const DEFAULT_RESEARCH_AUDIENCE = "lic_condo_owner";
 const RESEARCH_FIXTURES = Object.freeze({
@@ -409,7 +431,8 @@ async function initializeAuth() {
       renderAuthState(session);
       if (session && !recoveryMode) void loadAccountHistory({ resume: true });
       if (session && currentReviewId && currentPersistenceStatus === "supabase") void refreshReviewFromServer();
-      void refreshTikTokStatus();
+      if (session && !recoveryMode) void tikTokAutoSync.start();
+      else void refreshTikTokStatus();
     } else {
       authClient.configure({ url: "", anonKey: "" });
       authClient.saveSession(null);
@@ -426,14 +449,14 @@ async function initializeAuth() {
 function renderTikTokStatus(status = {}) {
   const state = status.status || "not_configured";
   const connected = state === "connected";
+  tikTokConnected = connected;
   if (tiktokReturnParams.get("tiktok") === "connected") tiktokReturnStatus.textContent = connected
-    ? "TikTok is connected. You can now sync your follower count."
+    ? "TikTok is connected. Your follower count updates automatically."
     : "TikTok authorization returned. Sign in to SellerSpark here to check the saved connection.";
   const configured = state !== "not_configured";
   tiktokConnectionHeading.textContent = connected ? "Connected" : configured ? "Not connected" : "Not configured";
   if (connected) {
-    const scopes = Array.isArray(status.scopes) ? status.scopes.join(", ") : "approved permissions";
-    tiktokConnectionNote.textContent = "Follower statistics are available through the authorized TikTok account. Permissions: " + scopes + ".";
+    tiktokConnectionNote.textContent = "Your follower count updates automatically while the studio is open. Video views also update after you allow video access.";
   } else if (configured && authClient.session) {
     tiktokConnectionNote.textContent = "Connect a TikTok account to read follower statistics. The authorization request stays server-side and direct publishing remains disabled.";
   } else if (configured) {
@@ -445,7 +468,7 @@ function renderTikTokStatus(status = {}) {
   connectTikTok.disabled = !configured || !authClient.session || connected;
   connectTikTok.textContent = connected ? "TikTok connected" : "Connect TikTok";
   syncTikTokFollowers.hidden = false;
-  syncTikTokFollowers.disabled = !connected;
+  syncTikTokFollowers.disabled = !connected || followerSyncLoading;
   videoViewsAccess = connected && Boolean(authClient.session) && Array.isArray(status.scopes) && status.scopes.includes("video.list");
   authorizeVideoViews.hidden = videoViewsAccess;
   authorizeVideoViews.disabled = !configured || !authClient.session;
@@ -455,7 +478,7 @@ function renderTikTokStatus(status = {}) {
     videoViewsList.replaceChildren();
     viewsNote.textContent = !configured ? "Finish the TikTok connection setup before reading video views."
       : !authClient.session ? "Sign in, connect TikTok, and authorize video access to see views."
-      : "Choose Authorize video views to grant read-only access to your public videos. TikTok must approve this permission for the app.";
+      : "Allow TikTok video views once to show your public videos and refresh their counts automatically. TikTok must approve this permission for the app.";
   }
   renderVideoViewControls();
 }
@@ -486,9 +509,10 @@ function renderVideoViews() {
   renderVideoViewControls();
 }
 
-async function loadVideoViews(cursor = null, pageIndex = 0) {
+async function loadVideoViews(cursor = null, pageIndex = 0, { isCurrent = () => true } = {}) {
   if (!videoViewsAccess || videoViewsLoading) return;
   const requestId = ++videoViewsRequest;
+  const requestOwner = authClient.session?.userId;
   videoViewsLoading = true;
   viewsNote.textContent = "Reading video views from TikTok…";
   renderVideoViewControls();
@@ -496,17 +520,17 @@ async function loadVideoViews(cursor = null, pageIndex = 0) {
     const suffix = cursor === null ? "" : "?cursor=" + encodeURIComponent(cursor);
     const response = await authClient.authorizedFetch("/api/tiktok/video-views" + suffix, { cache: "no-store" });
     const payload = await response.json();
-    if (requestId !== videoViewsRequest) return;
+    if (requestId !== videoViewsRequest || requestOwner !== authClient.session?.userId || !videoViewsAccess || !isCurrent()) return;
     if (!response.ok || !Array.isArray(payload.videos)) {
       viewsNote.textContent = payload.message || "Video views could not be loaded. Your draft workspace is unchanged.";
       return;
     }
     if (pageIndex === 0) videoPages = [];
-    videoPages[pageIndex] = payload;
+    videoPages[pageIndex] = { ...payload, requestCursor: cursor };
     videoPageIndex = pageIndex;
     renderVideoViews();
   } catch {
-    if (requestId === videoViewsRequest) viewsNote.textContent = "Video views are temporarily unavailable. Try again later.";
+    if (requestId === videoViewsRequest && requestOwner === authClient.session?.userId && isCurrent()) viewsNote.textContent = "Video views are temporarily unavailable. Your last loaded views are kept; the studio will retry automatically.";
   } finally {
     if (requestId === videoViewsRequest) {
       videoViewsLoading = false;
@@ -516,11 +540,13 @@ async function loadVideoViews(cursor = null, pageIndex = 0) {
 }
 
 async function refreshTikTokStatus() {
+  const statusRequest = ++tikTokStatusRequest;
   if (!authClient.enabled) {
     renderTikTokStatus({ status: "not_configured", scopes: [] });
     return;
   }
   const session = await authClient.getSession();
+  if (statusRequest !== tikTokStatusRequest) return;
   if (!session) {
     renderTikTokStatus({ status: "not_connected", scopes: [] });
     return;
@@ -528,10 +554,11 @@ async function refreshTikTokStatus() {
   try {
     const response = await authClient.authorizedFetch("/api/tiktok/status", { cache: "no-store" });
     const payload = await response.json();
-    if (response.ok) renderTikTokStatus(payload);
+    if (statusRequest !== tikTokStatusRequest || session.userId !== authClient.session?.userId) return;
+    if (response.ok) { renderTikTokStatus(payload); return payload; }
     else tiktokConnectionNote.textContent = payload.message || "TikTok connection status is unavailable.";
   } catch {
-    tiktokConnectionNote.textContent = "TikTok connection status is unavailable. The fictional demo is still usable.";
+    if (statusRequest === tikTokStatusRequest && session.userId === authClient.session?.userId) tiktokConnectionNote.textContent = "TikTok connection status is unavailable. Your last loaded counts are kept.";
   }
 }
 
@@ -559,25 +586,31 @@ async function startTikTokAuthorization({ includeVideoViews = false } = {}) {
   }
 }
 
-async function syncTikTokFollowerCount() {
+async function syncTikTokFollowerCount({ isCurrent = () => true } = {}) {
+  if (followerSyncLoading || !authClient.session || !tikTokConnected) return;
+  const requestOwner = authClient.session.userId;
+  const requestId = ++followerSyncRequest;
+  followerSyncLoading = true;
   syncTikTokFollowers.disabled = true;
   try {
     const response = await authClient.authorizedFetch("/api/tiktok/follower-count", { cache: "no-store" });
     const payload = await response.json();
+    if (requestId !== followerSyncRequest || requestOwner !== authClient.session?.userId || !tikTokConnected || !isCurrent()) return;
     if (!response.ok || !Number.isInteger(payload.followerCount)) {
       tiktokConnectionNote.textContent = payload.message || "Follower statistics could not be read safely.";
       return;
     }
     currentFollowers.value = String(payload.followerCount);
+    if (startingFollowers.value === "") startingFollowers.value = String(payload.followerCount);
     renderGrowthPilot();
     window.dispatchEvent(new CustomEvent("sellerspark:tiktok-metric", {
       detail: { followerCount: payload.followerCount, observedAt: payload.observedAt }
     }));
-    growthNote.textContent = "Follower count synced from TikTok at " + new Date(payload.observedAt).toLocaleString() + ". This measures progress; it does not predict growth.";
+    document.querySelector("#tiktok-sync-status").textContent = "Updated from TikTok at " + new Date(payload.observedAt).toLocaleString() + ". Refreshes every two minutes while the studio is open.";
   } catch (error) {
-    tiktokConnectionNote.textContent = authClientErrorMessage(error);
+    if (requestId === followerSyncRequest && requestOwner === authClient.session?.userId && isCurrent()) tiktokConnectionNote.textContent = "TikTok could not refresh right now. Your last count is kept; the studio will retry automatically.";
   } finally {
-    syncTikTokFollowers.disabled = false;
+    if (requestId === followerSyncRequest) { followerSyncLoading = false; syncTikTokFollowers.disabled = !tikTokConnected; }
   }
 }
 
@@ -685,6 +718,12 @@ function writeStorageObject(key, value) {
 }
 
 function readGrowthPilotMap() {
+  const scoped = readStorageObject(growthPilotStorageKey(), null);
+  if (scoped && typeof scoped === "object") return scoped;
+  const owner = authClient.session?.userId;
+  const adoptedBy = readStorageObject("sellerspark-growth-migration-owner-v1", null)?.owner;
+  if (owner && adoptedBy && adoptedBy !== owner) return {};
+  if (owner && !adoptedBy) writeStorageObject("sellerspark-growth-migration-owner-v1", { owner });
   const saved = readStorageObject(GROWTH_PILOT_STORAGE_KEY, {});
   if (Object.keys(saved).some((key) => isSupportedAudience(key))) return saved;
   const legacy = readStorageObject(LEGACY_GROWTH_PILOT_STORAGE_KEY, null);
@@ -699,20 +738,24 @@ function persistGrowthPilot() {
   map[currentWorkspaceAudience] = {
     audienceMode: campaignAudienceMode.value,
     startingFollowers: startingFollowers.value,
-    currentFollowers: currentFollowers.value
+    currentFollowers: currentFollowers.value,
+    goal: followerGoal.value
   };
-  writeStorageObject(GROWTH_PILOT_STORAGE_KEY, map);
+  writeStorageObject(growthPilotStorageKey(), map);
+  writeStorageObject(followerGoalStorageKey(), { goal: Number(followerGoal.value) });
 }
 
 function renderGrowthPilot(values = {}) {
   const plan = createGrowthPilotView({
     audienceMode: values.audienceMode ?? campaignAudienceMode.value,
     startingFollowers: values.startingFollowers ?? startingFollowers.value,
-    currentFollowers: values.currentFollowers ?? currentFollowers.value
+    currentFollowers: values.currentFollowers ?? currentFollowers.value,
+    goal: values.goal ?? followerGoal.value
   });
   campaignAudienceMode.value = plan.audienceMode;
   if (values.startingFollowers !== undefined) startingFollowers.value = values.startingFollowers ?? "";
   if (values.currentFollowers !== undefined) currentFollowers.value = values.currentFollowers ?? "";
+  if (values.goal !== undefined) followerGoal.value = String(plan.tracker.goal);
   growthGoal.textContent = String(plan.tracker.goal) + " total followers";
   growthProgress.textContent = plan.tracker.progressPercent === null
     ? "Count needed"
@@ -722,16 +765,16 @@ function renderGrowthPilot(values = {}) {
     : (plan.tracker.netChange >= 0 ? "+" : "") + String(plan.tracker.netChange);
   growthNote.textContent = plan.tracker.errors?.length
     ? plan.tracker.errors.join(" ")
-    : plan.tracker.note;
+    : plan.tracker.note + " Your goal is saved on this device.";
   calendarNote.textContent = "Planning for " + plan.audienceMode + " · draft prompts only. No auto-scheduling.";
   renderGrowthCalendar(plan.calendar);
-  persistGrowthPilot();
+  if (!plan.tracker.errors.length) persistGrowthPilot();
   return plan;
 }
 
 function restoreGrowthPilot() {
   const saved = readGrowthPilotMap()[currentWorkspaceAudience] || {};
-  renderGrowthPilot(saved);
+  renderGrowthPilot({ ...saved, goal: readStorageObject(followerGoalStorageKey(), null)?.goal ?? saved.goal ?? 100 });
 }
 
 function clone(value) {
@@ -1403,6 +1446,7 @@ async function runFictionalTest() {
     brief.campaignAudienceMode = campaignAudienceMode.value;
     brief.startingFollowers = startingFollowers.value === "" ? null : Number(startingFollowers.value);
     brief.currentFollowers = currentFollowers.value === "" ? null : Number(currentFollowers.value);
+    brief.followerGoal = Number(followerGoal.value);
     const response = await requestContentBrief(brief, activeRequestController.signal);
     const result = await response.json();
     if (requestId !== requestSequence) return;
@@ -1464,6 +1508,7 @@ audienceValue.addEventListener("change", () => {
 });
 startingFollowers.addEventListener("change", () => renderGrowthPilot());
 currentFollowers.addEventListener("change", () => renderGrowthPilot());
+followerGoal.addEventListener("change", () => renderGrowthPilot());
 authForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   setAuthError();
@@ -1510,8 +1555,8 @@ authSignOut.addEventListener("click", async () => {
 connectTikTok.addEventListener("click", () => startTikTokAuthorization());
 syncTikTokFollowers.addEventListener("click", syncTikTokFollowerCount);
 openVideoViews.addEventListener("click", () => {
-  viewsPanel.hidden = !viewsPanel.hidden;
-  openVideoViews.setAttribute("aria-expanded", String(!viewsPanel.hidden));
+  viewsPanel.hidden = false;
+  openVideoViews.setAttribute("aria-expanded", "true");
   if (!viewsPanel.hidden && videoViewsAccess && !videoPages.length) void loadVideoViews();
 });
 authorizeVideoViews.addEventListener("click", () => startTikTokAuthorization({ includeVideoViews: true }));
@@ -1594,16 +1639,21 @@ authClient.onAuthStateChange((session) => {
     closeDraft();
     clearActiveWorkspace();
     restoreWorkspace();
+    restoreGrowthPilot();
   }
   void loadAccountHistory({ resume: true });
 });
 authClient.onAuthStateChange((session) => {
   if (session && currentReviewId && currentPersistenceStatus === "supabase") void refreshReviewFromServer();
 });
-authClient.onAuthStateChange(() => void refreshTikTokStatus());
 authClient.onAuthStateChange((session) => {
   const nextOwner = session?.userId || null;
-  if (nextOwner && nextOwner === videoViewsOwner) return;
+  if (nextOwner && nextOwner === videoViewsOwner) { void tikTokAutoSync.start(); return; }
+  tikTokAutoSync.stop();
+  tikTokStatusRequest++;
+  followerSyncRequest++;
+  followerSyncLoading = false;
+  currentFollowers.value = "";
   videoViewsOwner = nextOwner;
   videoViewsRequest += 1;
   videoViewsLoading = false;
@@ -1613,7 +1663,13 @@ authClient.onAuthStateChange((session) => {
   videoViewsList.replaceChildren();
   viewsNote.textContent = "Connect TikTok and authorize video access to see views.";
   renderVideoViewControls();
+  if (session && !recoveryMode) void tikTokAutoSync.start();
+  else renderTikTokStatus({ status: "not_connected", scopes: [] });
 });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState !== "hidden") void tikTokAutoSync.refreshNow(); });
+window.addEventListener("focus", () => void tikTokAutoSync.refreshNow());
+window.addEventListener("pagehide", () => tikTokAutoSync.stop());
+window.addEventListener("pageshow", () => { if (authClient.session && !recoveryMode) void tikTokAutoSync.start(); });
 void initializeAuth();
 
 

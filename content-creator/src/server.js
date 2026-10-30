@@ -40,6 +40,7 @@ const assets = new Map([
   ["/index.html", { file: path.join(publicRoot, "index.html"), type: "text/html; charset=utf-8" }],
   ["/app.js", { file: path.join(publicRoot, "app.js"), type: "text/javascript; charset=utf-8" }],
   ["/growth-pilot.js", { file: path.join(publicRoot, "growth-pilot.js"), type: "text/javascript; charset=utf-8" }],
+  ["/tiktok-auto-sync.js", { file: path.join(publicRoot, "tiktok-auto-sync.js"), type: "text/javascript; charset=utf-8" }],
   ["/supabase-auth.js", { file: path.join(publicRoot, "supabase-auth.js"), type: "text/javascript; charset=utf-8" }],
   ["/styles.css", { file: path.join(publicRoot, "styles.css"), type: "text/css; charset=utf-8" }],
   ["/penthouse-studio.js", { file: path.join(publicRoot, "penthouse-studio.js"), type: "text/javascript; charset=utf-8" }],
@@ -140,7 +141,8 @@ function decorateCampaignResult(result, brief) {
     growthPilot: createGrowthPilot({
       audienceMode: metadata.campaignAudienceMode,
       startingFollowers: brief.startingFollowers,
-      currentFollowers: brief.currentFollowers
+      currentFollowers: brief.currentFollowers,
+      goal: brief.followerGoal
     })
   };
 }

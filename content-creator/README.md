@@ -1,5 +1,13 @@
 # SellerSpark — Crystal's Content Creator
 
+Latest TikTok update: followers refresh automatically on signed-in startup and
+every two minutes while the tab is visible. Authorized per-video views refresh
+on the same schedule, preserving the selected video page. The follower goal is
+editable and saved per owner on this device; the same goal follows the user
+across audience locations. Current followers are read-only TikTok data. Video
+views require the separate `video.list` consent. **213 automated tests pass.**
+See [the automatic metrics report](reports/automatic-tiktok-metrics-20261030.md).
+
 ## Current independent build — October 30, 2026
 
 The integrated studio now includes a model-directed **Content Creator** and
