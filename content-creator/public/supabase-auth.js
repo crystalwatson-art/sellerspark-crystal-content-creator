@@ -30,7 +30,7 @@ function numberFromParam(value) {
 }
 
 export class BrowserSupabaseAuth {
-  constructor({ url = "", anonKey = "", fetchImpl = globalThis.fetch, storage = globalThis.sessionStorage, clock = () => Date.now() } = {}) {
+  constructor({ url = "", anonKey = "", fetchImpl = globalThis.fetch?.bind(globalThis), storage = globalThis.sessionStorage, clock = () => Date.now() } = {}) {
     this.fetchImpl = fetchImpl;
     this.storage = storage;
     this.clock = clock;

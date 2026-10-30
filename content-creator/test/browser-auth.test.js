@@ -117,6 +117,36 @@ test("password recovery restores the URL session and updates the password with i
   assert.equal(calls[0].options.body, JSON.stringify({ password: "new-fictional-password" }));
 });
 
+test("default browser fetch keeps the global receiver during password updates", async () => {
+  const originalFetch = globalThis.fetch;
+  let receiver = null;
+  globalThis.fetch = function () {
+    receiver = this;
+    if (this !== globalThis) {
+      throw new TypeError("Failed to execute 'fetch' on 'Window': Illegal invocation");
+    }
+    return Promise.resolve(response(200, { user: { id: userId } }));
+  };
+
+  try {
+    const client = new BrowserSupabaseAuth({
+      url: "https://sellerspark-development.supabase.co",
+      anonKey: "mock-public-anon-key",
+      storage: storage(),
+      clock: () => 1_000_000
+    });
+    client.restoreRecoverySession({
+      hash: "#access_token=recovery-access&refresh_token=recovery-refresh&expires_in=3600&type=recovery"
+    });
+
+    await client.updatePassword("new-fictional-password");
+
+    assert.equal(receiver, globalThis);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("password recovery rejects expired or incomplete links without making a request", async () => {
   let calls = 0;
   const client = auth({ fetchImpl: async () => { calls += 1; return response(200, {}); } });
