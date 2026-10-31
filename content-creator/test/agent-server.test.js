@@ -4,11 +4,20 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import brief from '../fixtures/fictional-research-brief.json' with { type: 'json' };
-import { createServer } from '../src/server.js';
+import { createServer, resolveWriterMode } from '../src/server.js';
 import { createContentDraft } from '../src/content-creator.js';
 import { createAgentSystem } from '../src/agent-system.js';
 import { createFreeAgentModel } from '../src/free-agent-model.js';
 import { ReviewStore } from '../src/review-store.js';
+
+test('production configuration rejects OpenAI and paid provider overrides before any writer call', () => {
+  for (const mode of ['openai','anthropic','paid','openrouter-paid']) {
+    assert.throws(()=>resolveWriterMode({CONTENT_CREATOR_PROVIDER:mode,OPENAI_API_KEY:'synthetic'}),/OpenAI API.*disabled/);
+    assert.throws(()=>createServer({reviewStore:{},providerMode:mode}),/OpenAI API.*disabled/);
+  }
+  assert.equal(resolveWriterMode({OPENAI_API_KEY:'synthetic'}),'template','an OpenAI key alone never enables a writer');
+  for (const key of ['GROQ_API_KEY','OPENROUTER_API_KEY','GEMINI_API_KEY']) assert.equal(resolveWriterMode({[key]:'synthetic'}),'agents');
+});
 
 test('all three unavailable free writers reach a labelled template draft set and persistent human review', async t => {
   const calls = [];

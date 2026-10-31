@@ -177,8 +177,8 @@ test("authenticated content uses the verified owner for persistent review creati
       return response(200, []);
     },
     serverOptions: {
-      providerMode: "openai",
-      openAIWriter: { generate: async () => ({ ...createContentDraft(fictionalLicBrief), status: "ready_for_review", writer: "mock", writerStatus: "generated" }) }
+      providerMode: "groq",
+      groqWriter: { generate: async () => ({ ...createContentDraft(fictionalLicBrief), status: "ready_for_review", writer: "mock", writerStatus: "generated" }) }
     }
   });
   t.after(() => running.server.close());

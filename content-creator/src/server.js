@@ -5,7 +5,6 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createContentDraft } from "./content-creator.js";
-import { createOpenAIWriter } from "./openai-writer.js";
 import { createGroqWriter, DEFAULT_GROQ_MODEL } from "./groq-writer.js";
 import { createGeminiWriter, DEFAULT_GEMINI_MODEL } from "./gemini-writer.js";
 import { createOpenRouterWriter, DEFAULT_OPENROUTER_MODEL } from "./openrouter-writer.js";
@@ -148,6 +147,13 @@ function decorateCampaignResult(result, brief) {
   };
 }
 
+const ALLOWED_WRITER_MODES = new Set(["agents", "groq", "template"]);
+export function resolveWriterMode(env = process.env) {
+  const mode = env.CONTENT_CREATOR_PROVIDER || ([env.GROQ_API_KEY, env.OPENROUTER_API_KEY, env.GEMINI_API_KEY].some(Boolean) ? "agents" : "template");
+  if (!ALLOWED_WRITER_MODES.has(mode)) throw new Error("SellerSpark permits only its free-provider chain or templates. The OpenAI API and other provider modes are disabled.");
+  return mode;
+}
+
 export function createServer({
   reviewStore,
   demoReviewStore = null,
@@ -155,7 +161,6 @@ export function createServer({
   authConfig = { enabled: false },
   revisionGenerator = null,
   providerMode = process.env.CONTENT_CREATOR_PROVIDER || "template",
-  openAIWriter = null,
   groqWriter = null,
   geminiWriter = null,
   openRouterWriter = null,
@@ -163,6 +168,7 @@ export function createServer({
   agentSystem = null
 } = {}) {
   if (!reviewStore) throw new Error("createServer requires a ReviewStore.");
+  resolveWriterMode({ CONTENT_CREATOR_PROVIDER: providerMode });
 
   async function withListingReviewUsing(contentResult, brief, { store, actorId = null, actorToken = null, persistenceStatus }) {
     const listingReview = adaptContentResultToListingReview(contentResult);
@@ -224,7 +230,6 @@ export function createServer({
         logger: logProviderFailure
       }), brief);
     }
-    if (providerMode === "openai" && openAIWriter) return decorateCampaignResult(await openAIWriter.generate(brief), brief);
     return decorateCampaignResult({
       agent: "content_creator",
       writer: providerMode,
@@ -639,13 +644,10 @@ export function createRequestHandler(options = {}) {
 }
 
 export async function createConfiguredRequestHandler() {
-  const providerMode = process.env.CONTENT_CREATOR_PROVIDER || ([process.env.GROQ_API_KEY, process.env.OPENROUTER_API_KEY, process.env.GEMINI_API_KEY].some(Boolean) ? "agents" : "template");
+  const providerMode = resolveWriterMode();
   const backupProvider = process.env.CONTENT_CREATOR_BACKUP_PROVIDER || "none";
   const draftHistory = createDraftHistory();
   const agentSystem = providerMode === "agents" ? createAgentSystem({ model: createFreeAgentModel(), history: draftHistory, budgetMs: 120000 }) : null;
-  const openAIWriter = providerMode === "openai"
-    ? createOpenAIWriter({ apiKey: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL, history: draftHistory })
-    : null;
   const groqWriter = providerMode === "groq"
     ? createGroqWriter({ apiKey: process.env.GROQ_API_KEY, model: process.env.GROQ_MODEL || DEFAULT_GROQ_MODEL, history: draftHistory })
     : null;
@@ -708,10 +710,8 @@ export async function createConfiguredRequestHandler() {
   const demoReviewStore = await new ReviewStore({ filePath: path.join(dataDir, "fictional-demo-review-store.json") }).init();
   const revisionGenerator = providerMode === "groq" && groqWriter
     ? createRevisionGenerator({ primaryWriter: groqWriter, backupWriter: openRouterWriter || geminiWriter, logger: logProviderFailure })
-    : providerMode === "openai" && openAIWriter
-      ? createRevisionGenerator({ primaryWriter: openAIWriter, logger: logProviderFailure })
-      : null;
-  return createRequestHandler({ reviewStore, demoReviewStore, authVerifier, authConfig, revisionGenerator, providerMode, openAIWriter, groqWriter, geminiWriter, openRouterWriter, tiktokIntegration, agentSystem });
+    : null;
+  return createRequestHandler({ reviewStore, demoReviewStore, authVerifier, authConfig, revisionGenerator, providerMode, groqWriter, geminiWriter, openRouterWriter, tiktokIntegration, agentSystem });
 }
 
 export async function startServer({ port = Number(process.env.PORT || 3000) } = {}) {

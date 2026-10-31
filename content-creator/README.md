@@ -5,7 +5,7 @@ every two minutes while the tab is visible. Authorized per-video views refresh
 on the same schedule, preserving the selected video page. The follower goal is
 editable and saved per owner on this device; the same goal follows the user
 across audience locations. Current followers are read-only TikTok data. Video
-views require the separate `video.list` consent. **213 automated tests pass.**
+views require the separate `video.list` consent. **224 automated tests pass.**
 See [the automatic metrics report](reports/automatic-tiktok-metrics-20261030.md).
 
 ## Current independent build — October 30, 2026
@@ -17,13 +17,12 @@ are described in [agent/architecture.md](agent/architecture.md).
 This is Crystal's independent implementation; it does not call a collaborator's
 Research Agent or require shared repository integration.
 
-The deployment currently remains in clearly labeled **sample mode** until its
-owner configures the server-only `OPENROUTER_API_KEY` for Preview. With that
-personal key present and no explicit legacy `CONTENT_CREATOR_PROVIDER` override,
-the configured handler selects `agents` automatically. The default model is
-`openrouter/free`; paid model IDs are rejected. Never put the key in browser code,
-source control, a report or chat. Existing Groq/Gemini/OpenRouter writer adapters
-remain intact for their earlier supported configurations.
+The configured writer chain contains exactly three AI providers: **Groq →
+OpenRouter → Gemini**. An independent offline template fallback keeps safe draft
+creation available when the providers exhaust their free quotas or are unavailable.
+The OpenAI API is disabled, including explicit legacy provider overrides. With
+any of the three server-only provider keys present, the handler selects `agents`
+unless an allowed explicit mode is configured. See the free-writer setup below.
 
 AI generation requires SellerSpark sign-in. The agent roles have no account,
 database, publishing or messaging tools; the authenticated server alone saves
@@ -237,71 +236,44 @@ not require provider keys. Review records use Vercel's temporary writable
 across cold starts or deployments. Do not treat the preview as production
 storage or enable publishing from it.
 
-## Optional AI writer
+## Three AI writers and an offline template fallback
 
-Offline template mode is the default and is the only mode used by the automated
-tests and local demo. The opt-in OpenAI writer is server-side and uses the
-Responses API with strict Structured Outputs. It is not enabled unless Crystal
-explicitly approves it and configures all of the following server environment
-variables:
+Configure these server-only variables for the orchestrated recovery chain:
 
-    CONTENT_CREATOR_PROVIDER=openai
-    OPENAI_MODEL=<approved model name>
-    OPENAI_API_KEY=<server-only secret>
-
-For the optional Groq free-tier writer, use a separate provider selection and
-server-only key:
-
-    CONTENT_CREATOR_PROVIDER=groq
-    GROQ_MODEL=openai/gpt-oss-120b
+    CONTENT_CREATOR_PROVIDER=agents
     GROQ_API_KEY=<server-only secret>
-
-The selected Groq model is `openai/gpt-oss-120b`. Its adapter uses Groq's
-OpenAI-compatible Chat Completions endpoint and strict JSON Schema Structured
-Outputs. A Groq `429` rate-limit response returns a safe `rate_limited` result
-and can trigger the optional backup chain described below.
-
-## Verified free backup writer
-
-Groq is the primary AI writer. The verified free backup is OpenRouter's free
-router, not a paid model or paid fallback. Configure the chain only on the
-server with:
-
-    CONTENT_CREATOR_PROVIDER=groq
-    GROQ_MODEL=openai/gpt-oss-120b
-    GROQ_API_KEY=<server-only secret>
-    CONTENT_CREATOR_BACKUP_PROVIDER=openrouter
     OPENROUTER_MODEL=openrouter/free
     OPENROUTER_API_KEY=<server-only secret>
+    GEMINI_API_KEY=<server-only secret>
 
-OpenRouter is restricted in code to `openrouter/free` or an explicitly free
-model identifier ending in `:free`. When Groq has a safe availability failure
-such as a rate limit, timeout, network error, or configuration/authentication
-failure, the server makes one bounded OpenRouter backup attempt. If both AI
-writers fail, the existing offline template writer is used only when the same
-research brief passes the safety gate. Unsafe, malformed, unsupported, stale,
-or repetitive provider output is stopped for review rather than replaced.
+The request-scoped chain tries Groq, OpenRouter, and Gemini in that order.
+Availability, quota, transport, and configuration failures advance to the next
+provider within the bounded run. There is no paid OpenAI API path: startup rejects
+`CONTENT_CREATOR_PROVIDER=openai`, and an OpenAI key alone never enables generation.
+The Groq model identifier `openai/gpt-oss-120b` refers to an open-weight model
+hosted at Groq's endpoint; it does not connect to the OpenAI API.
 
-The Gemini adapter and earlier Gemini verification notes remain preserved as
-historical, optional code, but Gemini is not the current configured backup in
-this verified setup. Failover logs contain only provider names, safe status
-categories, and HTTP status metadata—never keys, headers, or response bodies.
-No provider is enabled in default template mode. No mode publishes content or
-contacts customers automatically, and human approval is always required.
+OpenRouter accepts only `openrouter/free` or a model ID ending in `:free`; paid
+model identifiers are rejected. Groq and Gemini must use accounts/projects on
+their free tiers with billing disabled. Their API keys do not encode an
+application-enforceable free-plan guarantee, so account billing status must be
+verified separately. Never enable paid billing to bypass free quotas.
 
-No live provider request is made by the test suite or local demo.
+When all three providers have eligible availability failures, the same safety-checked
+brief can produce clearly labeled **Offline template fallback** drafts. Templates
+are not a fourth AI provider, require no key, and incur no model API charge.
+Unsafe or invalid model output is stopped rather than bypassed through fallback.
+Human approval remains required; nothing publishes or contacts customers.
 
-Never put the API key in browser code or commit it to this folder. When the
-OpenAI writer is unavailable, returns malformed output, produces unsupported
-claims, or fails the freshness check, the app returns no drafts and does not
-silently substitute offline templates. The result identifies the writer that
-produced it.
+The automated suite uses injected provider responses, including all-three failure,
+template recovery, persisted review actions, and rejection of paid provider modes.
+Live provider success must be reported separately from mocked tests. Do not put
+keys in browser code, source control, reports, or chat.
 
 Draft freshness uses process-memory history keyed by audience. It compares
 hooks and scripts within the current batch and against recent drafts, then
 allows at most one automatic rewrite by default. History is not persisted and
 is cleared when the server restarts; no database or external storage is used.
 
-Automated tests inject mocked Responses API results. No live or paid OpenAI
-or Groq request is made by the tests, demo, or default server mode.
+Automated tests inject mocked provider results and make no live model requests.
 
