@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { createContentDraft } from './content-creator.js';
-import { buildResearchInput, MODEL_OUTPUT_SCHEMA, validateModelOutput, mergeModelDrafts, WRITER_INSTRUCTIONS } from './openai-writer.js';
+import { buildResearchInput, MODEL_OUTPUT_SCHEMA, validateModelOutput, mergeModelDrafts, WRITER_INSTRUCTIONS, classifyProviderError } from './openai-writer.js';
 import { evaluateDraftSetQuality } from './editorial-quality.js';
 import { findRepetition } from './draft-history.js';
 
@@ -45,9 +45,12 @@ export function createAgentSystem({ model, history = null, now = Date.now, budge
       const historyKey = typeof historyScope === 'string' && historyScope ? historyScope + ':' + brief?.audience : null;
       const recentDrafts = historyKey ? history?.get(historyKey) || [] : [];
       const runInfo = stopReason => ({ id: runId, mode: 'model_directed', provider: model?.provider || 'openrouter', model: model?.model || null, modelCalls: calls, revisionHandoffs: revisions, maxRevisions: MAX_REVISIONS, stopReason, trace: copy(trace) });
-      const blocked = reason => {
+      const blocked = (reason, diagnostic = null) => {
         add('system', 'stopped', { code: reason });
-        return { ...baseline, writer: 'agent_system', writerLabel: 'Content Creator + Listing Optimizer', writerStatus: reason, status: 'needs_more_research', drafts: [], agentRun: runInfo(reason), humanApprovalRequired: true, automaticallyPublished: false, customerContacted: false, missingInformation: [...(baseline.missingInformation || []), reason === 'not_configured' ? 'Live AI is not connected yet. Your saved drafts have not changed.' : 'The agents stopped before producing a checked draft set (' + reason + '). Your saved drafts have not changed.'] };
+        // Only action names, counters and classified errors enter runtime logs.
+        // Never log provider payloads, task text, credentials or raw exceptions.
+        console.warn('SellerSpark agent stopped', JSON.stringify({ ...runInfo(reason), diagnostic }));
+        return { ...baseline, writer: 'agent_system', writerLabel: 'Content Creator + Listing Optimizer', writerStatus: diagnostic?.writerStatus || reason, ...(diagnostic ? { diagnostic } : {}), status: 'needs_more_research', drafts: [], agentRun: runInfo(reason), humanApprovalRequired: true, automaticallyPublished: false, customerContacted: false, missingInformation: [...(baseline.missingInformation || []), reason === 'not_configured' ? 'Live AI is not connected yet. Your saved drafts have not changed.' : 'The agents stopped before producing a checked draft set (' + reason + '). Your saved drafts have not changed.'] };
       };
       if (baseline.status !== 'ready_for_review') return blocked('research_gate');
       if (!model?.configured || typeof model.decide !== 'function') return blocked('not_configured');
@@ -165,7 +168,8 @@ export function createAgentSystem({ model, history = null, now = Date.now, budge
         }
       } catch (error) {
         const codes = new Set(['time_limit','call_limit','step_limit','repeated_action','invalid_decision','agent_stopped','revision_limit','not_configured','provider_timeout','rate_limited','parse_failure','truncated_response']);
-        return blocked(codes.has(error?.code) ? error.code : 'provider_unavailable');
+        const providerFailure = ['provider_timeout','rate_limited','parse_failure','truncated_response','provider_error','invalid_response'].includes(error?.code);
+        return blocked(codes.has(error?.code) ? error.code : 'provider_unavailable', providerFailure ? classifyProviderError(error) : null);
       }
     }
   };

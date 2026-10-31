@@ -175,3 +175,14 @@ for (const scenario of [
   assert.equal(result.humanApprovalRequired, true);
   assert.equal(result.automaticallyPublished, false);
 });
+
+test('live provider failures retain safe status diagnostics without exposing raw errors', async () => {
+  const model = { configured: true, async decide() {
+    throw Object.assign(new Error('private provider payload must not escape'), { code: 'provider_error', httpStatus: 401 });
+  } };
+  const result = await createAgentSystem({ model }).generate(brief);
+  assert.equal(result.writerStatus, 'authentication_failed');
+  assert.equal(result.diagnostic.httpStatus, 401);
+  assert.equal(result.agentRun.modelCalls, 1);
+  assert.doesNotMatch(JSON.stringify(result), /private provider payload/);
+});
