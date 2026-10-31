@@ -38,6 +38,10 @@ test('two model-directed agents pass identical complete handoffs and never appro
   const result = await createAgentSystem({ model: modelWith({ onCall: input => inputs.push(clone(input)) }) }).generate(brief);
   assert.equal(result.status, 'ready_for_review');
   assert.equal(result.agentRun.modelCalls, 6);
+  assert.equal(result.agentRun.orchestrator, 'bounded_task_coordinator');
+  assert.deepEqual(result.agentRun.assignments.map(task => task.role), ['content_creator', 'listing_optimizer']);
+  assert.ok(inputs.every(input => input.context.assignment.role === input.role));
+  assert.ok(result.agentRun.trace.some(event => event.agent === 'orchestrator' && event.event === 'task_assigned'));
   assert.equal(result.humanApprovalRequired, true);
   assert.equal(result.automaticallyPublished, false);
   assert.equal(result.customerContacted, false);
@@ -61,6 +65,7 @@ test('Optimizer chooses a revision, Creator receives corrections, and visible te
   const result = await createAgentSystem({ model: modelWith({ corrections: 1, onCall: input => inputs.push(clone(input)) }) }).generate(brief);
   assert.equal(result.status, 'ready_for_review');
   assert.equal(result.agentRun.revisionHandoffs, 1);
+  assert.deepEqual(result.agentRun.assignments.map(task => [task.role, task.revision]), [['content_creator',0],['listing_optimizer',0],['content_creator',1],['listing_optimizer',1]]);
   assert.match(result.drafts[0].script, /^Pause and name/);
   const revised = inputs.find(input => input.role === 'content_creator' && input.context.revision === 1);
   assert.equal(revised.context.feedback[0].instruction, 'Make the first sentence clearer.');
