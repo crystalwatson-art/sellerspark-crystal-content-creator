@@ -11,7 +11,7 @@ import { createGeminiWriter, DEFAULT_GEMINI_MODEL } from "./gemini-writer.js";
 import { createOpenRouterWriter, DEFAULT_OPENROUTER_MODEL } from "./openrouter-writer.js";
 import { createDraftHistory } from "./draft-history.js";
 import { adaptContentResultToListingReview, applyListingReviewAction } from "./listing-optimizer.js";
-import { generateWithFailover } from "./provider-failover.js";
+import { generateWithFailover, isFailoverEligible } from "./provider-failover.js";
 import { ReviewStore } from "./review-store.js";
 import { SupabaseReviewStore } from "./supabase-review-store.js";
 import { SupabaseAuthVerifier } from "./supabase-auth.js";
@@ -541,16 +541,25 @@ export function createServer({
           if (actionInput.action === "rewrite_current") {
             try { revisionInput = JSON.parse(actionInput.note); } catch { /* shared action validator reports invalid input */ }
           }
-          if (providerMode === "agents" && agentSystem && (actionInput.action === "regenerate_current" || revisionInput?.preset)) {
+          const writingAction = actionInput.action === "regenerate_current" || Boolean(revisionInput?.preset);
+          let templateUsed = next.listingReview.writer === "offline_template" && writingAction;
+          if (providerMode === "agents" && agentSystem && writingAction && !templateUsed) {
             const review = next.listingReview.reviews.find(item => item.draftId === actionInput.draftId);
             if (!review) throw Object.assign(new Error(safeActionMessage("draft_not_found")), { code: "draft_not_found" });
             if (revisionInput?.preset && (review.automaticRevisionAttempts || 0) >= 2) throw Object.assign(new Error(safeActionMessage("revision_limit_reached")), { code: "revision_limit_reached" });
             if (revisionInput?.preset && !["Shorter", "Warmer", "More professional", "Stronger opening"].includes(revisionInput.preset)) throw Object.assign(new Error(safeActionMessage("invalid_revision")), { code: "invalid_revision" });
             const currentDrafts = createContentDraft(next.brief).drafts.map((draft, i) => ({ ...draft, ...next.listingReview.reviews[i].working, supportingClaimIds: (draft.claimsUsed || []).map(claim => claim.sourceId || claim.sourceRefId || claim.referenceId) }));
             const generated = await agentSystem.generate(next.brief, { currentDrafts, targetDraftId: actionInput.draftId, historyScope: context.actorId || "review:" + id, instruction: revisionInput?.preset ? "Revise this card's wording: " + revisionInput.preset : "Replace only this card with an entirely different idea grounded in its topic." });
-            if (generated.status !== "ready_for_review") throw Object.assign(new Error(generated.missingInformation?.at(-1) || safeActionMessage("revision_unavailable")), { code: "revision_unavailable" });
-            const target = generated.drafts.find(draft => draft.id === actionInput.draftId);
-            replacement = Object.fromEntries(["hook","script","caption","takeaway","videoConcept","suggestedScenes","hashtags","suggestedNextStep","reasonToFollow"].map(field => [field, target[field]]));
+            if (generated.status !== "ready_for_review") {
+              const templateAllowed = isFailoverEligible(generated)
+                && createContentDraft(next.brief).status === "ready_for_review"
+                && (revisionInput?.preset || next.researchVerification?.status === "fictional_test_only");
+              if (!templateAllowed) throw Object.assign(new Error(generated.missingInformation?.at(-1) || safeActionMessage("revision_unavailable")), { code: "revision_unavailable" });
+              templateUsed = true;
+            } else {
+              const target = generated.drafts.find(draft => draft.id === actionInput.draftId);
+              replacement = Object.fromEntries(["hook","script","caption","takeaway","videoConcept","suggestedScenes","hashtags","suggestedNextStep","reasonToFollow"].map(field => [field, target[field]]));
+            }
             agentRun = generated.agentRun;
           }
           const result = CARD_ACTIONS.has(actionInput.action)
@@ -571,6 +580,11 @@ export function createServer({
             throw error;
           }
           next.listingReview = result.state;
+          if (writingAction) {
+            const review = next.listingReview.reviews.find(item => item.draftId === actionInput.draftId);
+            review.lastWritingProvider = templateUsed ? "offline_template" : agentRun ? "agent_system" : "template";
+            if (templateUsed) review.revisionHistory.at(-1).note += " Used the offline template writer; human approval is required.";
+          }
           if (agentRun) {
             const review = next.listingReview.reviews.find(item => item.draftId === actionInput.draftId);
             review.agentRuns ||= [];

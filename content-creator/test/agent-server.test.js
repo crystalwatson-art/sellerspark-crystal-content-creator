@@ -36,6 +36,16 @@ test('all three unavailable free writers reach a labelled template draft set and
   const reopened=await(await fetch(base+'/api/reviews/'+saved.listingReviewId,{headers:{Authorization:'Bearer synthetic-token'}})).json();
   assert.equal(reopened.listingReview.reviews.length,3);
   assert.ok(reopened.listingReview.reviews.every(review=>review.status!=='accepted'));
+  assert.equal(reopened.listingReview.writer,'offline_template');
+  const target=saved.listingReview.reviews[0];
+  const sibling=structuredClone(saved.listingReview.reviews[1]);
+  const rewritten=await(await fetch(base+'/api/reviews/'+saved.listingReviewId+'/actions',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer synthetic-token'},body:JSON.stringify({action:'rewrite_current',draftId:target.draftId,expectedVersion:saved.listingReviewVersion,note:JSON.stringify({preset:'Shorter'})})})).json();
+  assert.equal(rewritten.status,'ok');
+  assert.ok(rewritten.listingReview.reviews[0].working.script.length<target.working.script.length);
+  assert.equal(rewritten.listingReview.reviews[0].lastWritingProvider,'offline_template');
+  assert.equal(rewritten.listingReview.reviews[0].status,'revision_requested');
+  assert.deepEqual(rewritten.listingReview.reviews[1],sibling);
+  assert.equal(calls.length,3,'revising a template draft does not retry unavailable AI services');
 });
 
 test('authenticated API uses both agents, saves their trace, and regenerates only the selected card', async t => {

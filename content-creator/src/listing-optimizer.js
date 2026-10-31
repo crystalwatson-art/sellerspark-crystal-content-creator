@@ -295,6 +295,8 @@ export function adaptContentResultToListingReview(contentResult, options = {}) {
     customerContacted: false,
     publicationDisabled: true,
     evaluator: options.evaluatorName || "handoff_hygiene_only",
+    writer: contentResult?.writer || "unknown",
+    writerLabel: contentResult?.writerLabel || null,
     ...(contentResult?.agentRun ? { agentRun: clone(contentResult.agentRun) } : {})
   };
 }

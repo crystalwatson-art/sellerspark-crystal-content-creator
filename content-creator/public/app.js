@@ -1125,7 +1125,7 @@ function renderModal() {
   if (!draft) return;
 
   modalNumber.textContent = "DRAFT " + String(activeDraftIndex + 1).padStart(2, "0") + " · VERSION " + (activeReview()?.cardVersion || 1);
-  modalAngle.textContent = draft.angle;
+  modalAngle.textContent = draft.angle + (activeReview()?.lastWritingProvider === "offline_template" || currentListingReview?.writer === "offline_template" ? " · Template draft" : "");
   modalTitle.textContent = draft.hook;
   modalAudience.textContent = draft.audienceLabel;
   modalHook.textContent = draft.hook;
@@ -1421,6 +1421,7 @@ async function runReviewAction(action, note = "Human reviewer requested this act
     if (!demoError.textContent) {
       document.querySelector("#card-revise-panel").hidden = true;
       document.querySelector("#card-action-feedback").textContent = ({approve_current:"Approved. Copy is now available.", reject_current:"Marked as unwanted. Regenerate this card for a different idea.", rewrite_current:"Wording updated on this card. Review the highlighted script.", regenerate_current:"Only this card was replaced with a different sample idea. Review it before accepting.", undo_current:"Previous version restored."})[action] || "Saved.";
+      if (["rewrite_current","regenerate_current"].includes(action) && activeReview()?.lastWritingProvider === "offline_template") document.querySelector("#card-action-feedback").textContent += " Used the template writer. Your approval is still required.";
     }
     renderOptimizerReview();
   }
