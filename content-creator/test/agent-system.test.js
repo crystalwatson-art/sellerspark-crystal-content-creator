@@ -213,6 +213,7 @@ test('completed evidence and check steps cannot be reselected through the advert
   assert.deepEqual(payload.response_format.json_schema.schema.properties.action.enum,['request_revision','stop']);
   await model.decide({ ...input, role:'content_creator', tools:{read_brief:'{}',check_drafts:'{}',send_to_optimizer:'{}',stop:'{}'}, observations:[{tool:'read_brief',ok:true}] });
   assert.deepEqual(payload.response_format.json_schema.schema.properties.action.enum,['check_drafts','stop']);
+  assert.ok(payload.response_format.json_schema.schema.properties.input.properties.drafts.items.required.includes('script'));
   assert.equal(remaining,3000,'custom provider adapters receive the remaining deadline');
 });
 

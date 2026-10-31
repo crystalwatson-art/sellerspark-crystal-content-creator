@@ -1,4 +1,4 @@
-import { createHttpJsonRequest } from './openai-writer.js';
+import { createHttpJsonRequest, MODEL_OUTPUT_SCHEMA } from './openai-writer.js';
 import { isFreeRouterModel, parseOpenRouterResponse, OPENROUTER_CHAT_ENDPOINT } from './openrouter-writer.js';
 
 // A model selects a single whitelisted action each turn. The server executes it
@@ -27,16 +27,26 @@ export function createAgentModel({ apiKey, model = 'openrouter/free', request, f
           }
           return true;
         }));
+      const inputProperties = {};
+      if (role === 'content_creator' && availableTools.check_drafts) inputProperties.drafts = MODEL_OUTPUT_SCHEMA.properties.drafts;
+      if (availableTools.send_to_optimizer) {
+        inputProperties.confidence = { type:'number',minimum:0,maximum:1 };
+        inputProperties.uncertainties = { type:'array',items:{type:'string'} };
+      }
+      if (availableTools.request_revision) {
+        inputProperties.confidence = { type:'number',minimum:0,maximum:1 };
+        inputProperties.feedback = {type:'array',items:{type:'object',properties:{draftIndex:{type:'integer',minimum:0,maximum:2},field:{type:'string'},instruction:{type:'string'}},required:['draftIndex','field','instruction'],additionalProperties:false}};
+      }
       const send = request || createHttpJsonRequest({ apiKey, endpoint: OPENROUTER_CHAT_ENDPOINT, providerLabel: 'OpenRouter', fetchImpl, timeoutMs: Math.min(25000, remainingMs) });
       if (!send) throw Object.assign(new Error('Agent provider not configured'), { code: 'not_configured' });
       const result = await send({
         model,
         messages: [
-          { role: 'system', content: 'RESPONSE PROTOCOL: return exactly {"action":"available_tool_name","input":{}}. The root must contain action and input, never drafts. ' + instructions + ' Your response is ONE tool action, never the final drafts directly. The action value must exactly match an AVAILABLE tool key below. Return only the action JSON; no reasoning or commentary. Available tools and their input contracts: ' + JSON.stringify(availableTools) + (needsEvidence ? ' Evidence has not been read. Your next action must be ' + firstTool + ' with input {}, or stop with input {}.' : '') },
+          { role: 'system', content: 'RESPONSE PROTOCOL: return one JSON object with exactly two root keys: action (an available tool name) and input (an object containing that tool\'s arguments). The input object must contain the fields required by the chosen tool; it is empty only for tools whose contract says input {}. Drafts belong in input.drafts for check_drafts, never at the root. ' + instructions + ' Your response is ONE tool action, never the final drafts directly. The action value must exactly match an AVAILABLE tool key below. Return only the action JSON; no reasoning or commentary. Available tools and their input contracts: ' + JSON.stringify(availableTools) + (needsEvidence ? ' Evidence has not been read. Your next action must be ' + firstTool + ' with input {}, or stop with input {}.' : '') },
           { role: 'user', content: JSON.stringify({ context, observations }) + '\nReturn one action/input JSON object matching the response protocol.' }
         ],
         ...(model.startsWith('liquid/') ? { response_format: { type: 'json_object' } } : {
-          response_format: { type: 'json_schema', json_schema: { name: 'agent_action', strict: false, schema: { type: 'object', properties: { action: { type: 'string', enum: Object.keys(availableTools) }, input: { type: 'object' } }, required: ['action','input'], additionalProperties: false } } },
+          response_format: { type: 'json_schema', json_schema: { name: 'agent_action', strict: false, schema: { type: 'object', properties: { action: { type: 'string', enum: Object.keys(availableTools) }, input: { type: 'object',properties:inputProperties,additionalProperties:false } }, required: ['action','input'], additionalProperties: false } } },
           provider: { require_parameters: true }
         }),
         // A model may choose check_drafts on any turn, whose input contains
