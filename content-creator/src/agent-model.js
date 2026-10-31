@@ -13,7 +13,8 @@ export function createAgentModel({ apiKey, model = 'openrouter/free', request, f
       // Expose prerequisites before writing/review tools. A first-turn model
       // must read its evidence rather than spending output on an invalid draft.
       const firstTool = role === 'content_creator' ? 'read_brief' : role === 'listing_optimizer' ? 'inspect_handoff' : null;
-      const availableTools = observations.length === 0 && firstTool
+      const needsEvidence = firstTool && !observations.some(observation => observation.tool === firstTool && observation.ok !== false);
+      const availableTools = needsEvidence
         ? Object.fromEntries(Object.entries(tools).filter(([name]) => name === firstTool || name === 'stop'))
         : tools;
       const send = request || createHttpJsonRequest({ apiKey, endpoint: OPENROUTER_CHAT_ENDPOINT, providerLabel: 'OpenRouter', fetchImpl, timeoutMs: Math.min(30000, remainingMs) });
@@ -21,8 +22,8 @@ export function createAgentModel({ apiKey, model = 'openrouter/free', request, f
       const result = await send({
         model,
         messages: [
-          { role: 'system', content: instructions + ' Your response is ONE tool action, never the final drafts directly. The action value must exactly match an AVAILABLE tool key below. Return only the action JSON; no reasoning or commentary. Available tools and their input contracts: ' + JSON.stringify(availableTools) },
-          { role: 'user', content: JSON.stringify({ context, observations }) }
+          { role: 'system', content: 'RESPONSE PROTOCOL: return exactly {"action":"available_tool_name","input":{}}. The root must contain action and input, never drafts. ' + instructions + ' Your response is ONE tool action, never the final drafts directly. The action value must exactly match an AVAILABLE tool key below. Return only the action JSON; no reasoning or commentary. Available tools and their input contracts: ' + JSON.stringify(availableTools) + (needsEvidence ? ' Evidence has not been read. Your next action must be ' + firstTool + ' with input {}, or stop with input {}.' : '') },
+          { role: 'user', content: JSON.stringify({ context, observations }) + '\nReturn one action/input JSON object matching the response protocol.' }
         ],
         ...(model.startsWith('liquid/') ? { response_format: { type: 'json_object' } } : {
           response_format: { type: 'json_schema', json_schema: { name: 'agent_action', strict: false, schema: { type: 'object', properties: { action: { type: 'string', enum: Object.keys(availableTools) }, input: { type: 'object' } }, required: ['action','input'], additionalProperties: false } } },
