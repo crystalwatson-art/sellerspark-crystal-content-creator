@@ -47,7 +47,7 @@ export function classifyProviderError(error) {
     const category = error.code;
     return {
       category,
-      writerStatus: "invalid_response",
+      writerStatus: category === "truncated_response" ? "truncated_response" : "invalid_response",
       explanation: category === "truncated_response"
         ? "The provider response was cut off before the required JSON was complete."
         : "The provider returned content that was not valid JSON for the required response.",

@@ -28,6 +28,16 @@ test('invalid output cannot bypass validation by changing provider', async () =>
 test('missing credentials do not create configured free providers',()=>{
   assert.equal(createFreeAgentModel({env:{}}).configured,false);
 });
+test('provider-declared length cutoff advances without accepting partial output', async()=>{
+  const seen=[];
+  const run=createFailoverAgentModel({models:[
+    {configured:true,provider:'openrouter',async decide(){seen.push('openrouter');throw Object.assign(new Error('cut off'),{code:'truncated_response'});}},
+    {configured:true,provider:'gemini',async decide(){seen.push('gemini');return {action:'inspect_handoff',input:{}};}}
+  ]});
+  assert.deepEqual(await run.decide({remainingMs:5000}),{action:'inspect_handoff',input:{}});
+  assert.deepEqual(seen,['openrouter','gemini']);
+  assert.equal(run.attempts[0].status,'truncated_response');
+});
 test('three configured adapters recover across actual request envelopes without OpenAI calls', async()=>{
   const urls=[];
   const env={GROQ_API_KEY:'test-only',OPENROUTER_API_KEY:'test-only',GEMINI_API_KEY:'test-only'};

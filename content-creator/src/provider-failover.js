@@ -9,6 +9,7 @@ export const FAILOVER_ELIGIBLE_STATUSES = Object.freeze([
   "access_denied",
   "endpoint_or_model_not_found",
   "request_rejected",
+  "truncated_response",
   "provider_error"
 ]);
 
