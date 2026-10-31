@@ -17,6 +17,7 @@ import { SupabaseReviewStore } from "./supabase-review-store.js";
 import { SupabaseAuthVerifier } from "./supabase-auth.js";
 import { createRevisionGenerator } from "./revision-generator.js";
 import { createAgentModel } from "./agent-model.js";
+import { createFreeAgentModel } from "./free-agent-model.js";
 import { createAgentSystem } from "./agent-system.js";
 import { createGrowthPilot, createCampaignMetadata } from "./growth-pilot.js";
 import { getTikTokConnectionPlan } from "./tiktok-connection.js";
@@ -201,7 +202,14 @@ export function createServer({
   }
 
   async function contentResultFor(brief, options = {}) {
-    if (providerMode === "agents" && agentSystem) return decorateCampaignResult(await agentSystem.generate(brief, options), brief);
+    if (providerMode === "agents" && agentSystem) return decorateCampaignResult(await generateWithFailover({
+      brief,
+      primaryWriter: { generate: input => agentSystem.generate(input, options) },
+      primaryLabel: "Free agent writers (Groq → OpenRouter → Gemini)",
+      backupWriters: [],
+      templateFallback: true,
+      logger: logProviderFailure
+    }), brief);
     if (providerMode === "template") return decorateCampaignResult(createContentDraft(brief), brief);
     if (providerMode === "groq" && groqWriter) {
       return decorateCampaignResult(await generateWithFailover({
@@ -620,7 +628,7 @@ export async function createConfiguredRequestHandler() {
   const providerMode = process.env.CONTENT_CREATOR_PROVIDER || (process.env.OPENROUTER_API_KEY ? "agents" : "template");
   const backupProvider = process.env.CONTENT_CREATOR_BACKUP_PROVIDER || "none";
   const draftHistory = createDraftHistory();
-  const agentSystem = providerMode === "agents" ? createAgentSystem({ model: createAgentModel({ apiKey: process.env.OPENROUTER_API_KEY, model: process.env.OPENROUTER_MODEL || DEFAULT_OPENROUTER_MODEL }), history: draftHistory, budgetMs: 55000 }) : null;
+  const agentSystem = providerMode === "agents" ? createAgentSystem({ model: createFreeAgentModel(), history: draftHistory, budgetMs: 55000 }) : null;
   const openAIWriter = providerMode === "openai"
     ? createOpenAIWriter({ apiKey: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL, history: draftHistory })
     : null;
