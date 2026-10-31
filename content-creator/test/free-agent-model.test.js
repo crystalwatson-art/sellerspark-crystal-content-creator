@@ -34,6 +34,12 @@ test('three configured adapters recover across actual request envelopes without 
   const model=createFreeAgentModel({env,fetchImpl:async(url,init)=>{
     urls.push(url);
     const payload=JSON.parse(init.body);
+    if(url.includes('api.groq.com')) {
+      assert.equal(payload.response_format.type,'json_schema');
+      assert.deepEqual(payload.response_format.json_schema.schema.properties.action.enum,['read_brief','stop']);
+      assert.equal(payload.reasoning_effort,'low');
+      assert.equal(payload.reasoning,undefined);
+    }
     if(url.includes('googleapis.com')) {
       assert.equal(payload.response_format.mime_type,'application/json');
       return {ok:true,status:200,json:async()=>({outputs:[{type:'text',text:'{"action":"read_brief","input":{}}'}]})};
