@@ -1,11 +1,19 @@
 # SellerSpark — Crystal's Content Creator
 
+Latest live checkpoint — October 31: the real Content Creator and Listing Optimizer
+completed three AI drafts for human review in 23.508 seconds after Groq and
+OpenRouter rate limits, recovering through Gemini 3.5 Flash-Lite. The tested
+deployment is assigned to the stable private preview. **227 automated tests pass.**
+This is server-side live-agent evidence; a fresh signed-in browser pass, the
+ten-case evaluation and peer red-team remain separate. See
+[the live verification report](reports/verified-live-two-agent-fix-20261031.md).
+
 Latest TikTok update: followers refresh automatically on signed-in startup and
 every two minutes while the tab is visible. Authorized per-video views refresh
 on the same schedule, preserving the selected video page. The follower goal is
 editable and saved per owner on this device; the same goal follows the user
 across audience locations. Current followers are read-only TikTok data. Video
-views require the separate `video.list` consent. **224 automated tests pass.**
+views require the separate `video.list` consent.
 See [the automatic metrics report](reports/automatic-tiktok-metrics-20261030.md).
 
 ## Current independent build — October 30, 2026
