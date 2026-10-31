@@ -10,16 +10,22 @@ export function createAgentModel({ apiKey, model = 'openrouter/free', request, f
     provider: 'openrouter',
     model,
     async decide({ role, instructions, context, observations, tools, remainingMs }) {
+      // Expose prerequisites before writing/review tools. A first-turn model
+      // must read its evidence rather than spending output on an invalid draft.
+      const firstTool = role === 'content_creator' ? 'read_brief' : role === 'listing_optimizer' ? 'inspect_handoff' : null;
+      const availableTools = observations.length === 0 && firstTool
+        ? Object.fromEntries(Object.entries(tools).filter(([name]) => name === firstTool || name === 'stop'))
+        : tools;
       const send = request || createHttpJsonRequest({ apiKey, endpoint: OPENROUTER_CHAT_ENDPOINT, providerLabel: 'OpenRouter', fetchImpl, timeoutMs: Math.min(30000, remainingMs) });
       if (!send) throw Object.assign(new Error('Agent provider not configured'), { code: 'not_configured' });
       const result = await send({
         model,
         messages: [
-          { role: 'system', content: instructions + ' Your response is ONE tool action, never the final drafts directly. The action value must exactly match a tool key below. For example, {"action":"read_brief","input":{}} reads the brief; {"action":"check_drafts","input":{"drafts":[...]}} checks writing. Return only the action JSON; no reasoning or commentary. Tools and their input contracts: ' + JSON.stringify(tools) },
+          { role: 'system', content: instructions + ' Your response is ONE tool action, never the final drafts directly. The action value must exactly match an AVAILABLE tool key below. Return only the action JSON; no reasoning or commentary. Available tools and their input contracts: ' + JSON.stringify(availableTools) },
           { role: 'user', content: JSON.stringify({ context, observations }) }
         ],
         ...(model.startsWith('liquid/') ? { response_format: { type: 'json_object' } } : {
-          response_format: { type: 'json_schema', json_schema: { name: 'agent_action', strict: false, schema: { type: 'object', properties: { action: { type: 'string', enum: Object.keys(tools) }, input: { type: 'object' } }, required: ['action','input'], additionalProperties: false } } },
+          response_format: { type: 'json_schema', json_schema: { name: 'agent_action', strict: false, schema: { type: 'object', properties: { action: { type: 'string', enum: Object.keys(availableTools) }, input: { type: 'object' } }, required: ['action','input'], additionalProperties: false } } },
           reasoning: { effort: 'none', exclude: true }
         }),
         // A model may choose check_drafts on any turn, whose input contains
