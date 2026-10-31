@@ -64,3 +64,5 @@ input,select,textarea{border:1px solid var(--border);background:transparent;max-
 #drafts .review-state{display:block;color:var(--gold);font-size:.73rem;margin:8px 0 12px}
 
 @media(max-width:600px){#drafts{grid-template-columns:1fr;margin-top:30px;width:100%}#draft-modal{padding:12px}#draft-modal .modal-dialog{width:100%;max-height:calc(100dvh - 24px);padding:20px}#draft-modal .modal-columns{grid-template-columns:1fr}}
+/* Keep the two closed disclosures compact so the room remains visible. */
+#view-creator > .workflow-details:not([open]){width:min(100%,26rem);max-width:100%;box-sizing:border-box}
