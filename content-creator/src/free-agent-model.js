@@ -41,14 +41,14 @@ export function createFailoverAgentModel({ models, now = Date.now }) {
 }
 
 export function createFreeAgentModel({ env = process.env, fetchImpl = globalThis.fetch } = {}) {
-  const groq = createAgentModel({ request: env.GROQ_API_KEY ? async payload => {
+  const groq = createAgentModel({ request: env.GROQ_API_KEY ? async (payload, remainingMs) => {
     const { reasoning, ...body } = payload;
-    return createHttpJsonRequest({ apiKey: env.GROQ_API_KEY, endpoint: GROQ_CHAT_ENDPOINT, providerLabel: 'Groq', fetchImpl, timeoutMs: 15000 })({ ...body, model: env.GROQ_MODEL || DEFAULT_GROQ_MODEL, response_format: { type: 'json_object' } });
+    return createHttpJsonRequest({ apiKey: env.GROQ_API_KEY, endpoint: GROQ_CHAT_ENDPOINT, providerLabel: 'Groq', fetchImpl, timeoutMs: Math.min(15000, remainingMs) })({ ...body, model: env.GROQ_MODEL || DEFAULT_GROQ_MODEL, reasoning_effort: 'low' });
   } : undefined });
   groq.provider = 'groq'; groq.model = env.GROQ_MODEL || DEFAULT_GROQ_MODEL;
   const openrouter = createAgentModel({ apiKey: env.OPENROUTER_API_KEY, model: env.OPENROUTER_MODEL || 'openrouter/free', fetchImpl });
-  const gemini = createAgentModel({ request: env.GEMINI_API_KEY ? async payload => {
-    const result = await createGeminiRequest({ apiKey: env.GEMINI_API_KEY, fetchImpl, timeoutMs: 15000 })({
+  const gemini = createAgentModel({ request: env.GEMINI_API_KEY ? async (payload, remainingMs) => {
+    const result = await createGeminiRequest({ apiKey: env.GEMINI_API_KEY, fetchImpl, timeoutMs: Math.min(15000, remainingMs) })({
       model: env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL,
       input: payload.messages.map(message => message.content).join('\n\n'),
       response_format: { type: 'text', mime_type: 'application/json', schema: { type: 'object', properties: { action: { type: 'string' }, input: { type: 'object' } }, required: ['action', 'input'] } }
