@@ -45,7 +45,7 @@ export function parseGeminiResponse(response) {
   return JSON.parse(content);
 }
 
-function createGeminiRequest({ apiKey, fetchImpl = globalThis.fetch, timeoutMs = 10000 }) {
+export function createGeminiRequest({ apiKey, fetchImpl = globalThis.fetch, timeoutMs = 10000 }) {
   if (!apiKey || typeof fetchImpl !== "function") return null;
 
   return async (payload) => {
@@ -109,3 +109,4 @@ export function createGeminiWriter({
     notConfiguredMessage: "Gemini backup writer is not configured; no AI request was made."
   });
 }
+
