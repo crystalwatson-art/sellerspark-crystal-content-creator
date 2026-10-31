@@ -54,6 +54,17 @@ test('signed-in Generate saves decisions and a fresh browser resumes them withou
   const nativeFetch = globalThis.fetch;
   const original = Object.fromEntries(['window','document','location','localStorage','sessionStorage','MutationObserver','CustomEvent','Event'].map(key => [key, globalThis[key]]));
   let dom;
+  const pendingRequests = new Set();
+  async function closeBrowser() {
+    // Let authentication/TikTok refresh callbacks settle before removing the
+    // simulated browser globals. Closing JSDOM does not cancel native fetches.
+    for (let turn = 0; turn < 20; turn++) {
+      await Promise.allSettled([...pendingRequests]);
+      await new Promise(resolve => setImmediate(resolve));
+      if (!pendingRequests.size) break;
+    }
+    dom?.window.close();
+  }
   function installBrowser(route = "/#creator") {
     dom = new JSDOM(html, { url: base + route, pretendToBeVisual: true });
     const w = dom.window;
@@ -61,12 +72,17 @@ test('signed-in Generate saves decisions and a fresh browser resumes them withou
     w.HTMLDialogElement.prototype.close = function () { this.open = false; };
     w.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
     for (const key of Object.keys(original)) globalThis[key] = key === 'window' ? w : w[key];
-    globalThis.fetch = (url, options) => nativeFetch(new URL(url, base), options);
+    globalThis.fetch = (url, options) => {
+      const request = nativeFetch(new URL(url, base), options);
+      const tracked = request.finally(() => pendingRequests.delete(tracked));
+      pendingRequests.add(tracked);
+      return tracked;
+    };
     w.sessionStorage.setItem('sellerspark-supabase-session-v1', JSON.stringify({ accessToken: 'synthetic-owner-session', userId: owner, expiresAt: Date.now() + 3600000 }));
     return id => w.document.getElementById(id);
   }
   t.after(async () => {
-    dom?.window.close(); globalThis.fetch = nativeFetch;
+    await closeBrowser(); globalThis.fetch = nativeFetch;
     for (const [key, value] of Object.entries(original)) if (value === undefined) delete globalThis[key]; else globalThis[key] = value;
     await new Promise(resolve => server.close(resolve)); await rm(dir, { recursive: true, force: true });
   });
@@ -95,7 +111,7 @@ test('signed-in Generate saves decisions and a fresh browser resumes them withou
   $('optimizer-accept').click();
   await waitFor(() => rows[0].listing_review.reviews[0].status === 'accepted' && $('optimizer-review-status').textContent === 'Accepted');
   const savedHook = rows[0].listing_review.reviews[0].working.hook;
-  dom.window.close();
+  await closeBrowser();
   $ = installBrowser();
   assert.equal(localStorage.length, 0, 'the second browser has no cached drafts');
   await import('../public/app.js?account-resume-second');
@@ -106,7 +122,7 @@ test('signed-in Generate saves decisions and a fresh browser resumes them withou
   assert.equal(rows.length, 1, 'resuming must not create a duplicate review');
   assert.equal(rows[0].listing_review.reviews[0].working.script, 'My personally revised wording for this draft.');
   assert.ok(rows[0].listing_review.reviews[0].cardVersions.length >= 2);
-  dom.window.close();
+  await closeBrowser();
   $ = installBrowser('/?tiktok=error&reason=provider_client_invalid#home');
   await import('../public/app.js?account-resume-callback');
   await waitFor(() => $('auth-status').textContent.startsWith('Signed in'));

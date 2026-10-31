@@ -628,7 +628,7 @@ export async function createConfiguredRequestHandler() {
   const providerMode = process.env.CONTENT_CREATOR_PROVIDER || ([process.env.GROQ_API_KEY, process.env.OPENROUTER_API_KEY, process.env.GEMINI_API_KEY].some(Boolean) ? "agents" : "template");
   const backupProvider = process.env.CONTENT_CREATOR_BACKUP_PROVIDER || "none";
   const draftHistory = createDraftHistory();
-  const agentSystem = providerMode === "agents" ? createAgentSystem({ model: createFreeAgentModel(), history: draftHistory, budgetMs: 55000 }) : null;
+  const agentSystem = providerMode === "agents" ? createAgentSystem({ model: createFreeAgentModel(), history: draftHistory, budgetMs: 120000 }) : null;
   const openAIWriter = providerMode === "openai"
     ? createOpenAIWriter({ apiKey: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL, history: draftHistory })
     : null;

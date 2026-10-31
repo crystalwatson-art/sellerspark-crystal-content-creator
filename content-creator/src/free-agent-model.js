@@ -48,10 +48,11 @@ export function createFreeAgentModel({ env = process.env, fetchImpl = globalThis
   groq.provider = 'groq'; groq.model = env.GROQ_MODEL || DEFAULT_GROQ_MODEL;
   const openrouter = createAgentModel({ apiKey: env.OPENROUTER_API_KEY, model: env.OPENROUTER_MODEL || 'openrouter/free', fetchImpl });
   const gemini = createAgentModel({ request: env.GEMINI_API_KEY ? async (payload, remainingMs) => {
-    const result = await createGeminiRequest({ apiKey: env.GEMINI_API_KEY, fetchImpl, timeoutMs: Math.min(15000, remainingMs) })({
+    const result = await createGeminiRequest({ apiKey: env.GEMINI_API_KEY, fetchImpl, timeoutMs: Math.min(30000, remainingMs) })({
       model: env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL,
       input: payload.messages.map(message => message.content).join('\n\n'),
-      response_format: { type: 'text', mime_type: 'application/json', schema: { type: 'object', properties: { action: { type: 'string' }, input: { type: 'object' } }, required: ['action', 'input'] } }
+      generation_config: { thinking_level: 'low', max_output_tokens: payload.max_tokens, temperature: payload.temperature },
+      response_format: { type: 'text', mime_type: 'application/json', schema: payload.response_format.json_schema?.schema || { type: 'object', properties: { action: { type: 'string' }, input: { type: 'object' } }, required: ['action', 'input'] } }
     });
     return { choices: [{ message: { content: JSON.stringify(parseGeminiResponse(result)) } }] };
   } : undefined });

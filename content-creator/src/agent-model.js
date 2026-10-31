@@ -27,7 +27,7 @@ export function createAgentModel({ apiKey, model = 'openrouter/free', request, f
           }
           return true;
         }));
-      const send = request || createHttpJsonRequest({ apiKey, endpoint: OPENROUTER_CHAT_ENDPOINT, providerLabel: 'OpenRouter', fetchImpl, timeoutMs: Math.min(15000, remainingMs) });
+      const send = request || createHttpJsonRequest({ apiKey, endpoint: OPENROUTER_CHAT_ENDPOINT, providerLabel: 'OpenRouter', fetchImpl, timeoutMs: Math.min(25000, remainingMs) });
       if (!send) throw Object.assign(new Error('Agent provider not configured'), { code: 'not_configured' });
       const result = await send({
         model,
