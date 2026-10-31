@@ -14,10 +14,20 @@ export function createAgentModel({ apiKey, model = 'openrouter/free', request, f
       // must read its evidence rather than spending output on an invalid draft.
       const firstTool = role === 'content_creator' ? 'read_brief' : role === 'listing_optimizer' ? 'inspect_handoff' : null;
       const needsEvidence = firstTool && !observations.some(observation => observation.tool === firstTool && observation.ok !== false);
+      const latestCheck = observations.findLast(observation => observation.tool === 'check_drafts');
       const availableTools = needsEvidence
         ? Object.fromEntries(Object.entries(tools).filter(([name]) => name === firstTool || name === 'stop'))
-        : tools;
-      const send = request || createHttpJsonRequest({ apiKey, endpoint: OPENROUTER_CHAT_ENDPOINT, providerLabel: 'OpenRouter', fetchImpl, timeoutMs: Math.min(30000, remainingMs) });
+        : Object.fromEntries(Object.entries(tools).filter(([name]) => {
+          if (name === firstTool) return false;
+          if (role === 'content_creator' && name === 'send_to_optimizer') return latestCheck?.ok === true;
+          if (role === 'listing_optimizer') {
+            if (name === 'finish') return latestCheck?.ok === true;
+            if (name === 'request_revision') return Boolean(latestCheck);
+            if (name === 'check_drafts') return !latestCheck;
+          }
+          return true;
+        }));
+      const send = request || createHttpJsonRequest({ apiKey, endpoint: OPENROUTER_CHAT_ENDPOINT, providerLabel: 'OpenRouter', fetchImpl, timeoutMs: Math.min(15000, remainingMs) });
       if (!send) throw Object.assign(new Error('Agent provider not configured'), { code: 'not_configured' });
       const result = await send({
         model,
@@ -33,7 +43,7 @@ export function createAgentModel({ apiKey, model = 'openrouter/free', request, f
         // three complete drafts. Observation count cannot predict output size.
         max_tokens: 8000,
         temperature: 0.2
-      });
+      }, remainingMs);
       return parseOpenRouterResponse(result);
     }
   };
