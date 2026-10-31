@@ -7,8 +7,8 @@ import {
 } from "./openai-writer.js";
 
 export const GEMINI_WRITER = "gemini";
-export const GEMINI_WRITER_LABEL = "Google Gemini 3.8 Flash writer";
-export const DEFAULT_GEMINI_MODEL = "gemini-3.8-flash";
+export const GEMINI_WRITER_LABEL = "Google Gemini 3.5 Flash-Lite writer";
+export const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash-lite";
 export const GEMINI_INTERACTIONS_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/interactions";
 
 export function buildGeminiRequest({ model, brief, recentDrafts = [], rewriteContext = null }) {

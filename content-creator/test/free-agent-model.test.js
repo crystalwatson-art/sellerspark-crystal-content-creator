@@ -53,7 +53,8 @@ test('three configured adapters recover across actual request envelopes without 
     }
     if(url.includes('googleapis.com')) {
       assert.equal(payload.response_format.mime_type,'application/json');
-      assert.equal(payload.generation_config.thinking_level,'low');
+      assert.equal(payload.model,'gemini-3.5-flash-lite');
+      assert.equal(payload.generation_config.thinking_level,'minimal');
       assert.equal(payload.generation_config.max_output_tokens,1024);
       assert.deepEqual(payload.response_format.schema.properties.action.enum,['read_brief','stop']);
       return {ok:true,status:200,json:async()=>({outputs:[{type:'text',text:'{"action":"read_brief","input":{}}'}]})};
@@ -65,6 +66,22 @@ test('three configured adapters recover across actual request envelopes without 
   assert.deepEqual(model.attempts.map(attempt=>attempt.provider),['groq','openrouter','gemini']);
   assert.equal(urls.length,3);
   assert.ok(urls.every(url=>!url.includes('api.openai.com')));
+});
+
+test('all-backup failure can resume the same decision once after a bounded declared quota cooldown',async()=>{
+  let clock=0, primaryCalls=0;
+  const inputs=[],waits=[];
+  const run=createFailoverAgentModel({now:()=>clock,wait:async ms=>{waits.push(ms);clock+=ms;},models:[
+    {configured:true,provider:'groq',async decide(input){inputs.push(input);if(++primaryCalls!==2)throw Object.assign(new Error('limited'),{code:'rate_limited',retryAfter:'2'});return {action:'finish',input:{}};}},
+    {configured:true,provider:'gemini',async decide(){throw Object.assign(new Error('unavailable'),{httpStatus:503,code:'provider_error'});}}
+  ]});
+  const context={candidate:'same checked handoff'},observations=[{tool:'check_drafts',ok:true}];
+  const input={role:'listing_optimizer',context,observations,remainingMs:10000};
+  assert.equal((await run.decide(input)).action,'finish');
+  assert.deepEqual(waits,[2000]);
+  assert.ok(inputs.every(i=>i.context===context && i.observations===observations));
+  await assert.rejects(run.decide(input),{code:'rate_limited'});
+  assert.deepEqual(waits,[2000],'no repeated cooldown loop within this generation');
 });
 
 test('draft request communicates the same package and scene counts enforced by validation', async()=>{

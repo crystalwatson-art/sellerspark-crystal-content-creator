@@ -5,20 +5,24 @@ import { DEFAULT_GROQ_MODEL, GROQ_CHAT_ENDPOINT } from './groq-writer.js';
 import { createGeminiRequest, parseGeminiResponse, DEFAULT_GEMINI_MODEL } from './gemini-writer.js';
 
 // Keep the same role, task, observations and permissions across transport recovery.
-// Failed providers remain skipped for the remainder of this generation.
-export function createFailoverAgentModel({ models, now = Date.now }) {
+// Failed providers are skipped, except for one bounded, provider-declared
+// quota cooldown after every backup has failed.
+export function createFailoverAgentModel({ models, now = Date.now, wait = ms => new Promise(resolve => setTimeout(resolve, ms)) }) {
   const configured = models.filter(model => model?.configured);
   let failed = new Set();
   const attempts = [];
+  const cooldowns = new Map();
+  let cooldownUsed = false;
   return {
     configured: configured.length > 0,
     provider: 'free_provider_failover',
     model: configured.map(model => model.model).join(' → '),
     attempts,
-    forRun() { return createFailoverAgentModel({ models, now }); },
+    forRun() { return createFailoverAgentModel({ models, now, wait }); },
     async decide(input) {
       const started = now(); let lastError;
-      for (const model of configured) {
+      for (let pass = 0; pass < 2; pass++) {
+       for (const model of configured) {
         if (failed.has(model)) continue;
         const remainingMs = input.remainingMs - (now() - started);
         if (remainingMs <= 0) throw Object.assign(new Error('time_limit'), { code: 'time_limit' });
@@ -32,8 +36,20 @@ export function createFailoverAgentModel({ models, now = Date.now }) {
           // Evidence, malformed output, validation and safety failures never
           // become a reason to shop for a less restrictive provider.
           if (!FAILOVER_ELIGIBLE_STATUSES.includes(status)) throw error;
+          const retrySeconds = Number(error.retryAfter);
+          if (status === 'rate_limited' && Number.isFinite(retrySeconds) && retrySeconds > 0 && retrySeconds <= 60) cooldowns.set(model, now() + retrySeconds * 1000);
           failed.add(model); lastError = error;
         }
+       }
+       // Only after all backups are unavailable, honor one provider-declared
+       // short cooldown. Resume the same decision, never restart either agent.
+       const recoverable = !cooldownUsed && configured.find(model => cooldowns.has(model) && Math.max(0,cooldowns.get(model)-now()) + 5000 < input.remainingMs - (now()-started));
+       if (!recoverable) break;
+       cooldownUsed = true;
+       const waitMs = Math.max(0,cooldowns.get(recoverable)-now());
+       attempts.push({provider:recoverable.provider,status:'quota_cooldown',waitMs});
+       await wait(waitMs);
+       failed.delete(recoverable);
       }
       throw lastError || Object.assign(new Error('No free writer available'), { code: 'not_configured' });
     }
@@ -51,7 +67,7 @@ export function createFreeAgentModel({ env = process.env, fetchImpl = globalThis
     const result = await createGeminiRequest({ apiKey: env.GEMINI_API_KEY, fetchImpl, timeoutMs: Math.min(30000, remainingMs) })({
       model: env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL,
       input: payload.messages.map(message => message.content).join('\n\n'),
-      generation_config: { thinking_level: 'low', max_output_tokens: payload.max_tokens, temperature: payload.temperature },
+      generation_config: { thinking_level: (env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL) === 'gemini-3.5-flash-lite' ? 'minimal' : 'low', max_output_tokens: payload.max_tokens },
       response_format: { type: 'text', mime_type: 'application/json', schema: payload.response_format.json_schema?.schema || { type: 'object', properties: { action: { type: 'string' }, input: { type: 'object' } }, required: ['action', 'input'] } }
     });
     return { choices: [{ message: { content: JSON.stringify(parseGeminiResponse(result)) } }] };
