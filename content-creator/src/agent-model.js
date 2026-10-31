@@ -10,8 +10,7 @@ export function createAgentModel({ apiKey, model = 'openrouter/free', request, f
     provider: 'openrouter',
     model,
     async decide({ role, instructions, context, observations, tools, remainingMs }) {
-      const writing = role === 'content_creator' && observations.length > 0;
-      const send = request || createHttpJsonRequest({ apiKey, endpoint: OPENROUTER_CHAT_ENDPOINT, providerLabel: 'OpenRouter', fetchImpl, timeoutMs: Math.min(writing ? 30000 : 12000, remainingMs) });
+      const send = request || createHttpJsonRequest({ apiKey, endpoint: OPENROUTER_CHAT_ENDPOINT, providerLabel: 'OpenRouter', fetchImpl, timeoutMs: Math.min(30000, remainingMs) });
       if (!send) throw Object.assign(new Error('Agent provider not configured'), { code: 'not_configured' });
       const result = await send({
         model,
@@ -23,7 +22,10 @@ export function createAgentModel({ apiKey, model = 'openrouter/free', request, f
           response_format: { type: 'json_schema', json_schema: { name: 'agent_action', strict: false, schema: { type: 'object', properties: { action: { type: 'string', enum: Object.keys(tools) }, input: { type: 'object' } }, required: ['action','input'], additionalProperties: false } } },
           reasoning: { effort: 'none', exclude: true }
         }),
-        max_tokens: writing ? 3500 : 768
+        // A model may choose check_drafts on any turn, whose input contains
+        // three complete drafts. Observation count cannot predict output size.
+        max_tokens: 8000,
+        temperature: 0.2
       });
       return parseOpenRouterResponse(result);
     }
