@@ -119,6 +119,8 @@ export const MODEL_OUTPUT_SCHEMA = {
   properties: {
     drafts: {
       type: "array",
+      minItems: 3,
+      maxItems: 3,
       items: {
         type: "object",
         additionalProperties: false,
@@ -128,11 +130,11 @@ export const MODEL_OUTPUT_SCHEMA = {
           script: { type: "string" },
           takeaway: { type: "string" },
           caption: { type: "string" },
-          hashtags: { type: "array", items: { type: "string" } },
+          hashtags: { type: "array", minItems: 1, items: { type: "string" } },
           suggestedNextStep: { type: "string" },
           reasonToFollow: { type: "string" },
           videoConcept: { type: "string" },
-          suggestedScenes: { type: "array", items: { type: "string" } },
+          suggestedScenes: { type: "array", minItems: 3, items: { type: "string" } },
           supportingClaimIds: { type: "array", items: { type: "string" } }
         },
         required: [
@@ -347,7 +349,7 @@ export function validateModelOutput(output, brief, baseline) {
   return null;
 }
 
-function validationReasonCode(message) {
+export function validationReasonCode(message) {
   if (/exactly three drafts/i.test(message)) return "draft_count";
   if (/unexpected creative angle/i.test(message)) return "creative_angle";
   if (/incomplete draft/i.test(message)) return "required_field";

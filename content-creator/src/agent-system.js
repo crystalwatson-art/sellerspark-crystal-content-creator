@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { createContentDraft } from './content-creator.js';
-import { buildResearchInput, MODEL_OUTPUT_SCHEMA, validateModelOutput, mergeModelDrafts, WRITER_INSTRUCTIONS, classifyProviderError } from './openai-writer.js';
+import { buildResearchInput, MODEL_OUTPUT_SCHEMA, validateModelOutput, validationReasonCode, mergeModelDrafts, WRITER_INSTRUCTIONS, classifyProviderError } from './openai-writer.js';
 import { evaluateDraftSetQuality } from './editorial-quality.js';
 import { findRepetition } from './draft-history.js';
 
@@ -54,6 +54,7 @@ export function createAgentSystem({ model: configuredModel, history = null, now 
         // Only action names, counters and classified errors enter runtime logs.
         // Never log provider payloads, task text, credentials or raw exceptions.
         console.warn('SellerSpark agent stopped', JSON.stringify({ ...runInfo(reason), diagnostic }));
+        console.warn('SellerSpark recovery summary', JSON.stringify({id:runId,stopReason:reason,providerAttempts:model?.attempts || [],checks:trace.filter(e=>e.reasonCode).map(e=>({agent:e.agent,reasonCode:e.reasonCode}))}));
         return { ...baseline, writer: 'agent_system', writerLabel: 'Content Creator + Listing Optimizer', writerStatus: diagnostic?.writerStatus || reason, ...(diagnostic ? { diagnostic } : {}), status: 'needs_more_research', drafts: [], agentRun: runInfo(reason), humanApprovalRequired: true, automaticallyPublished: false, customerContacted: false, missingInformation: [...(baseline.missingInformation || []), reason === 'not_configured' ? 'Live AI is not connected yet. Your saved drafts have not changed.' : 'The agents stopped before producing a checked draft set (' + reason + '). Your saved drafts have not changed.'] };
       };
       if (baseline.status !== 'ready_for_review') return blocked('research_gate');
@@ -139,7 +140,7 @@ export function createAgentSystem({ model: configuredModel, history = null, now 
             if (action === 'check_drafts') {
               const problem = creatorRead ? validate(input) : 'Read the brief first.';
               candidate = problem ? null : copy({ drafts: input.drafts });
-              observation = problem ? { ok: false, code: 'validation_failed', message: problem } : { ok: true, message: 'Candidate checked. You may hand it to the Optimizer.' };
+              observation = problem ? { ok: false, code: 'validation_failed', reasonCode: validationReasonCode(problem), message: problem } : { ok: true, message: 'Candidate checked. You may hand it to the Optimizer.' };
             }
             if (action === 'send_to_optimizer') {
               if (!candidate || !Number.isFinite(input.confidence) || input.confidence < 0 || input.confidence > 1 || !Array.isArray(input.uncertainties) || input.uncertainties.some(value => typeof value !== 'string' || value.length > 500)) {
@@ -176,7 +177,7 @@ export function createAgentSystem({ model: configuredModel, history = null, now 
               else return 'finished';
             }
           }
-          add(role, 'tool_result', { tool: action, ok: observation.ok !== false, ...(observation.code ? { code: observation.code } : {}) });
+          add(role, 'tool_result', { tool: action, ok: observation.ok !== false, ...(observation.code ? { code: observation.code } : {}), ...(observation.reasonCode ? {reasonCode:observation.reasonCode} : {}) });
           observations.push({ tool: action, ...copy(observation) });
         }
         throw failure('step_limit');

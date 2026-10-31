@@ -66,3 +66,17 @@ test('three configured adapters recover across actual request envelopes without 
   assert.equal(urls.length,3);
   assert.ok(urls.every(url=>!url.includes('api.openai.com')));
 });
+
+test('draft request communicates the same package and scene counts enforced by validation', async()=>{
+  let request;
+  const model=createFreeAgentModel({env:{GROQ_API_KEY:'test-only'},fetchImpl:async(url,init)=>{
+    request=JSON.parse(init.body);
+    return {ok:true,status:200,json:async()=>({choices:[{message:{content:'{"action":"stop","input":{}}'}}]})};
+  }});
+  await model.decide({role:'content_creator',instructions:'Use supplied evidence.',context:{},observations:[{tool:'read_brief',ok:true}],tools:{check_drafts:'drafts required',stop:'{}'},remainingMs:5000});
+  const schema=request.response_format.json_schema.schema.properties.input.properties.drafts;
+  assert.equal(schema.minItems,3);
+  assert.equal(schema.maxItems,3);
+  assert.equal(schema.items.properties.suggestedScenes.minItems,3);
+  assert.equal(schema.items.properties.hashtags.minItems,1);
+});
