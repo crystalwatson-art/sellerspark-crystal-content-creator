@@ -159,6 +159,18 @@ test('free-only model adapter passes the current observation to the next decisio
   assert.equal(payload.max_tokens, 8000, 'first-turn writing must not be truncated by a control-only budget');
 });
 
+test('first decisions expose evidence-reading tools before drafting and review tools', async () => {
+  let payload;
+  const model = createAgentModel({ request: async body => { payload = body; return { choices: [{ message: { content: '{"action":"stop","input":{}}' } }] }; } });
+  for (const [role, prerequisite] of [['content_creator', 'read_brief'], ['listing_optimizer', 'inspect_handoff']]) {
+    await model.decide({ role, instructions: 'Use evidence.', context: {}, observations: [], tools: { [prerequisite]: '{}', check_drafts: 'draft schema', stop: '{}' }, remainingMs: 1000 });
+    assert.deepEqual(payload.response_format.json_schema.schema.properties.action.enum, [prerequisite, 'stop']);
+    assert.doesNotMatch(payload.messages[0].content, /draft schema/);
+    await model.decide({ role, instructions: 'Use evidence.', context: {}, observations: [{ ok: true }], tools: { [prerequisite]: '{}', check_drafts: 'draft schema', stop: '{}' }, remainingMs: 1000 });
+    assert.ok(payload.response_format.json_schema.schema.properties.action.enum.includes('check_drafts'));
+  }
+});
+
 // Protocol regressions are simulated model decisions, explicitly separate from live evaluations.
 for (const scenario of [
   { name: 'missing audience', edit: b => delete b.audience, expected: 'research_gate' },
