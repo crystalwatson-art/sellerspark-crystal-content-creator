@@ -19,8 +19,10 @@ export function createAgentModel({ apiKey, model = 'openrouter/free', request, f
           { role: 'system', content: instructions + ' Your response is ONE tool action, never the final drafts directly. The action value must exactly match a tool key below. For example, {"action":"read_brief","input":{}} reads the brief; {"action":"check_drafts","input":{"drafts":[...]}} checks writing. Return only the action JSON; no reasoning or commentary. Tools and their input contracts: ' + JSON.stringify(tools) },
           { role: 'user', content: JSON.stringify({ context, observations }) }
         ],
-        response_format: { type: 'json_schema', json_schema: { name: 'agent_action', strict: false, schema: { type: 'object', properties: { action: { type: 'string', enum: Object.keys(tools) }, input: { type: 'object' } }, required: ['action','input'], additionalProperties: false } } },
-        reasoning: { effort: 'none', exclude: true },
+        ...(model.startsWith('liquid/') ? { response_format: { type: 'json_object' } } : {
+          response_format: { type: 'json_schema', json_schema: { name: 'agent_action', strict: false, schema: { type: 'object', properties: { action: { type: 'string', enum: Object.keys(tools) }, input: { type: 'object' } }, required: ['action','input'], additionalProperties: false } } },
+          reasoning: { effort: 'none', exclude: true }
+        }),
         max_tokens: writing ? 3500 : 768
       });
       return parseOpenRouterResponse(result);
