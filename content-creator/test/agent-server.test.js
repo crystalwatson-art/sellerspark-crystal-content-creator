@@ -7,7 +7,36 @@ import brief from '../fixtures/fictional-research-brief.json' with { type: 'json
 import { createServer } from '../src/server.js';
 import { createContentDraft } from '../src/content-creator.js';
 import { createAgentSystem } from '../src/agent-system.js';
+import { createFreeAgentModel } from '../src/free-agent-model.js';
 import { ReviewStore } from '../src/review-store.js';
+
+test('all three unavailable free writers reach a labelled template draft set and persistent human review', async t => {
+  const calls = [];
+  const model = createFreeAgentModel({ env: { GROQ_API_KEY:'synthetic',OPENROUTER_API_KEY:'synthetic',GEMINI_API_KEY:'synthetic' }, fetchImpl: async url => {
+    calls.push(url);
+    return { ok:false,status:url.includes('openrouter.ai') ? 400 : 429 };
+  } });
+  const dir = await mkdtemp(path.join(os.tmpdir(),'sellerspark-template-recovery-'));
+  const store = await new ReviewStore({filePath:path.join(dir,'reviews.json')}).init();
+  const server = createServer({providerMode:'agents',agentSystem:createAgentSystem({model}),reviewStore:store,authVerifier:{async verify(){return {userId:'synthetic-owner',accessToken:'synthetic-token'};}}});
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  t.after(async()=>{await new Promise(resolve=>server.close(resolve));await rm(dir,{recursive:true,force:true});});
+  const base='http://127.0.0.1:'+server.address().port;
+  const response=await fetch(base+'/api/content',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer synthetic-token'},body:JSON.stringify(brief)});
+  const saved=await response.json();
+  assert.equal(response.status,200);
+  assert.deepEqual(calls.map(url=>new URL(url).hostname),['api.groq.com','openrouter.ai','generativelanguage.googleapis.com']);
+  assert.equal(saved.writer,'offline_template');
+  assert.equal(saved.writerStatus,'fallback_template');
+  assert.equal(saved.writerLabel,'Offline template fallback writer');
+  assert.equal(saved.drafts.length,3);
+  assert.equal(saved.humanApprovalRequired,true);
+  assert.equal(saved.automaticallyPublished,false);
+  assert.ok(saved.listingReview.reviews.every(review=>review.status!=='accepted'));
+  const reopened=await(await fetch(base+'/api/reviews/'+saved.listingReviewId,{headers:{Authorization:'Bearer synthetic-token'}})).json();
+  assert.equal(reopened.listingReview.reviews.length,3);
+  assert.ok(reopened.listingReview.reviews.every(review=>review.status!=='accepted'));
+});
 
 test('authenticated API uses both agents, saves their trace, and regenerates only the selected card', async t => {
   let modelCalls = 0;

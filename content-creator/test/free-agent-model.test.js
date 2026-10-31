@@ -39,6 +39,7 @@ test('three configured adapters recover across actual request envelopes without 
       assert.deepEqual(payload.response_format.json_schema.schema.properties.action.enum,['read_brief','stop']);
       assert.equal(payload.reasoning_effort,'low');
       assert.equal(payload.reasoning,undefined);
+      assert.equal(payload.provider,undefined);
     }
     if(url.includes('googleapis.com')) {
       assert.equal(payload.response_format.mime_type,'application/json');

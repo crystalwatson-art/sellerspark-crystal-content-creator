@@ -8,6 +8,7 @@ export const FAILOVER_ELIGIBLE_STATUSES = Object.freeze([
   "authentication_failed",
   "access_denied",
   "endpoint_or_model_not_found",
+  "request_rejected",
   "provider_error"
 ]);
 
@@ -150,3 +151,4 @@ export async function generateWithFailover({
     outcome: "all_providers_unavailable"
   });
 }
+

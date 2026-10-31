@@ -42,7 +42,7 @@ export function createFailoverAgentModel({ models, now = Date.now }) {
 
 export function createFreeAgentModel({ env = process.env, fetchImpl = globalThis.fetch } = {}) {
   const groq = createAgentModel({ request: env.GROQ_API_KEY ? async (payload, remainingMs) => {
-    const { reasoning, ...body } = payload;
+    const { reasoning, provider, ...body } = payload;
     return createHttpJsonRequest({ apiKey: env.GROQ_API_KEY, endpoint: GROQ_CHAT_ENDPOINT, providerLabel: 'Groq', fetchImpl, timeoutMs: Math.min(15000, remainingMs) })({ ...body, model: env.GROQ_MODEL || DEFAULT_GROQ_MODEL, reasoning_effort: 'low' });
   } : undefined });
   groq.provider = 'groq'; groq.model = env.GROQ_MODEL || DEFAULT_GROQ_MODEL;

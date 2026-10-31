@@ -37,7 +37,7 @@ export function createAgentModel({ apiKey, model = 'openrouter/free', request, f
         ],
         ...(model.startsWith('liquid/') ? { response_format: { type: 'json_object' } } : {
           response_format: { type: 'json_schema', json_schema: { name: 'agent_action', strict: false, schema: { type: 'object', properties: { action: { type: 'string', enum: Object.keys(availableTools) }, input: { type: 'object' } }, required: ['action','input'], additionalProperties: false } } },
-          reasoning: { effort: 'none', exclude: true }
+          provider: { require_parameters: true }
         }),
         // A model may choose check_drafts on any turn, whose input contains
         // three complete drafts. Observation count cannot predict output size.

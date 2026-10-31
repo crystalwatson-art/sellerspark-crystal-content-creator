@@ -158,7 +158,8 @@ test('free-only model adapter passes the current observation to the next decisio
   assert.equal(payload.model, 'openrouter/free');
   assert.equal(payload.response_format.type, 'json_schema');
   assert.deepEqual(payload.response_format.json_schema.schema.properties.action.enum, ['stop']);
-  assert.equal(payload.reasoning.effort, 'none');
+  assert.equal(payload.reasoning, undefined, 'the free router must not force an unsupported reasoning setting');
+  assert.equal(payload.provider.require_parameters, true);
   assert.equal(payload.max_tokens, 8000);
   await model.decide({ role: 'content_creator', instructions: 'Decide safely.', context: {}, observations: [], tools: { check_drafts: '{}' }, remainingMs: 1000 });
   assert.equal(payload.max_tokens, 8000, 'first-turn writing must not be truncated by a control-only budget');
