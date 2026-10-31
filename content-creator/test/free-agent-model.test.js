@@ -28,3 +28,21 @@ test('invalid output cannot bypass validation by changing provider', async () =>
 test('missing credentials do not create configured free providers',()=>{
   assert.equal(createFreeAgentModel({env:{}}).configured,false);
 });
+test('three configured adapters recover across actual request envelopes without OpenAI calls', async()=>{
+  const urls=[];
+  const env={GROQ_API_KEY:'test-only',OPENROUTER_API_KEY:'test-only',GEMINI_API_KEY:'test-only'};
+  const model=createFreeAgentModel({env,fetchImpl:async(url,init)=>{
+    urls.push(url);
+    const payload=JSON.parse(init.body);
+    if(url.includes('googleapis.com')) {
+      assert.equal(payload.response_format.mime_type,'application/json');
+      return {ok:true,status:200,json:async()=>({outputs:[{type:'text',text:'{"action":"read_brief","input":{}}'}]})};
+    }
+    return {ok:false,status:429,json:async()=>({})};
+  }}).forRun();
+  const result=await model.decide({role:'content_creator',instructions:'Read evidence.',context:{},observations:[],tools:{read_brief:'{}',stop:'{}'},remainingMs:10000});
+  assert.equal(result.action,'read_brief');
+  assert.deepEqual(model.attempts.map(attempt=>attempt.provider),['groq','openrouter','gemini']);
+  assert.equal(urls.length,3);
+  assert.ok(urls.every(url=>!url.includes('api.openai.com')));
+});
