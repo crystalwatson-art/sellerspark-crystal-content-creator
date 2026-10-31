@@ -625,7 +625,7 @@ export function createRequestHandler(options = {}) {
 }
 
 export async function createConfiguredRequestHandler() {
-  const providerMode = process.env.CONTENT_CREATOR_PROVIDER || (process.env.OPENROUTER_API_KEY ? "agents" : "template");
+  const providerMode = process.env.CONTENT_CREATOR_PROVIDER || ([process.env.GROQ_API_KEY, process.env.OPENROUTER_API_KEY, process.env.GEMINI_API_KEY].some(Boolean) ? "agents" : "template");
   const backupProvider = process.env.CONTENT_CREATOR_BACKUP_PROVIDER || "none";
   const draftHistory = createDraftHistory();
   const agentSystem = providerMode === "agents" ? createAgentSystem({ model: createFreeAgentModel(), history: draftHistory, budgetMs: 55000 }) : null;
