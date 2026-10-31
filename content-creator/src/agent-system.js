@@ -38,6 +38,7 @@ export function createAgentSystem({ model: configuredModel, history = null, now 
       const baseline = createContentDraft(brief);
       const started = now();
       const trace = [];
+      const assignments = [];
       const runId = randomUUID();
       let calls = 0, revisions = 0, candidate = null, handoff = null, feedback = [];
       let creatorRead = false;
@@ -45,7 +46,7 @@ export function createAgentSystem({ model: configuredModel, history = null, now 
       const targetIndex = targetDraftId ? currentDrafts?.findIndex(draft => draft.id === targetDraftId) : null;
       const historyKey = typeof historyScope === 'string' && historyScope ? historyScope + ':' + brief?.audience : null;
       const recentDrafts = historyKey ? history?.get(historyKey) || [] : [];
-      const runInfo = stopReason => ({ id: runId, mode: 'model_directed', provider: model?.provider || 'openrouter', model: model?.model || null, modelCalls: calls, revisionHandoffs: revisions, maxRevisions: MAX_REVISIONS, stopReason, trace: copy(trace) });
+      const runInfo = stopReason => ({ id: runId, mode: 'model_directed', orchestrator: 'bounded_task_coordinator', assignments: copy(assignments), providerAttempts: copy(model?.attempts || []), provider: model?.provider || 'openrouter', model: model?.model || null, modelCalls: calls, revisionHandoffs: revisions, maxRevisions: MAX_REVISIONS, stopReason, trace: copy(trace) });
       const blocked = (reason, diagnostic = null) => {
         add('system', 'stopped', { code: reason });
         // Only action names, counters and classified errors enter runtime logs.
@@ -83,6 +84,19 @@ export function createAgentSystem({ model: configuredModel, history = null, now 
         return received;
       }
       async function loop(role) {
+        const assignment = {
+          id: runId + ':' + (assignments.length + 1),
+          role,
+          revision: revisions,
+          goal: role === 'content_creator'
+            ? (revisions ? 'Apply the Optimizer feedback, validate the corrected drafts and return the handoff.' : 'Read the brief, write three grounded drafts, validate and hand them to the Optimizer.')
+            : 'Inspect the Creator handoff, independently check the drafts and request corrections or finish for human review.',
+          permittedTools: Object.keys(toolsByRole[role]),
+          maxSteps: 6,
+          maxRevisions: MAX_REVISIONS
+        };
+        assignments.push(assignment);
+        add('orchestrator', 'task_assigned', { taskId: assignment.id, to: role, revision: revisions });
         let lastAction = null;
         const observations = [];
         let optimizerInspected = false, optimizerChecked = false;
@@ -94,7 +108,7 @@ export function createAgentSystem({ model: configuredModel, history = null, now 
           add(role, 'model_called', { call: calls });
           let timer;
           const decision = await Promise.race([
-            model.decide({ role, instructions: role === 'content_creator' ? creatorInstructions : optimizerInstructions, tools: toolsByRole[role], context: { ...copy(fixedContext), revision: revisions, feedback: copy(feedback), candidate: role === 'content_creator' ? copy(candidate) : null }, observations: copy(observations), remainingMs }),
+            model.decide({ role, instructions: role === 'content_creator' ? creatorInstructions : optimizerInstructions, tools: toolsByRole[role], context: { ...copy(fixedContext), assignment: copy(assignment), revision: revisions, feedback: copy(feedback), candidate: role === 'content_creator' ? copy(candidate) : null }, observations: copy(observations), remainingMs }),
             new Promise((_, reject) => { timer = setTimeout(() => reject(failure('time_limit')), remainingMs); })
           ]).finally(() => clearTimeout(timer));
           if (!decision || typeof decision.action !== 'string' || JSON.stringify(decision).length > 55000) throw failure('invalid_decision');
