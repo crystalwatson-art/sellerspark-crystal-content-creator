@@ -171,9 +171,29 @@ test('first decisions expose evidence-reading tools before drafting and review t
     await model.decide({ role, instructions: 'Use evidence.', context: {}, observations: [], tools: { [prerequisite]: '{}', check_drafts: 'draft schema', stop: '{}' }, remainingMs: 1000 });
     assert.deepEqual(payload.response_format.json_schema.schema.properties.action.enum, [prerequisite, 'stop']);
     assert.doesNotMatch(payload.messages[0].content, /draft schema/);
-    await model.decide({ role, instructions: 'Use evidence.', context: {}, observations: [{ ok: true }], tools: { [prerequisite]: '{}', check_drafts: 'draft schema', stop: '{}' }, remainingMs: 1000 });
+    await model.decide({ role, instructions: 'Use evidence.', context: {}, observations: [{ ok: false, code: 'invalid_decision' }], tools: { [prerequisite]: '{}', check_drafts: 'draft schema', stop: '{}' }, remainingMs: 1000 });
+    assert.deepEqual(payload.response_format.json_schema.schema.properties.action.enum, [prerequisite, 'stop'], 'format corrections do not unlock drafting before evidence');
+    await model.decide({ role, instructions: 'Use evidence.', context: {}, observations: [{ tool: prerequisite, ok: true }], tools: { [prerequisite]: '{}', check_drafts: 'draft schema', stop: '{}' }, remainingMs: 1000 });
     assert.ok(payload.response_format.json_schema.schema.properties.action.enum.includes('check_drafts'));
   }
+});
+
+test('one malformed action gets bounded feedback before evidence and all original checks still execute', async () => {
+  const original = modelWith();
+  let first = true;
+  const calls = [];
+  const result = await createAgentSystem({ model: { ...original, async decide(input) {
+    calls.push(clone(input));
+    if (first) { first = false; return outputFor(); }
+    return original.decide(input);
+  } } }).generate(brief);
+  assert.equal(result.status, 'ready_for_review');
+  assert.equal(result.agentRun.modelCalls, 7);
+  assert.equal(calls[1].observations[0].code, 'invalid_decision');
+  assert.equal(result.agentRun.trace.filter(event => event.event === 'tool_selected' && event.tool === 'read_brief').length, 1);
+  assert.ok(result.agentRun.trace.some(event => event.agent === 'listing_optimizer' && event.tool === 'check_drafts'));
+  assert.doesNotMatch(calls[0].instructions, /Return exactly three draft packages/);
+  assert.equal(result.automaticallyPublished, false);
 });
 
 // Protocol regressions are simulated model decisions, explicitly separate from live evaluations.
