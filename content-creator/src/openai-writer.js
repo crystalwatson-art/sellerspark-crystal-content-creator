@@ -410,32 +410,35 @@ export function createHttpJsonRequest({
         ...(controller ? { signal: controller.signal } : {})
       });
     } catch (error) {
+      if (timeout) clearTimeout(timeout);
       if (error?.name === "AbortError") {
         const timeoutError = new Error(providerLabel + " request timed out");
         timeoutError.code = "provider_timeout";
         throw timeoutError;
       }
       throw error;
-    } finally {
-      if (timeout) clearTimeout(timeout);
     }
 
-    if (!response.ok) {
-      const error = new Error(providerLabel + " request failed with status " + String(response.status));
-      error.code = response.status === 429 ? "rate_limited" : "provider_error";
-      error.httpStatus = response.status;
-      error.statusClass = classifyHttpStatus(response.status).statusClass;
-      error.retryAfter = response.headers?.get?.("retry-after") ?? null;
-      throw error;
-    }
     try {
-      return await response.json();
-    } catch {
-      const error = new Error("provider response was not readable as JSON");
-      error.code = "invalid_response";
-      error.httpStatus = response.status;
-      error.statusClass = classifyHttpStatus(response.status).statusClass;
-      throw error;
+      if (!response.ok) {
+        const error = new Error(providerLabel + " request failed with status " + String(response.status));
+        error.code = response.status === 429 ? "rate_limited" : "provider_error";
+        error.httpStatus = response.status;
+        error.statusClass = classifyHttpStatus(response.status).statusClass;
+        error.retryAfter = response.headers?.get?.("retry-after") ?? null;
+        throw error;
+      }
+      try {
+        return await response.json();
+      } catch (cause) {
+        const error = new Error("provider response was not readable as JSON");
+        error.code = cause?.name === "AbortError" || controller?.signal.aborted ? "provider_timeout" : "invalid_response";
+        error.httpStatus = response.status;
+        error.statusClass = classifyHttpStatus(response.status).statusClass;
+        throw error;
+      }
+    } finally {
+      if (timeout) clearTimeout(timeout);
     }
   };
 }

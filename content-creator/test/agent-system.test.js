@@ -151,7 +151,9 @@ test('free-only model adapter passes the current observation to the next decisio
   assert.deepEqual(await model.decide({ instructions: 'Decide safely.', context: { audience: 'seller' }, observations: [{ ok: false, code: 'validation_failed' }], tools: { stop: '{}' }, remainingMs: 1000 }), { action: 'stop', input: {} });
   assert.match(payload.messages[1].content, /validation_failed/);
   assert.equal(payload.model, 'openrouter/free');
-  assert.equal(payload.response_format.type, 'json_object');
+  assert.equal(payload.response_format.type, 'json_schema');
+  assert.deepEqual(payload.response_format.json_schema.schema.properties.action.enum, ['stop']);
+  assert.equal(payload.reasoning.effort, 'none');
 });
 
 // Protocol regressions are simulated model decisions, explicitly separate from live evaluations.
