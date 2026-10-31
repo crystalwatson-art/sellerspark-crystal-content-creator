@@ -648,6 +648,15 @@ function renderWriterDiagnostic(result) {
   resultDiagnostic.hidden = isReady;
   if (isReady) return;
 
+  if (result.agentRun) {
+    const run = result.agentRun;
+    const labels = { time_limit: "AI took too long", provider_timeout: "AI provider timed out", repeated_action: "AI repeated a step", step_limit: "AI could not complete its checks", revision_limit: "AI reached the revision limit", invalid_decision: "AI returned an unusable action", agent_stopped: "AI stopped before completing its checks" };
+    writerStatusValue.textContent = labels[run.stopReason] || result.diagnostic?.category?.replaceAll("_", " ") || run.stopReason?.replaceAll("_", " ") || "AI stopped";
+    writerExplanation.textContent = (result.diagnostic?.explanation || "The AI did not complete a checked draft set.") + " Your saved drafts have not changed.";
+    writerNextStep.textContent = (result.diagnostic?.nextStep || "Try again shortly.") + " Last run: " + run.modelCalls + " model decisions; " + run.trace.filter(event => event.event === "tool_selected").map(event => event.agent.replaceAll("_", " ") + ": " + event.tool.replaceAll("_", " ")).join(" → ") + ".";
+    return;
+  }
+
   if (result.researchVerification?.status === "needs_more_research") {
     const verification = result.researchVerification;
     writerStatusValue.textContent = "Research verification needed";
