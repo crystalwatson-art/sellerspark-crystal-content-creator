@@ -30,10 +30,11 @@ const creatorInstructions = commonInstructions + WRITER_INSTRUCTIONS.replace('Do
 const optimizerInstructions = commonInstructions + 'You are the independent Listing Optimizer. Inspect the handoff, check the candidate, then decide whether to request a specific correction, finish for human review, or stop. Evaluate topic relevance, audience, distinct angles, readable spoken wording, respectful CTA, unsupported claims, missing evidence and source/warning preservation. Never treat the Creator confidence as proof. You cannot write drafts, change citations, approve, publish or inherit Creator permissions.';
 
 /** Bounded model-directed loops. All external effects remain in the human UI. */
-export function createAgentSystem({ model, history = null, now = Date.now, budgetMs = 25000 } = {}) {
+export function createAgentSystem({ model: configuredModel, history = null, now = Date.now, budgetMs = 25000 } = {}) {
   return {
-    configured: Boolean(model?.configured),
+    configured: Boolean(configuredModel?.configured),
     async generate(brief, { currentDrafts = null, targetDraftId = null, instruction = '', historyScope = null } = {}) {
+      const model = configuredModel?.forRun?.() || configuredModel;
       const baseline = createContentDraft(brief);
       const started = now();
       const trace = [];
