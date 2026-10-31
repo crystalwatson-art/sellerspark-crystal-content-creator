@@ -196,6 +196,25 @@ test('one malformed action gets bounded feedback before evidence and all origina
   assert.equal(result.automaticallyPublished, false);
 });
 
+test('completed evidence and check steps cannot be reselected through the advertised action schema', async () => {
+  let payload, remaining;
+  const model = createAgentModel({ request: async (body, budget) => {
+    payload = body; remaining = budget;
+    return { choices: [{ message: { content: '{"action":"stop","input":{}}' } }] };
+  } });
+  const input = { instructions: 'Use evidence.', context: {}, remainingMs: 3000 };
+  const tools = { inspect_handoff: '{}', check_drafts: '{}', request_revision: '{}', finish: '{}', stop: '{}' };
+  await model.decide({ ...input, role: 'listing_optimizer', tools, observations: [{ tool:'inspect_handoff',ok:true }] });
+  assert.deepEqual(payload.response_format.json_schema.schema.properties.action.enum,['check_drafts','stop']);
+  await model.decide({ ...input, role: 'listing_optimizer', tools, observations: [{ tool:'inspect_handoff',ok:true },{ tool:'check_drafts',ok:true }] });
+  assert.deepEqual(payload.response_format.json_schema.schema.properties.action.enum,['request_revision','finish','stop']);
+  await model.decide({ ...input, role: 'listing_optimizer', tools, observations: [{ tool:'inspect_handoff',ok:true },{ tool:'check_drafts',ok:false }] });
+  assert.deepEqual(payload.response_format.json_schema.schema.properties.action.enum,['request_revision','stop']);
+  await model.decide({ ...input, role:'content_creator', tools:{read_brief:'{}',check_drafts:'{}',send_to_optimizer:'{}',stop:'{}'}, observations:[{tool:'read_brief',ok:true}] });
+  assert.deepEqual(payload.response_format.json_schema.schema.properties.action.enum,['check_drafts','stop']);
+  assert.equal(remaining,3000,'custom provider adapters receive the remaining deadline');
+});
+
 // Protocol regressions are simulated model decisions, explicitly separate from live evaluations.
 for (const scenario of [
   { name: 'missing audience', edit: b => delete b.audience, expected: 'research_gate' },
