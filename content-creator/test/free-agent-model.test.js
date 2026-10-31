@@ -44,7 +44,7 @@ test('three configured adapters recover across actual request envelopes without 
     if(url.includes('googleapis.com')) {
       assert.equal(payload.response_format.mime_type,'application/json');
       assert.equal(payload.generation_config.thinking_level,'low');
-      assert.equal(payload.generation_config.max_output_tokens,8000);
+      assert.equal(payload.generation_config.max_output_tokens,1024);
       assert.deepEqual(payload.response_format.schema.properties.action.enum,['read_brief','stop']);
       return {ok:true,status:200,json:async()=>({outputs:[{type:'text',text:'{"action":"read_brief","input":{}}'}]})};
     }

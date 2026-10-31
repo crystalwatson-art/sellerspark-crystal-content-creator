@@ -49,9 +49,12 @@ export function createAgentModel({ apiKey, model = 'openrouter/free', request, f
           response_format: { type: 'json_schema', json_schema: { name: 'agent_action', strict: false, schema: { type: 'object', properties: { action: { type: 'string', enum: Object.keys(availableTools) }, input: { type: 'object',properties:inputProperties,additionalProperties:false } }, required: ['action','input'], additionalProperties: false } } },
           provider: { require_parameters: true }
         }),
-        // A model may choose check_drafts on any turn, whose input contains
-        // three complete drafts. Observation count cannot predict output size.
-        max_tokens: 8000,
+        // Only Creator drafting needs room for three full packages. Reserving
+        // that allowance for evidence reads and empty review actions needlessly
+        // consumes scarce free-tier token capacity. Use the advertised tool
+        // set, not observation count, so a valid drafting turn stays untruncated.
+        max_tokens: role === 'content_creator' && availableTools.check_drafts
+          ? 8000 : needsEvidence ? 1024 : 2048,
         temperature: 0.2
       }, remainingMs);
       return parseOpenRouterResponse(result);

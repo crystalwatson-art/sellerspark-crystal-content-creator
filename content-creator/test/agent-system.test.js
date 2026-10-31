@@ -160,9 +160,9 @@ test('free-only model adapter passes the current observation to the next decisio
   assert.deepEqual(payload.response_format.json_schema.schema.properties.action.enum, ['stop']);
   assert.equal(payload.reasoning, undefined, 'the free router must not force an unsupported reasoning setting');
   assert.equal(payload.provider.require_parameters, true);
-  assert.equal(payload.max_tokens, 8000);
-  await model.decide({ role: 'content_creator', instructions: 'Decide safely.', context: {}, observations: [], tools: { check_drafts: '{}' }, remainingMs: 1000 });
-  assert.equal(payload.max_tokens, 8000, 'first-turn writing must not be truncated by a control-only budget');
+  assert.equal(payload.max_tokens, 2048);
+  await model.decide({ role: 'content_creator', instructions: 'Decide safely.', context: {}, observations: [{tool:'read_brief',ok:true}], tools: { check_drafts: '{}' }, remainingMs: 1000 });
+  assert.equal(payload.max_tokens, 8000, 'an unlocked drafting action retains room for complete packages');
 });
 
 test('first decisions expose evidence-reading tools before drafting and review tools', async () => {
@@ -171,11 +171,13 @@ test('first decisions expose evidence-reading tools before drafting and review t
   for (const [role, prerequisite] of [['content_creator', 'read_brief'], ['listing_optimizer', 'inspect_handoff']]) {
     await model.decide({ role, instructions: 'Use evidence.', context: {}, observations: [], tools: { [prerequisite]: '{}', check_drafts: 'draft schema', stop: '{}' }, remainingMs: 1000 });
     assert.deepEqual(payload.response_format.json_schema.schema.properties.action.enum, [prerequisite, 'stop']);
+    assert.equal(payload.max_tokens, 1024, 'evidence reads do not reserve a full drafting allowance');
     assert.doesNotMatch(payload.messages[0].content, /draft schema/);
     await model.decide({ role, instructions: 'Use evidence.', context: {}, observations: [{ ok: false, code: 'invalid_decision' }], tools: { [prerequisite]: '{}', check_drafts: 'draft schema', stop: '{}' }, remainingMs: 1000 });
     assert.deepEqual(payload.response_format.json_schema.schema.properties.action.enum, [prerequisite, 'stop'], 'format corrections do not unlock drafting before evidence');
     await model.decide({ role, instructions: 'Use evidence.', context: {}, observations: [{ tool: prerequisite, ok: true }], tools: { [prerequisite]: '{}', check_drafts: 'draft schema', stop: '{}' }, remainingMs: 1000 });
     assert.ok(payload.response_format.json_schema.schema.properties.action.enum.includes('check_drafts'));
+    assert.equal(payload.max_tokens, role === 'content_creator' ? 8000 : 2048, 'independent review keeps a smaller control budget');
   }
 });
 
