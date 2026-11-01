@@ -96,3 +96,7 @@ input,select,textarea{border:1px solid var(--border);background:transparent;max-
   padding:0;
   cursor:default;
 }
+
+/* Align Video views with the TikTok account card, wrapping its guidance. */
+#views-panel{grid-column:1;min-width:0;width:100%}
+#views-panel p{white-space:normal;overflow-wrap:anywhere}
