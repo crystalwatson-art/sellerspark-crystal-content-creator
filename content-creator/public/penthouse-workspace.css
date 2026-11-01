@@ -75,20 +75,13 @@ input,select,textarea{border:1px solid var(--border);background:transparent;max-
 #view-creator .creator-tools,
 #view-creator #demo-error{
   width:min(100%,850px);
-  background:rgba(11,15,35,.88);
+  background:var(--surface);
   color:var(--ink);
   border:1px solid var(--border);
   border-radius:18px;
-  backdrop-filter:blur(14px);
-  -webkit-backdrop-filter:blur(14px);
+  backdrop-filter:blur(var(--glass-blur));
+  -webkit-backdrop-filter:blur(var(--glass-blur));
 }
 #view-creator .creator-tools p{color:var(--ink)}
 #view-creator .creator-tools .text-link{overflow-wrap:anywhere}
 #view-creator #demo-error{padding:16px 20px;border-left:3px solid #dc9393}
-:root[data-theme=light] #view-creator .creator-tools,
-:root[data-theme=light] #view-creator #demo-error{background:rgba(255,250,241,.92)}
-@media(prefers-reduced-transparency:reduce){
-  #view-creator .creator-tools,#view-creator #demo-error{background:#0b0f23}
-  :root[data-theme=light] #view-creator .creator-tools,
-  :root[data-theme=light] #view-creator #demo-error{background:#fffaf1}
-}
