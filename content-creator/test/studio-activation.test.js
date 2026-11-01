@@ -137,8 +137,8 @@ test('approved studio activates generation, distinct review surfaces and local i
   assert.equal($('connect-tiktok').disabled,true);
   assert.equal($('popup-opacity'),null);
   assert.equal(window.document.documentElement.style.getPropertyValue('--popup-alpha'),'');
-  $('reduce-motion').checked=true;change('reduce-motion');
-  assert.equal(window.document.documentElement.dataset.motion,'still');
+  assert.equal($('reduce-motion'),null);
+  assert.equal(window.document.documentElement.dataset.motion,'gentle');
   const previousCalendarKey=[...Array(localStorage.length)].map((_,i)=>localStorage.key(i)).find(x=>x.startsWith('sellerspark-calendar-v1:'));
   assert.ok(previousCalendarKey);
   $('audience-value').value='brooklyn_townhouse_owner';change('audience-value');

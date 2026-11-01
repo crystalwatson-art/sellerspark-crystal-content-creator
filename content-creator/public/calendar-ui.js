@@ -157,12 +157,8 @@ export function initializeCalendar(app) {
   window.addEventListener('hashchange',()=>{close();hidePreview();});
   window.addEventListener('resize',hidePreview);
   window.addEventListener('scroll',hidePreview,{passive:true});
-  const still=$('reduce-motion');
-  try {still.checked=localStorage.getItem('sellerspark-still-cards-v1')==='true';} catch {}
-  document.documentElement.dataset.motion=still.checked?'still':'gentle';
-  still.addEventListener('change',()=>{
-    document.documentElement.dataset.motion=still.checked?'still':'gentle';
-    try {localStorage.setItem('sellerspark-still-cards-v1',String(still.checked));} catch {}
-  });
+  let keepStill=false;
+  try {keepStill=localStorage.getItem('sellerspark-still-cards-v1')==='true';} catch {}
+  document.documentElement.dataset.motion=keepStill?'still':'gentle';
   render();
 }

@@ -348,6 +348,8 @@ function clearRecoveryUrl() {
 let accountHistoryRequest = 0;
 const accountHistory = document.createElement("section");
 accountHistory.className = "module glass";
+accountHistory.id = "account-history";
+accountHistory.hidden = true;
 accountHistory.setAttribute("aria-label", "Saved drafts");
 document.getElementById("view-account").append(accountHistory);
 
