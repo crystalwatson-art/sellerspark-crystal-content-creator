@@ -123,7 +123,9 @@ input,select,textarea{border:1px solid var(--border);background:transparent;max-
 #view-growth > .subheading h2{font-size:2rem}
 #view-growth .campaign-section{grid-template-columns:minmax(0,430px) minmax(20px,1fr) minmax(260px,340px)}
 #view-growth .tiktok-connection,#view-growth .views-panel,#view-growth .growth-plan{padding:20px 22px}
+#view-growth .growth-plan{margin-top:calc(-1 * var(--growth-heading-offset,161px))}
 @media(max-width:900px){
+  #view-growth .growth-plan{margin-top:0}
   #view-growth .campaign-section{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
   #view-growth > .subheading{width:calc((100% - 18px)/2);max-width:none}
 }

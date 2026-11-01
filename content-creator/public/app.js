@@ -1737,3 +1737,15 @@ body.replaceChildren(scriptSection, captionSection, controls, supporting);
 supporting.append(optimizerWarningsBlock);
 renderEarlierSets();
 void initializeAgentStatus();
+
+// Keep the right-hand plan level with the introduction, including when text wraps.
+const growthHeading = document.querySelector('#view-growth > .subheading');
+function alignGrowthPlan() {
+  if (!growthHeading || growthHeading.getBoundingClientRect().height === 0) return;
+  const offset = growthHeading.getBoundingClientRect().height + parseFloat(getComputedStyle(growthHeading).marginBottom || '0');
+  document.documentElement.style.setProperty('--growth-heading-offset', offset + 'px');
+}
+if (typeof ResizeObserver !== 'undefined' && growthHeading) new ResizeObserver(alignGrowthPlan).observe(growthHeading);
+window.addEventListener('resize', alignGrowthPlan);
+window.addEventListener('hashchange', alignGrowthPlan);
+alignGrowthPlan();
