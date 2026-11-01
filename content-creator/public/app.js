@@ -9,15 +9,19 @@ const audienceValue = document.querySelector("#audience-value");
 const audiencePill = document.querySelector("#audience-pill");
 const summary = document.querySelector("#result-summary");
 let generationMode = "sample";
+function renderGenerationMode() {
+  const saved = authClient.session ? 'Your drafts are saved to your account.' : 'Sign in to save your work.';
+  document.querySelector('#generation-mode').textContent = generationMode === 'agents'
+    ? 'AI creates three drafts and checks them with the Optimizer. ' + saved + ' The supplied research brief is fictional; nothing publishes automatically.'
+    : 'Sample mode: Generate creates sample ideas from a fictional brief. ' + saved + ' Nothing publishes automatically.';
+}
 async function initializeAgentStatus() {
   try {
     const response = await fetch("/api/agent-status", { cache: "no-store" });
     if (!response.ok) return;
     const status = await response.json();
     generationMode = status.mode === "agents" ? "agents" : "sample";
-    document.querySelector("#generation-mode").textContent = generationMode === "agents"
-      ? "AI creates three drafts and checks them with the Optimizer. Sign in to save your work. The supplied research brief is fictional; nothing publishes automatically."
-      : "Sample mode: live AI is not connected yet. Generate creates sample ideas from a fictional brief. Earlier drafts stay in your history.";
+    renderGenerationMode();
   } catch { /* generation remains explicitly sample until the host confirms otherwise */ }
 }
 const resultDiagnostic = document.querySelector("#result-diagnostic");
@@ -307,6 +311,7 @@ function initializePasswordVisibilityToggles() {
 initializePasswordVisibilityToggles();
 
 function renderAuthState(session = authClient.session) {
+  renderGenerationMode();
   if (!authClient.enabled) {
     authForm.hidden = true;
     authRecoveryForm.hidden = true;

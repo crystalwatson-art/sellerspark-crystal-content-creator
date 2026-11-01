@@ -55,12 +55,21 @@ test('approved studio activates generation, distinct review surfaces and local i
   for (const asset of ['/proposals/card-flow.html','/penthouse-workspace.css','/calendar-ui.js','/calendar-state.js','/penthouse-studio.js','/assets/penthouse-night.webp','/assets/penthouse-day.webp']) {
     const response=await realFetch(base+asset);assert.equal(response.status,200,asset);
   }
-  click('run-fictional-test');
+  assert.equal($('optimizer-continue').hidden,true);
+  assert.equal($('approval-compare').hidden,true);
+  assert.equal($('audience-value').closest('label').hidden,true,'audience is chosen once on Overview');
+  $('location').value='brooklyn';change('location');
+  assert.equal($('audience-value').value,'brooklyn_townhouse_owner');
+  assert.equal($('creator-audience-context').textContent,'Brooklyn · Sellers');
+  $('location').value='lic';change('location');
+  click('optimizer-create-first');
   await waitFor(()=>window.SellerSparkContentCreator.getDraftSummaries().length===3,'three generated drafts');
   await waitFor(()=>$('view-creator').hidden===false,'creator routing');
   assert.equal($('regenerate-drafts').disabled,false);
   assert.equal($('optimizer-draft-list').children.length,3);
   assert.equal($('approval-draft-list').children.length,3);
+  assert.equal($('optimizer-continue').hidden,false);
+  assert.equal($('approval-compare').hidden,false);
   window.document.querySelector('#drafts .draft-card').click();
   assert.equal($('draft-modal').hidden,false);assert.equal($('draft-modal').dataset.mode,'creator');
   click('modal-close');

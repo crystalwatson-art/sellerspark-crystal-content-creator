@@ -12,6 +12,9 @@ const modal=document.querySelector('#draft-modal');
 let liveCount=null;
 function refreshReviewLists() {
   const drafts=app.getDraftSummaries();
+  document.querySelector('#optimizer-list-title').textContent=drafts.length?'Choose a draft to improve':'No drafts to improve yet';
+  document.querySelector('#optimizer-continue').hidden=!drafts.length;
+  document.querySelector('#approval-compare').hidden=!drafts.length;
   for(const page of ['optimizer','approval']) {
     const list=document.querySelector(`#${page}-draft-list`);
     list.replaceChildren();document.querySelector(`#${page}-empty`).hidden=drafts.length>0;
@@ -37,6 +40,9 @@ function route() {
 }
 function refreshLocation() {
   locationControl.value=fixtureControl.value==='brooklyn_townhouse_owner'?'brooklyn':'lic';
+  const audience=locationControl.value==='brooklyn'?'Brooklyn · Sellers':'Long Island City · Sellers';
+  document.querySelector('#creator-audience-context').textContent=audience;
+  document.querySelector('#optimizer-empty-note').textContent='No drafts for '+audience+' are open. Create your first drafts below, or open a saved set in Account.';
   locationControl.disabled=fixtureControl.disabled;refreshReviewLists();
 }
 locationControl.addEventListener('change',()=>{
@@ -62,6 +68,7 @@ new MutationObserver(refreshFollowers).observe(tiktokStatus,{childList:true,subt
 window.addEventListener('sellerspark:tiktok-metric',event=>{liveCount=event.detail.followerCount;refreshFollowers();});
 window.addEventListener('hashchange',route);
 for(const id of ['run-fictional-test','regenerate-drafts'])document.getElementById(id).addEventListener('click',()=>{location.hash='creator';});
+for(const id of ['optimizer-create-first','approval-create-first'])document.getElementById(id).addEventListener('click',()=>document.querySelector('#run-fictional-test').click());
 document.querySelector('#theme-toggle').addEventListener('click',()=>{
   try {localStorage.setItem('sellerspark-penthouse-theme',document.documentElement.dataset.theme==='light'?'day':'night');} catch {}
 });
