@@ -103,6 +103,7 @@ test('approved studio activates generation, distinct review surfaces and local i
   assert.ok(feedbackUpdates.some(text=>text.includes('Regenerating this card')));
   feedbackObserver.disconnect();
   assert.match($('card-action-feedback').textContent,/New version ready/);
+  assert.ok($('optimizer-proposed').textContent.includes($('modal-script').textContent),'comparison uses the current regenerated script');
   assert.equal($('draft-modal').hasAttribute('aria-busy'),false);
   assert.equal($('modal-copy').hidden,true);
   click('optimizer-reject');await waitFor(()=>$('optimizer-review-status').textContent==='Rejected','reject');

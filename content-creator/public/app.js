@@ -1095,7 +1095,7 @@ function renderOptimizerReview() {
 
   optimizerStatus.textContent = reviewStatusLabel(review.status);
   renderComparison(optimizerOriginal, review.original);
-  renderComparison(optimizerProposed, review.proposed);
+  renderComparison(optimizerProposed, review.working);
   renderList(
     optimizerChanges,
     review.changes.map((item) => item.label + ": " + displayValue(item.after) + " Why: " + item.reason),
