@@ -70,3 +70,25 @@ input,select,textarea{border:1px solid var(--border);background:transparent;max-
 @media(max-width:600px){#drafts{grid-template-columns:1fr;margin-top:30px;width:100%}#draft-modal{padding:12px}#draft-modal .modal-dialog{width:100%;max-height:calc(100dvh - 24px);padding:20px}#draft-modal .modal-columns{grid-template-columns:1fr}}
 /* Keep the two closed disclosures compact so the room remains visible. */
 #view-creator > .workflow-details:not([open]){width:min(100%,26rem);max-width:100%;box-sizing:border-box}
+
+/* Reading frost for the audience, progress, instructions and standalone error. */
+#view-creator .creator-tools,
+#view-creator #demo-error{
+  width:min(100%,850px);
+  background:rgba(11,15,35,.88);
+  color:var(--ink);
+  border:1px solid var(--border);
+  border-radius:18px;
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+}
+#view-creator .creator-tools p{color:var(--ink)}
+#view-creator .creator-tools .text-link{overflow-wrap:anywhere}
+#view-creator #demo-error{padding:16px 20px;border-left:3px solid #dc9393}
+:root[data-theme=light] #view-creator .creator-tools,
+:root[data-theme=light] #view-creator #demo-error{background:rgba(255,250,241,.92)}
+@media(prefers-reduced-transparency:reduce){
+  #view-creator .creator-tools,#view-creator #demo-error{background:#0b0f23}
+  :root[data-theme=light] #view-creator .creator-tools,
+  :root[data-theme=light] #view-creator #demo-error{background:#fffaf1}
+}
