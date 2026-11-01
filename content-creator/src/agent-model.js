@@ -15,6 +15,7 @@ export function createAgentModel({ apiKey, model = 'openrouter/free', request, f
       const firstTool = role === 'content_creator' ? 'read_brief' : role === 'listing_optimizer' ? 'inspect_handoff' : null;
       const needsEvidence = firstTool && !observations.some(observation => observation.tool === firstTool && observation.ok !== false);
       const latestCheck = observations.findLast(observation => observation.tool === 'check_drafts');
+      const singleCard = Number.isInteger(context?.task?.targetIndex);
       const availableTools = needsEvidence
         ? Object.fromEntries(Object.entries(tools).filter(([name]) => name === firstTool || name === 'stop'))
         : Object.fromEntries(Object.entries(tools).filter(([name]) => {
@@ -29,22 +30,25 @@ export function createAgentModel({ apiKey, model = 'openrouter/free', request, f
           return true;
         }));
       const inputProperties = {};
-      if (role === 'content_creator' && availableTools.check_drafts) inputProperties.drafts = MODEL_OUTPUT_SCHEMA.properties.drafts;
+      if (role === 'content_creator' && availableTools.check_drafts) {
+        inputProperties.drafts = singleCard ? {...MODEL_OUTPUT_SCHEMA.properties.drafts,minItems:1,maxItems:1} : MODEL_OUTPUT_SCHEMA.properties.drafts;
+        if(singleCard) availableTools.check_drafts='input {drafts:[one complete replacement package for targetIndex]}. The server preserves both other cards. Required package fields: '+JSON.stringify(MODEL_OUTPUT_SCHEMA.properties.drafts.items);
+      }
       if (availableTools.send_to_optimizer) {
         inputProperties.confidence = { type:'number',minimum:0,maximum:1 };
         inputProperties.uncertainties = { type:'array',items:{type:'string'} };
       }
       if (availableTools.request_revision) {
         inputProperties.confidence = { type:'number',minimum:0,maximum:1 };
-        inputProperties.feedback = {type:'array',minItems:1,maxItems:12,items:{type:'object',properties:{draftIndex:{type:'integer',minimum:0,maximum:2},field:{type:'string',enum:MODEL_OUTPUT_SCHEMA.properties.drafts.items.required.filter(field=>!['supportingClaimIds','angle'].includes(field))},instruction:{type:'string',minLength:1,maxLength:500}},required:['draftIndex','field','instruction'],additionalProperties:false}};
+        inputProperties.feedback = {type:'array',minItems:1,maxItems:12,items:{type:'object',properties:{draftIndex:{type:'integer',minimum:singleCard?context.task.targetIndex:0,maximum:singleCard?context.task.targetIndex:2},field:{type:'string',enum:MODEL_OUTPUT_SCHEMA.properties.drafts.items.required.filter(field=>!['supportingClaimIds','angle'].includes(field))},instruction:{type:'string',minLength:1,maxLength:500}},required:['draftIndex','field','instruction'],additionalProperties:false}};
       }
       const send = request || createHttpJsonRequest({ apiKey, endpoint: OPENROUTER_CHAT_ENDPOINT, providerLabel: 'OpenRouter', fetchImpl, timeoutMs: Math.min(25000, remainingMs) });
       if (!send) throw Object.assign(new Error('Agent provider not configured'), { code: 'not_configured' });
       const result = await send({
         model,
         messages: [
-          { role: 'system', content: 'RESPONSE PROTOCOL: return one JSON object with exactly two root keys: action (an available tool name) and input (an object containing that tool\'s arguments). The input object must contain the fields required by the chosen tool; it is empty only for tools whose contract says input {}. Drafts belong in input.drafts for check_drafts, never at the root. ' + instructions + ' Your response is ONE tool action, never the final drafts directly. The action value must exactly match an AVAILABLE tool key below. Return only the action JSON; no reasoning or commentary. For check_drafts you MUST provide input.drafts containing all three complete packages. For request_revision you MUST provide input.feedback; input.confidence is optional. Each feedback field must be one of hook, script, caption, takeaway, videoConcept, suggestedScenes, hashtags, suggestedNextStep, reasonToFollow. For finish use input {}.  Available tools and their input contracts: ' + JSON.stringify(availableTools) + (needsEvidence ? ' Evidence has not been read. Your next action must be ' + firstTool + ' with input {}, or stop with input {}.' : '') },
-          { role: 'user', content: JSON.stringify({ context, observations }) + '\nReturn one action/input JSON object matching the response protocol.' }
+          { role: 'system', content: 'RESPONSE PROTOCOL: return one JSON object with exactly two root keys: action (an available tool name) and input (an object containing that tool\'s arguments). The input object must contain the fields required by the chosen tool; it is empty only for tools whose contract says input {}. Drafts belong in input.drafts for check_drafts, never at the root. ' + instructions + ' Your response is ONE tool action, never the final drafts directly. The action value must exactly match an AVAILABLE tool key below. Return only the action JSON; no reasoning or commentary. For check_drafts you MUST provide input.drafts containing all three complete packages. For request_revision you MUST provide input.feedback; input.confidence is optional. Each feedback field must be one of hook, script, caption, takeaway, videoConcept, suggestedScenes, hashtags, suggestedNextStep, reasonToFollow. For finish use input {}.  Available tools and their input contracts: ' + JSON.stringify(availableTools) + (singleCard ? ' SINGLE CARD OVERRIDE: when checking drafts return exactly ONE complete replacement package for targetIndex, never three. The server preserves the siblings. Optimizer feedback may address only targetIndex.' : '') + (needsEvidence ? ' Evidence has not been read. Your next action must be ' + firstTool + ' with input {}, or stop with input {}.' : '') },
+          { role: 'user', content: JSON.stringify({ context, observations }) + (singleCard && role==='content_creator' ? '\nSINGLE CARD TASK: input.drafts must contain exactly ONE package, the edited target card. This overrides general three-package instructions. Do not reproduce either other card.' : '') + '\nReturn one action/input JSON object matching the response protocol.' }
         ],
         ...(model.startsWith('liquid/') ? { response_format: { type: 'json_object' } } : {
           response_format: { type: 'json_schema', json_schema: { name: 'agent_action', strict: false, schema: { type: 'object', properties: { action: { type: 'string', enum: Object.keys(availableTools) }, input: { type: 'object',properties:inputProperties,additionalProperties:false } }, required: ['action','input'], additionalProperties: false } } },

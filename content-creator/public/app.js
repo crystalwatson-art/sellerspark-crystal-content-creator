@@ -1469,7 +1469,7 @@ async function runFictionalTest() {
     const brief = await briefResponse.json();
     brief.sampleSet = generationSet++;
     writeStorageObject("sellerspark-sample-set-v1", generationSet);
-    brief.campaignAudienceMode = campaignAudienceMode.value;
+    brief.campaignAudienceMode = document.querySelector("#audience")?.value || "sellers";
     brief.startingFollowers = startingFollowers.value === "" ? null : Number(startingFollowers.value);
     brief.currentFollowers = currentFollowers.value === "" ? null : Number(currentFollowers.value);
     brief.followerGoal = Number(followerGoal.value);

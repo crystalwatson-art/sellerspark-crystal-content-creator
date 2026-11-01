@@ -147,6 +147,11 @@ export function createAgentSystem({ model: configuredModel, history = null, now 
           if (role === 'content_creator') {
             if (action === 'read_brief') { creatorRead = true; observation = copy(fixedContext); }
             if (action === 'check_drafts') {
+              if (targetDraftId && input.drafts?.length === 1) {
+                const replacement=input.drafts[0];
+                input.drafts=copy(currentDrafts);
+                input.drafts[targetIndex]=replacement;
+              }
               const problem = creatorRead ? validate(input) : 'Read the brief first.';
               candidate = problem ? null : copy({ drafts: input.drafts });
               observation = problem ? { ok: false, code: 'validation_failed', reasonCode: validationReasonCode(problem), message: problem } : { ok: true, message: 'Candidate checked. You may hand it to the Optimizer.' };

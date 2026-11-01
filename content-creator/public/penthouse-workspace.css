@@ -98,5 +98,16 @@ input,select,textarea{border:1px solid var(--border);background:transparent;max-
 }
 
 /* Align Video views with the TikTok account card, wrapping its guidance. */
+#view-creator{--creator-panel-width:440px}
+#view-creator > .subheading,
+#view-creator > .creator-tools,
+#view-creator #draft-queue .draft-queue-intro{
+  width:min(100%,var(--creator-panel-width));
+  max-width:var(--creator-panel-width);
+  min-width:0;
+}
+#view-creator .draft-queue-intro .section-heading{flex-direction:column;align-items:flex-start;gap:8px}
+#view-creator .creator-tools > *,
+#view-creator .draft-queue-intro p{min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere}
 #views-panel{grid-column:1;min-width:0;width:100%}
 #views-panel p{white-space:normal;overflow-wrap:anywhere}

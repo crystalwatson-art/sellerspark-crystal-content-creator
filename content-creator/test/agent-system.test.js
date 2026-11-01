@@ -153,6 +153,10 @@ test('single-card generation changes its text while preserving sibling fields an
   assert.equal(result.status, 'ready_for_review');
   assert.equal(result.drafts[0].hook, output.drafts[0].hook);
   assert.equal(result.drafts[1].script, current[1].script);
+  const single = await createAgentSystem({model:modelWith({output:{drafts:[output.drafts[0]]}})}).generate(brief,{currentDrafts:current,targetDraftId:current[0].id});
+  assert.equal(single.status,'ready_for_review');
+  assert.equal(single.drafts[0].hook,output.drafts[0].hook);
+  for(const index of [1,2]) for(const field of ['hook','script','caption','takeaway','suggestedScenes','hashtags']) assert.deepEqual(single.drafts[index][field],current[index][field]);
   output.drafts[1].script = 'Unauthorized sibling change.';
   const blocked = await createAgentSystem({ model: modelWith({ output }) }).generate(brief, { currentDrafts: current, targetDraftId: current[0].id });
   assert.equal(blocked.drafts.length, 0);
