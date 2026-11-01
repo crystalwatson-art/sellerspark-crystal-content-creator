@@ -5,6 +5,12 @@ import { createCloudflareAgentModel } from '../src/cloudflare-agent-model.js';
 import { createAgentSystem } from '../src/agent-system.js';
 
 const model = createCloudflareAgentModel();
+const decide = model.decide.bind(model);
+model.decide = async input => {
+  const result = await decide(input);
+  console.log('SELLERSPARK_DECISION_SHAPE '+JSON.stringify({role:input.role,action:result?.action,inputKeys:Object.keys(result?.input||{}),draftCount:result?.input?.drafts?.length,feedbackFields:result?.input?.feedback?.map(item=>item.field)}));
+  return result;
+};
 if (!model.configured) throw new Error('Cloudflare Account ID and API token are not configured.');
 const brief = JSON.parse(await readFile(new URL('../fixtures/fictional-research-brief.json', import.meta.url), 'utf8'));
 const started = Date.now();
