@@ -3,6 +3,7 @@ import { classifyProviderError, createHttpJsonRequest } from './openai-writer.js
 import { FAILOVER_ELIGIBLE_STATUSES } from './provider-failover.js';
 import { DEFAULT_GROQ_MODEL, GROQ_CHAT_ENDPOINT } from './groq-writer.js';
 import { createGeminiRequest, parseGeminiResponse, DEFAULT_GEMINI_MODEL } from './gemini-writer.js';
+import { createCloudflareAgentModel } from './cloudflare-agent-model.js';
 
 // Keep the same role, task, observations and permissions across transport recovery.
 // Failed providers are skipped, except for one bounded, provider-declared
@@ -73,5 +74,6 @@ export function createFreeAgentModel({ env = process.env, fetchImpl = globalThis
     return { choices: [{ message: { content: JSON.stringify(parseGeminiResponse(result)) } }] };
   } : undefined });
   gemini.provider = 'gemini'; gemini.model = env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
-  return createFailoverAgentModel({ models: [groq, openrouter, gemini] });
+  const cloudflare = createCloudflareAgentModel({ env, fetchImpl });
+  return createFailoverAgentModel({ models: [groq, openrouter, gemini, cloudflare] });
 }

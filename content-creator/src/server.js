@@ -149,7 +149,7 @@ function decorateCampaignResult(result, brief) {
 
 const ALLOWED_WRITER_MODES = new Set(["agents", "groq", "template"]);
 export function resolveWriterMode(env = process.env) {
-  const mode = env.CONTENT_CREATOR_PROVIDER || ([env.GROQ_API_KEY, env.OPENROUTER_API_KEY, env.GEMINI_API_KEY].some(Boolean) ? "agents" : "template");
+  const mode = env.CONTENT_CREATOR_PROVIDER || ([env.GROQ_API_KEY, env.OPENROUTER_API_KEY, env.GEMINI_API_KEY, env.CLOUDFLARE_API_TOKEN && env.CLOUDFLARE_ACCOUNT_ID].some(Boolean) ? "agents" : "template");
   if (!ALLOWED_WRITER_MODES.has(mode)) throw new Error("SellerSpark permits only its free-provider chain or templates. The OpenAI API and other provider modes are disabled.");
   return mode;
 }
@@ -211,7 +211,7 @@ export function createServer({
     if (providerMode === "agents" && agentSystem) return decorateCampaignResult(await generateWithFailover({
       brief,
       primaryWriter: { generate: input => agentSystem.generate(input, options) },
-      primaryLabel: "Free agent writers (Groq → OpenRouter → Gemini)",
+      primaryLabel: "Free agent writer chain",
       backupWriters: [],
       templateFallback: true,
       logger: logProviderFailure
