@@ -1124,6 +1124,7 @@ function renderOptimizerReview() {
     ? "Two suggested rewrites have been used. You can edit the script directly, undo a change, or regenerate this sample card."
     : "Choose a suggestion, or edit the script directly. Changes appear on this card and need your approval again.";
   document.querySelector("#card-regenerate").disabled = busy;
+  document.querySelector("#card-regenerate").textContent = busy ? "Working…" : "Regenerate this card";
   document.querySelector("#card-undo").disabled = busy || !review.cardUndo?.length;
   optimizerRestore.disabled = busy || JSON.stringify(review.working) === JSON.stringify(review.original);
 }
@@ -1181,13 +1182,16 @@ function setReviewMode(mode) {
     ? "Review the draft and make your decision"
     : "Shape this draft";
   const next = document.querySelector("#modal-next-step");
-  next.href = modal.dataset.mode === "creator" ? "#optimizer" : "#approval";
-  next.textContent = modal.dataset.mode === "creator" ? "Open Listing Optimizer →" : "Review & approve →";
+  next.href = "#optimizer";
+  next.textContent = "Compare in Listing Optimizer →";
+  next.hidden = modal.dataset.mode === "optimizer";
+  document.querySelector(".optimizer-review-columns").hidden = modal.dataset.mode !== "optimizer";
 }
 
 function openDraft(index) {
   if (!currentDrafts[index]) return;
   activeDraftIndex = index;
+  if (!reviewActionInFlight) document.querySelector("#card-action-feedback").textContent = "";
   previouslyFocusedElement = document.activeElement;
   renderModal();
   modal.hidden = false;
@@ -1387,7 +1391,10 @@ async function runReviewAction(action, note = "Human reviewer requested this act
   const actionOwner = authClient.session?.userId;
   const actionReviewId = currentReviewId;
   reviewActionInFlight = true;
-  document.querySelector("#card-action-feedback").textContent = "Saving your change…";
+  document.querySelector("#card-action-feedback").textContent = action === "regenerate_current"
+    ? "Regenerating this card… Please wait. Your other cards stay unchanged."
+    : action === "rewrite_current" ? "Revising this card… Please wait." : "Saving your change…";
+  modal.setAttribute("aria-busy", "true");
   renderOptimizerReview();
   try {
     if (currentPersistenceStatus === "fictional_demo_store") {
@@ -1426,9 +1433,10 @@ async function runReviewAction(action, note = "Human reviewer requested this act
       : "The local review store is not reachable. Your current browser copy was not changed.");
   } finally {
     reviewActionInFlight = false;
+    modal.removeAttribute("aria-busy");
     if (!demoError.textContent) {
       document.querySelector("#card-revise-panel").hidden = true;
-      document.querySelector("#card-action-feedback").textContent = ({approve_current:"Approved. Copy is now available.", reject_current:"Marked as unwanted. Regenerate this card for a different idea.", rewrite_current:"Wording updated on this card. Review the highlighted script.", regenerate_current:"Only this card was replaced with a different sample idea. Review it before accepting.", undo_current:"Previous version restored."})[action] || "Saved.";
+      document.querySelector("#card-action-feedback").textContent = ({approve_current:"Approved. Copy is now available.", reject_current:"Marked as unwanted. Regenerate this card for a different idea.", rewrite_current:"Wording updated on this card. Review the highlighted script.", regenerate_current:"New version ready. Only this card changed. Review it before accepting.", undo_current:"Previous version restored."})[action] || "Saved.";
       if (["rewrite_current","regenerate_current"].includes(action) && activeReview()?.lastWritingProvider === "offline_template") document.querySelector("#card-action-feedback").textContent += " Used the template writer. Your approval is still required.";
     }
     renderOptimizerReview();
@@ -1621,7 +1629,12 @@ modalNext.addEventListener("click", () => {
   }
 });
 modalCopy.addEventListener("click", copyActiveDraft);
-document.querySelector("#modal-next-step").addEventListener("click", closeDraft);
+document.querySelector("#modal-next-step").addEventListener("click", event => {
+  event.preventDefault();
+  setReviewMode("optimizer");
+  renderModal();
+  document.querySelector("#optimizer-review-heading").scrollIntoView?.({ block: "start" });
+});
 resetConfirmation.addEventListener("cancel", () => { resetConfirmation.hidden = true; });
 optimizerAccept.addEventListener("click", () => runReviewAction("approve_current"));
 optimizerReject.addEventListener("click", () => runReviewAction("reject_current"));

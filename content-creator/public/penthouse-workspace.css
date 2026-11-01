@@ -53,7 +53,11 @@ input,select,textarea{border:1px solid var(--border);background:transparent;max-
 #draft-modal #optimizer-review>.review-panel:not(#card-revise-panel):not(#optimizer-history-block){display:none}
 #draft-modal .card-supporting{font-size:.78rem}
 #draft-modal .optimizer-review-heading h3{font-size:1.1rem}
-#draft-modal #modal-next-step{display:none}
+#draft-modal #modal-next-step:not([hidden]){display:inline-flex}
+#draft-modal[data-mode=optimizer] #optimizer-review>.review-panel:not([hidden]){display:block}
+#draft-modal .optimizer-review-columns{grid-template-columns:1fr}
+#draft-modal[aria-busy=true] #card-action-feedback{font-weight:700;border-left:3px solid var(--gold);padding:12px}
+#draft-modal[aria-busy=true] #card-regenerate{opacity:.8}
 #optimizer-history{max-height:200px;overflow:auto;white-space:pre-wrap}
 #card-revised-script{margin:12px 0}
 #card-revise-choices button{background:transparent;border:1px solid var(--border);border-radius:10px;padding:9px;font-size:.75rem}
