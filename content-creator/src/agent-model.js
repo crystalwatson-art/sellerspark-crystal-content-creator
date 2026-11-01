@@ -19,6 +19,7 @@ export function createAgentModel({ apiKey, model = 'openrouter/free', request, f
         ? Object.fromEntries(Object.entries(tools).filter(([name]) => name === firstTool || name === 'stop'))
         : Object.fromEntries(Object.entries(tools).filter(([name]) => {
           if (name === firstTool) return false;
+          if (role === 'content_creator' && name === 'check_drafts') return latestCheck?.ok !== true;
           if (role === 'content_creator' && name === 'send_to_optimizer') return latestCheck?.ok === true;
           if (role === 'listing_optimizer') {
             if (name === 'finish') return latestCheck?.ok === true;

@@ -181,6 +181,22 @@ test('first decisions expose evidence-reading tools before drafting and review t
   }
 });
 
+test('Creator advances to handoff after a successful check but can correct a failed candidate', async () => {
+  let payload;
+  const model = createAgentModel({ request: async body => { payload = body; return { choices: [{ message: { content: '{"action":"stop","input":{}}' } }] }; } });
+  const tools = { read_brief: '{}', check_drafts: 'input drafts', send_to_optimizer: 'input confidence and uncertainties', stop: '{}' };
+  for (const ok of [false, true]) {
+    await model.decide({ role:'content_creator', instructions:'Create and hand off.', context:{}, observations:[{tool:'read_brief',ok:true},{tool:'check_drafts',ok}], tools, remainingMs:1000 });
+    const allowed = payload.response_format.json_schema.schema.properties.action.enum;
+    assert.equal(allowed.includes('check_drafts'), !ok);
+    assert.equal(allowed.includes('send_to_optimizer'), ok);
+    if (ok) {
+      assert.deepEqual(allowed, ['send_to_optimizer','stop']);
+      assert.equal(payload.max_tokens, 2048);
+    }
+  }
+});
+
 test('one malformed action gets bounded feedback before evidence and all original checks still execute', async () => {
   const original = modelWith();
   let first = true;
