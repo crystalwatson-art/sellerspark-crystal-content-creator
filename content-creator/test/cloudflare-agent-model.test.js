@@ -7,7 +7,7 @@ import { createAgentSystem } from '../src/agent-system.js';
 import { createContentDraft } from '../src/content-creator.js';
 import { resolveWriterMode } from '../src/server.js';
 
-const env = { CLOUDFLARE_ACCOUNT_ID: 'a'.repeat(32), CLOUDFLARE_API_TOKEN: 'fake-test-token' };
+const env = { CLOUDFLARE_AGENT_ENABLED:'true', CLOUDFLARE_ACCOUNT_ID: 'a'.repeat(32), CLOUDFLARE_API_TOKEN: 'fake-test-token' };
 const input = { role:'content_creator', instructions:'Read the supplied brief.', context:{}, observations:[], tools:{read_brief:'{}',stop:'{}'}, remainingMs:5000 };
 const response = output => ({ok:true,status:200,json:async()=>({success:true,result:{response:output}})});
 
@@ -16,6 +16,7 @@ test('Cloudflare remains inactive without both credentials; a configured pair se
   assert.equal(createCloudflareAgentModel({env:{CLOUDFLARE_API_TOKEN:'test'}}).configured,false);
   assert.equal(createCloudflareAgentModel({env:{CLOUDFLARE_ACCOUNT_ID:env.CLOUDFLARE_ACCOUNT_ID}}).configured,false);
   assert.equal(resolveWriterMode(env),'agents');
+  assert.equal(createFreeAgentModel({env:{...env,CLOUDFLARE_AGENT_ENABLED:undefined}}).configured,false,'stored credentials do not activate the unverified provider');
   assert.throws(()=>createCloudflareAgentModel({env:{...env,CLOUDFLARE_ACCOUNT_ID:'../../other-account'}}),/Account ID/);
 });
 

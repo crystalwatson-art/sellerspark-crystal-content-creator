@@ -57,3 +57,5 @@ is included in the model request.
 - https://developers.cloudflare.com/workers-ai/features/json-mode/
 - https://developers.cloudflare.com/workers-ai/models/llama-3.3-70b-instruct-fp8-fast/
 - https://developers.cloudflare.com/workers-ai/platform/pricing/
+
+Cloudflare is currently opt-in in the combined chain: `CLOUDFLARE_AGENT_ENABLED=true` is required after live acceptance. Its direct verification script does not need this flag. Credentials alone do not activate an unverified writer.

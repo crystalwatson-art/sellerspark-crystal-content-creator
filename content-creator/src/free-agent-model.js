@@ -76,5 +76,5 @@ export function createFreeAgentModel({ env = process.env, fetchImpl = globalThis
   } : undefined });
   gemini.provider = 'gemini'; gemini.model = env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
   const cloudflare = createCloudflareAgentModel({ env, fetchImpl });
-  return createFailoverAgentModel({ models: [groq, openrouter, gemini, cloudflare], localControlSteps:true });
+  return createFailoverAgentModel({ models: [groq, openrouter, gemini, ...(env.CLOUDFLARE_AGENT_ENABLED === 'true' ? [cloudflare] : [])], localControlSteps:true });
 }
