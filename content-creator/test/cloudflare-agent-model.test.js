@@ -66,11 +66,7 @@ test('Cloudflare receives the same decision after three transport failures; no O
 test('both agents complete a matched handoff over the Cloudflare adapter with simulated responses',async()=>{
   const drafts=createContentDraft(brief).drafts.map(draft=>({...draft,supportingClaimIds:[]}));
   const actions=[
-    {action:'read_brief',input:{}},
     {action:'check_drafts',input:{drafts}},
-    {action:'send_to_optimizer',input:{confidence:.8,uncertainties:['Fictional test data.']}},
-    {action:'inspect_handoff',input:{}},
-    {action:'check_drafts',input:{}},
     {action:'finish',input:{}}
   ];
   const model=createFreeAgentModel({env,fetchImpl:async()=>response(actions.shift())});
@@ -78,6 +74,7 @@ test('both agents complete a matched handoff over the Cloudflare adapter with si
   assert.equal(result.status,'ready_for_review');
   assert.equal(result.drafts.length,3);
   assert.equal(actions.length,0);
+  assert.equal(result.agentRun.modelCalls,2,'writing and independent editorial judgment are the only network calls');
   assert.equal(result.humanApprovalRequired,true);
   assert.equal(result.automaticallyPublished,false);
   const sent=result.agentRun.trace.find(e=>e.event==='handoff_sent');

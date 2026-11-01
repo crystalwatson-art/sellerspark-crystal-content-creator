@@ -647,7 +647,7 @@ export async function createConfiguredRequestHandler() {
   const providerMode = resolveWriterMode();
   const backupProvider = process.env.CONTENT_CREATOR_BACKUP_PROVIDER || "none";
   const draftHistory = createDraftHistory();
-  const agentSystem = providerMode === "agents" ? createAgentSystem({ model: createFreeAgentModel(), history: draftHistory, budgetMs: 120000 }) : null;
+  const agentSystem = providerMode === "agents" ? createAgentSystem({ model: createFreeAgentModel(), history: draftHistory, budgetMs: 60000 }) : null;
   const groqWriter = providerMode === "groq"
     ? createGroqWriter({ apiKey: process.env.GROQ_API_KEY, model: process.env.GROQ_MODEL || DEFAULT_GROQ_MODEL, history: draftHistory })
     : null;

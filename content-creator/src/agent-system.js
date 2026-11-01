@@ -7,8 +7,8 @@ import { findRepetition } from './draft-history.js';
 const copy = value => JSON.parse(JSON.stringify(value));
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const failure = code => Object.assign(new Error(code), { code });
-const MAX_REVISIONS = 2;
-const MAX_CALLS = 20;
+const MAX_REVISIONS = 8;
+const MAX_CALLS = 64;
 const toolsByRole = Object.freeze({
   content_creator: {
     read_brief: 'input {}. Read the audience, questions, sources, warnings and allowed claims.',
@@ -19,7 +19,7 @@ const toolsByRole = Object.freeze({
   listing_optimizer: {
     inspect_handoff: 'input {}. Read the Creator candidate, original source references, warnings, uncertainty and revision request.',
     check_drafts: 'input {}. Run the independent validation and editorial checks on the received candidate.',
-    request_revision: 'input {feedback:[{draftIndex:0..2,field:string,instruction:string}], confidence:number 0..1}. Send specific actionable corrections to the Creator. Maximum two revision handoffs.',
+    request_revision: 'input {feedback:[{draftIndex:0..2,field:string,instruction:string}], confidence:number 0..1}. Send specific actionable corrections to the Creator. Maximum eight revision handoffs within the request deadline.',
     finish: 'input {}. Mark the checked candidate ready for HUMAN REVIEW only, when no correction is needed. Cannot approve or publish.',
     stop: 'input {}. Stop if evidence is insufficient or the task cannot be completed safely.'
   }
@@ -108,10 +108,19 @@ export function createAgentSystem({ model: configuredModel, history = null, now 
           const remainingMs = budgetMs - (now() - started);
           if (remainingMs <= 0) throw failure('time_limit');
           if (calls >= MAX_CALLS) throw failure('call_limit');
-          calls++;
-          add(role, 'model_called', { call: calls });
+          // Local prerequisites still pass through the same permission checks
+          // and validators. Only writing and editorial decisions need AI calls.
+          const firstTool = role === 'content_creator' ? 'read_brief' : 'inspect_handoff';
+          const latestCheck = observations.findLast(item=>item.tool==='check_drafts');
+          let localDecision = null;
+          if (model.localControlSteps) {
+            if (!observations.some(item=>item.tool===firstTool && item.ok!==false)) localDecision={action:firstTool,input:{}};
+            else if (role==='content_creator' && latestCheck?.ok===true) localDecision={action:'send_to_optimizer',input:{confidence:0,uncertainties:['Transferred after validation; confidence is not a model assessment.']}};
+            else if (role==='listing_optimizer' && !latestCheck) localDecision={action:'check_drafts',input:{}};
+          }
+          if (!localDecision) { calls++; add(role, 'model_called', { call: calls }); }
           let timer;
-          const decision = await Promise.race([
+          const decision = localDecision || await Promise.race([
             model.decide({ role, instructions: role === 'content_creator' ? creatorInstructions : optimizerInstructions, tools: toolsByRole[role], context: { ...copy(fixedContext), assignment: copy(assignment), revision: revisions, feedback: copy(feedback), candidate: role === 'content_creator' ? copy(candidate) : null }, observations: copy(observations), remainingMs }),
             new Promise((_, reject) => { timer = setTimeout(() => reject(failure('time_limit')), remainingMs); })
           ]).finally(() => clearTimeout(timer));

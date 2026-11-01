@@ -8,7 +8,7 @@ import { createCloudflareAgentModel } from './cloudflare-agent-model.js';
 // Keep the same role, task, observations and permissions across transport recovery.
 // Failed providers are skipped, except for one bounded, provider-declared
 // quota cooldown after every backup has failed.
-export function createFailoverAgentModel({ models, now = Date.now, wait = ms => new Promise(resolve => setTimeout(resolve, ms)) }) {
+export function createFailoverAgentModel({ models, now = Date.now, wait = ms => new Promise(resolve => setTimeout(resolve, ms)), localControlSteps = false }) {
   const configured = models.filter(model => model?.configured);
   let failed = new Set();
   const attempts = [];
@@ -19,7 +19,8 @@ export function createFailoverAgentModel({ models, now = Date.now, wait = ms => 
     provider: 'free_provider_failover',
     model: configured.map(model => model.model).join(' → '),
     attempts,
-    forRun() { return createFailoverAgentModel({ models, now, wait }); },
+    localControlSteps,
+    forRun() { return createFailoverAgentModel({ models, now, wait, localControlSteps }); },
     async decide(input) {
       const started = now(); let lastError;
       for (let pass = 0; pass < 2; pass++) {
@@ -75,5 +76,5 @@ export function createFreeAgentModel({ env = process.env, fetchImpl = globalThis
   } : undefined });
   gemini.provider = 'gemini'; gemini.model = env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
   const cloudflare = createCloudflareAgentModel({ env, fetchImpl });
-  return createFailoverAgentModel({ models: [groq, openrouter, gemini, cloudflare] });
+  return createFailoverAgentModel({ models: [groq, openrouter, gemini, cloudflare], localControlSteps:true });
 }

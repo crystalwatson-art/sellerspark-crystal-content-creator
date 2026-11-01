@@ -47,6 +47,7 @@ export function createCloudflareAgentModel({ env = process.env, fetchImpl = glob
     return { choices: [{ message: { content: typeof output === 'string' ? output : JSON.stringify(output) } }] };
   } : undefined });
   adapter.provider = 'cloudflare';
+  adapter.localControlSteps = true;
   adapter.model = CLOUDFLARE_AGENT_MODEL;
   return adapter;
 }

@@ -72,12 +72,20 @@ test('Optimizer chooses a revision, Creator receives corrections, and visible te
   assert.ok(result.agentRun.trace.some(event => event.event === 'handoff_sent' && event.to === 'content_creator'));
 });
 
-test('two revision handoffs are the maximum, preserving the human gate on failure', async () => {
-  const result = await createAgentSystem({ model: modelWith({ corrections: 3 }) }).generate(brief);
+test('automatic feedback loop continues beyond two rounds and returns for human review', async () => {
+  const result = await createAgentSystem({model:modelWith({corrections:3})}).generate(brief);
+  assert.equal(result.status,'ready_for_review');
+  assert.equal(result.agentRun.revisionHandoffs,3);
+  assert.equal(result.humanApprovalRequired,true);
+  assert.equal(result.automaticallyPublished,false);
+});
+
+test('eight revision handoffs are the maximum, preserving the human gate on failure', async () => {
+  const result = await createAgentSystem({ model: modelWith({ corrections: 9 }) }).generate(brief);
   assert.equal(result.status, 'needs_more_research');
   assert.equal(result.agentRun.stopReason, 'revision_limit');
-  assert.equal(result.agentRun.revisionHandoffs, 2);
-  assert.ok(result.agentRun.modelCalls <= 20);
+  assert.equal(result.agentRun.revisionHandoffs, 8);
+  assert.ok(result.agentRun.modelCalls <= 64);
   assert.equal(result.drafts.length, 0);
 });
 

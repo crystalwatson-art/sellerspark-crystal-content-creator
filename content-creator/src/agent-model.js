@@ -36,7 +36,7 @@ export function createAgentModel({ apiKey, model = 'openrouter/free', request, f
       }
       if (availableTools.request_revision) {
         inputProperties.confidence = { type:'number',minimum:0,maximum:1 };
-        inputProperties.feedback = {type:'array',items:{type:'object',properties:{draftIndex:{type:'integer',minimum:0,maximum:2},field:{type:'string'},instruction:{type:'string'}},required:['draftIndex','field','instruction'],additionalProperties:false}};
+        inputProperties.feedback = {type:'array',minItems:1,maxItems:12,items:{type:'object',properties:{draftIndex:{type:'integer',minimum:0,maximum:2},field:{type:'string',enum:MODEL_OUTPUT_SCHEMA.properties.drafts.items.required.filter(field=>!['supportingClaimIds','angle'].includes(field))},instruction:{type:'string',minLength:1,maxLength:500}},required:['draftIndex','field','instruction'],additionalProperties:false}};
       }
       const send = request || createHttpJsonRequest({ apiKey, endpoint: OPENROUTER_CHAT_ENDPOINT, providerLabel: 'OpenRouter', fetchImpl, timeoutMs: Math.min(25000, remainingMs) });
       if (!send) throw Object.assign(new Error('Agent provider not configured'), { code: 'not_configured' });
@@ -47,7 +47,9 @@ export function createAgentModel({ apiKey, model = 'openrouter/free', request, f
           { role: 'user', content: JSON.stringify({ context, observations }) + '\nReturn one action/input JSON object matching the response protocol.' }
         ],
         ...(model.startsWith('liquid/') ? { response_format: { type: 'json_object' } } : {
-          response_format: { type: 'json_schema', json_schema: { name: 'agent_action', strict: false, schema: { type: 'object', properties: { action: { type: 'string', enum: Object.keys(availableTools) }, input: { type: 'object',properties:inputProperties,additionalProperties:false } }, required: ['action','input'], additionalProperties: false } } },
+          response_format: { type: 'json_schema', json_schema: { name: 'agent_action', strict: false, schema: { type: 'object', properties: { action: { type: 'string', enum: Object.keys(availableTools) }, input: { type: 'object',properties:inputProperties,additionalProperties:false } }, required: ['action','input'], additionalProperties: false,
+            anyOf:Object.keys(availableTools).map(action=>({properties:{action:{enum:[action]},input:{type:'object',required:action==='check_drafts'&&role==='content_creator'?['drafts']:action==='request_revision'?['feedback','confidence']:[],...(action==='finish'||action==='stop'?{maxProperties:0}:{})}}}))
+          } } },
           provider: { require_parameters: true }
         }),
         // Only Creator drafting needs room for three full packages. Reserving
