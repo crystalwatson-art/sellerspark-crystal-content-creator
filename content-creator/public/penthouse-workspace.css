@@ -85,3 +85,14 @@ input,select,textarea{border:1px solid var(--border);background:transparent;max-
 #view-creator .creator-tools p{color:var(--ink)}
 #view-creator .creator-tools .text-link{overflow-wrap:anywhere}
 #view-creator #demo-error{padding:16px 20px;border-left:3px solid #dc9393}
+
+/* Status and audience are information, not clickable controls. */
+#view-creator #status-value,
+#view-creator #audience-pill{
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  padding:0;
+  cursor:default;
+}
