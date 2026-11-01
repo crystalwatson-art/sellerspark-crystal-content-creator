@@ -407,7 +407,10 @@ async function loadAccountHistory({ resume = false } = {}) {
       });
       accountHistory.append(button);
     }
-    if (resume && !currentDrafts.length && workspaceSequence === requestSequence && payload.records[0]) openSavedRecord(payload.records[0]);
+    const resumeRecord = localStorage.getItem(AUDIENCE_SELECTION_STORAGE_KEY)
+      ? payload.records.find(record => (record.listingReview?.audience || record.brief?.audience) === currentWorkspaceAudience)
+      : payload.records[0];
+    if (resume && !currentDrafts.length && workspaceSequence === requestSequence && resumeRecord) openSavedRecord(resumeRecord);
   } catch {
     if (sequence === accountHistoryRequest) message.textContent = "Saved drafts could not be loaded. Your work has not been deleted. Refresh to try again.";
   }
@@ -862,8 +865,8 @@ function restoreWorkspaceSnapshot(saved) {
     drafts.replaceChildren();
     emptyState.hidden = false;
     audiencePill.textContent = "Audience pending";
-    summary.textContent = "Run fictional test mode to create a review-only queue.";
-    setStatus("Ready to test", "muted");
+    summary.textContent = "Choose Generate above to create your first drafts.";
+    setStatus("Ready to create", "muted");
     resultDiagnostic.hidden = true;
     setDemoError();
     return false;
@@ -1268,7 +1271,7 @@ function resetWorkspace() {
   restoreGrowthPilot();
   audiencePill.textContent = "Audience pending";
   summary.textContent = "Active review reset. Saved review history remains on this browser.";
-  setStatus("Ready to test", "muted");
+  setStatus("Ready to create", "muted");
   resultDiagnostic.hidden = true;
   setDemoError();
   resetConfirmation.close();
@@ -1292,8 +1295,8 @@ function clearActiveWorkspace() {
   drafts.replaceChildren();
   emptyState.hidden = false;
   audiencePill.textContent = "Audience pending";
-  summary.textContent = "Audience changed. Run fictional test mode to create a new review-only queue.";
-  setStatus("Ready to test", "muted");
+  summary.textContent = "Location changed. Choose Generate above to create drafts for this audience.";
+  setStatus("Ready to create", "muted");
   resultDiagnostic.hidden = true;
   setDemoError();
 }

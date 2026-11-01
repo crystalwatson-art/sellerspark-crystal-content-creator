@@ -124,8 +124,12 @@ test('signed-in Generate saves decisions and a fresh browser resumes them withou
   assert.ok(rows[0].listing_review.reviews[0].cardVersions.length >= 2);
   await closeBrowser();
   $ = installBrowser('/?tiktok=error&reason=provider_client_invalid#home');
+  localStorage.setItem('sellerspark-selected-research-audience-v1','brooklyn_townhouse_owner');
   await import('../public/app.js?account-resume-callback');
   await waitFor(() => $('auth-status').textContent.startsWith('Signed in'));
+  await waitFor(() => document.querySelector('[aria-label="Saved drafts"]').textContent.includes('most recently updated sets'));
+  assert.equal($('audience-value').value,'brooklyn_townhouse_owner','an explicit Overview location survives account history resume');
+  assert.equal($('drafts').children.length,0,'LIC history does not silently replace an empty Brooklyn workspace');
   assert.equal(location.hash, '#growth');
   assert.equal(location.search, '');
   assert.match($('tiktok-return-status').textContent, /app credentials/);
