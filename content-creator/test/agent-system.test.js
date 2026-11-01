@@ -80,6 +80,18 @@ test('automatic feedback loop continues beyond two rounds and returns for human 
   assert.equal(result.automaticallyPublished,false);
 });
 
+test('valid editorial corrections continue without an optional confidence score', async () => {
+  const original=modelWith({corrections:1});
+  const result=await createAgentSystem({model:{...original,async decide(input){
+    const decision=await original.decide(input);
+    if(decision.action==='request_revision') delete decision.input.confidence;
+    return decision;
+  }}}).generate(brief);
+  assert.equal(result.status,'ready_for_review');
+  assert.equal(result.agentRun.revisionHandoffs,1);
+  assert.equal(result.humanApprovalRequired,true);
+});
+
 test('eight revision handoffs are the maximum, preserving the human gate on failure', async () => {
   const result = await createAgentSystem({ model: modelWith({ corrections: 9 }) }).generate(brief);
   assert.equal(result.status, 'needs_more_research');

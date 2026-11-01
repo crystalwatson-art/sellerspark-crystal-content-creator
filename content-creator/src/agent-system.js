@@ -19,7 +19,7 @@ const toolsByRole = Object.freeze({
   listing_optimizer: {
     inspect_handoff: 'input {}. Read the Creator candidate, original source references, warnings, uncertainty and revision request.',
     check_drafts: 'input {}. Run the independent validation and editorial checks on the received candidate.',
-    request_revision: 'input {feedback:[{draftIndex:0..2,field:string,instruction:string}], confidence:number 0..1}. Send specific actionable corrections to the Creator. Maximum eight revision handoffs within the request deadline.',
+    request_revision: 'input {feedback:[{draftIndex:0..2,field:string,instruction:string}], confidence?:number 0..1}. Send specific actionable corrections to the Creator. Maximum eight revision handoffs within the request deadline.',
     finish: 'input {}. Mark the checked candidate ready for HUMAN REVIEW only, when no correction is needed. Cannot approve or publish.',
     stop: 'input {}. Stop if evidence is insufficient or the task cannot be completed safely.'
   }
@@ -171,12 +171,12 @@ export function createAgentSystem({ model: configuredModel, history = null, now 
             }
             if (action === 'request_revision') {
               const allowedFields = new Set(MODEL_OUTPUT_SCHEMA.properties.drafts.items.required.filter(field => !['supportingClaimIds','angle'].includes(field)));
-              const valid = optimizerInspected && Array.isArray(input.feedback) && input.feedback.length > 0 && input.feedback.length <= 12 && input.feedback.every(item => Number.isInteger(item.draftIndex) && item.draftIndex >= 0 && item.draftIndex < 3 && (!targetDraftId || item.draftIndex === targetIndex) && allowedFields.has(item.field) && typeof item.instruction === 'string' && item.instruction.trim() && item.instruction.length <= 500) && Number.isFinite(input.confidence) && input.confidence >= 0 && input.confidence <= 1;
-              if (!valid) observation = { ok: false, code: 'invalid_feedback', message: 'Inspect the handoff and send specific field corrections and confidence.' };
+              const valid = optimizerInspected && Array.isArray(input.feedback) && input.feedback.length > 0 && input.feedback.length <= 12 && input.feedback.every(item => Number.isInteger(item.draftIndex) && item.draftIndex >= 0 && item.draftIndex < 3 && (!targetDraftId || item.draftIndex === targetIndex) && allowedFields.has(item.field) && typeof item.instruction === 'string' && item.instruction.trim() && item.instruction.length <= 500) && (input.confidence === undefined || (Number.isFinite(input.confidence) && input.confidence >= 0 && input.confidence <= 1));
+              if (!valid) observation = { ok: false, code: 'invalid_feedback', message: 'Inspect the handoff and send specific field corrections; confidence is optional.' };
               else {
                 if (revisions >= MAX_REVISIONS) throw failure('revision_limit');
                 revisions++;
-                const received = transfer(role, 'content_creator', { feedback: copy(input.feedback), confidence: input.confidence, audience: brief.audience, sourceRefs: copy(handoff.sourceRefs), warnings: copy(handoff.warnings), uncertaintyWarnings: copy(handoff.uncertaintyWarnings), uncertainties: copy(handoff.uncertainties), revision: revisions });
+                const received = transfer(role, 'content_creator', { feedback: copy(input.feedback), confidence: input.confidence ?? null, audience: brief.audience, sourceRefs: copy(handoff.sourceRefs), warnings: copy(handoff.warnings), uncertaintyWarnings: copy(handoff.uncertaintyWarnings), uncertainties: copy(handoff.uncertainties), revision: revisions });
                 feedback = received.feedback;
                 return 'revise';
               }
