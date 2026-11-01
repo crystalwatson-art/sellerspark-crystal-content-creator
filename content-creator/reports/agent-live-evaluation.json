@@ -1,73 +1,3697 @@
 {
-  "generatedAt": "2026-10-30T23:07:29.077Z",
-  "execution": "not_run",
-  "metric": "Automated contract checks, not semantic or real-world factual verification",
+  "generatedAt": "2026-11-01T02:27:55.664Z",
+  "sourceCommit": "7656717cbe5beb6de530c4ab6b4a54d6d7a648f0",
+  "runtimeCommit": "72250c22ecdf4a340a3c20778e6c62f77638cebd",
+  "verificationDeployment": "dpl_7WAGs15Q57MmysgpgUu7e9uVHyxJ",
+  "verificationBuildStatus": "ERROR because two evaluated cases failed; existing working preview was not reassigned",
+  "execution": "live_model",
+  "metric": "Automated workflow contract completion; not human semantic approval or verified real-world facts",
   "totalCases": 10,
-  "completed": 0,
-  "successful": 0,
-  "successRate": null,
+  "completed": 10,
+  "successful": 8,
+  "elapsedMs": 435831,
   "peerRedTeam": "pending",
-  "agentContributionAblation": "pending",
+  "humanEditorialReview": "pending",
+  "successRate": 0.8,
+  "agentContributionAblation": "not_run",
+  "agentContributionComparison": "observational first handoff versus final output",
+  "traceCoverage": "Reconstructed from build evidence: assignments, matching handoffs and stop events; not the complete per-call trace",
+  "captureLimitations": [
+    {
+      "type": "FEEDBACK",
+      "created": 1793499735447,
+      "reason": "Build-log text truncated by connector; omitted from reconstructed feedback."
+    }
+  ],
   "results": [
     {
       "id": "lic-timing",
-      "status": "not_run",
-      "reason": "provider_not_configured",
-      "success": null
+      "output": [],
+      "trace": [
+        {
+          "sequence": 1,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "4ed5ce04-bb80-453b-bee5-7a2ccf8e5c3c:1",
+          "to": "content_creator",
+          "revision": 0
+        },
+        {
+          "sequence": 9,
+          "agent": "system",
+          "event": "stopped",
+          "code": "repeated_action"
+        }
+      ],
+      "contributionComparison": {
+        "firstCreatorDrafts": [],
+        "optimizerDecisionFeedback": [],
+        "method": "Observed first Creator handoff versus final two-agent output; no causal ablation.",
+        "changedDrafts": 0
+      },
+      "audience": "lic_condo_owner",
+      "questions": [
+        "Which timing questions should I ask before deciding to sell?",
+        "What should I write down before an introductory conversation?",
+        "How do I decide what information I still need?"
+      ],
+      "status": "needs_more_research",
+      "success": false,
+      "elapsedMs": 16103,
+      "writer": "agent_system",
+      "draftCount": 0,
+      "handoffsSent": 0,
+      "handoffsMatched": 0,
+      "roles": [
+        "content_creator"
+      ],
+      "stopReason": "repeated_action",
+      "modelCalls": 3,
+      "revisionHandoffs": 0,
+      "providerAttempts": [
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "rate_limited"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        }
+      ],
+      "humanApprovalRequired": true,
+      "automaticallyPublished": false,
+      "customerContacted": false,
+      "humanEditorialReview": "pending",
+      "assistantEditorialAssessment": {
+        "assessment": "No draft returned",
+        "concern": "A provider repeated an action; coordinator stopped before an Optimizer handoff.",
+        "example": "No output to approve.",
+        "action": "Investigate the repeated action while preserving the stop guard."
+      }
     },
     {
       "id": "lic-preparation",
-      "status": "not_run",
-      "reason": "provider_not_configured",
-      "success": null
+      "output": [
+        {
+          "id": "content-draft-01",
+          "audience": "lic_condo_owner",
+          "audienceLabel": "Long Island City condo owners",
+          "researchTopicId": "fictional-topic-01",
+          "angle": "Seller education",
+          "hook": "Wonder which condo details you can verify yourself?",
+          "script": "Check your unit number, square footage, tax bill, HOA fees, and any recent upgrades. Pull the tax statement, review the HOA portal, and measure rooms with a tape. Having these facts ready shows you’re organized and builds buyer confidence.",
+          "takeaway": "You can confidently confirm key facts before listing.",
+          "videoConcept": "On‑camera walkthrough with checklist overlay.",
+          "suggestedScenes": [
+            "Host introduces the question on screen",
+            "Display a checklist of details to verify",
+            "Show pulling a tax bill and HOA portal screenshot",
+            "Close with a quick tip and call to action"
+          ],
+          "caption": "Get clear on your condo’s facts—follow for more NYC seller tips.",
+          "reasonToFollow": "Practical guidance for NYC condo owners to prepare their unit for sale.",
+          "hashtags": [
+            "#NYCRealEstate",
+            "#CondoSelling",
+            "#SellerTips"
+          ],
+          "suggestedNextStep": "Gather these documents and share them with your agent.",
+          "sourceRefs": [
+            {
+              "id": "fictional-source-01",
+              "title": "Fictional LIC Condo Seller Question Notes",
+              "url": "https://fictional.example/sellerspark/source-01",
+              "date": "2026-10-20"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        },
+        {
+          "id": "content-draft-02",
+          "audience": "lic_condo_owner",
+          "audienceLabel": "Long Island City condo owners",
+          "researchTopicId": "fictional-topic-02",
+          "angle": "Common seller mistakes",
+          "hook": "Avoid the mistake of skipping essential prep notes for your agent.",
+          "script": "Many sellers forget to list recent repairs, utility bills, or renovation permits. Without these, agents can’t price accurately. Create a one‑page summary: repairs, upgrades, permits, and utility costs. Hand it to your agent to streamline the listing process.",
+          "takeaway": "A complete prep note saves time and avoids price gaps.",
+          "videoConcept": "Host at a desk turning a blank note into a filled prep summary.",
+          "suggestedScenes": [
+            "Host states the common mistake",
+            "Show a blank note page",
+            "Fill in key items: repairs, permits, utilities",
+            "Highlight how the note speeds up the listing"
+          ],
+          "caption": "Don’t let missing info stall your sale—follow for practical prep advice.",
+          "reasonToFollow": "Step‑by‑step prep help for Long Island City condo sellers.",
+          "hashtags": [
+            "#NYCRealEstate",
+            "#SellerMistakes",
+            "#PrepTips"
+          ],
+          "suggestedNextStep": "Create a one‑page summary using the provided template.",
+          "sourceRefs": [
+            {
+              "id": "fictional-source-02",
+              "title": "Fictional LIC Condo Planning Notes",
+              "url": "https://fictional.example/sellerspark/source-02",
+              "date": "2026-10-20"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        },
+        {
+          "id": "content-draft-03",
+          "audience": "lic_condo_owner",
+          "audienceLabel": "Long Island City condo owners",
+          "researchTopicId": "fictional-topic-03",
+          "angle": "Decision-making questions",
+          "hook": "Not sure how to sort known condo facts from unknowns?",
+          "script": "Grab a sheet and draw two columns: Known Details and Unanswered Questions. List unit size, taxes, and recent upgrades under Known. Put things like pending permits or missing paperwork under Unanswered. Color‑code them and share the list with your agent to focus the next steps.",
+          "takeaway": "A clear split lets you focus on what matters next.",
+          "videoConcept": "Whiteboard split screen showing examples of known and unknown items.",
+          "suggestedScenes": [
+            "Host poses the question",
+            "Draw two columns on a whiteboard",
+            "Add sample known details",
+            "Add sample unanswered questions",
+            "Summarize the benefit of the list"
+          ],
+          "caption": "Organize your info and ask the right questions—follow for more guidance.",
+          "reasonToFollow": "Guidance on organizing condo information for a smoother sale.",
+          "hashtags": [
+            "#NYCRealEstate",
+            "#SellerHelp",
+            "#DecisionMaking"
+          ],
+          "suggestedNextStep": "Create a two‑column list today.",
+          "sourceRefs": [
+            {
+              "id": "fictional-source-03",
+              "title": "Fictional LIC Condo Consultation Notes",
+              "url": "https://fictional.example/sellerspark/source-03",
+              "date": "2026-10-20"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        }
+      ],
+      "trace": [
+        {
+          "sequence": 1,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "6c99b32c-9753-44f6-9373-cb463bd0ce06:1",
+          "to": "content_creator",
+          "revision": 0
+        },
+        {
+          "sequence": 10,
+          "agent": "content_creator",
+          "event": "handoff_sent",
+          "to": "listing_optimizer",
+          "handoffId": "df972767-29c5-4bf1-8184-98344d2787b2",
+          "payloadDigest": "371d54ea0731a8784d947a5159fd03f93b8e6ce757fec417d623fe27e486d2da",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 11,
+          "agent": "listing_optimizer",
+          "event": "handoff_received",
+          "from": "content_creator",
+          "handoffId": "df972767-29c5-4bf1-8184-98344d2787b2",
+          "payloadDigest": "371d54ea0731a8784d947a5159fd03f93b8e6ce757fec417d623fe27e486d2da",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 12,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "6c99b32c-9753-44f6-9373-cb463bd0ce06:2",
+          "to": "listing_optimizer",
+          "revision": 0
+        },
+        {
+          "sequence": 27,
+          "agent": "listing_optimizer",
+          "event": "ready_for_human_review"
+        }
+      ],
+      "contributionComparison": {
+        "firstCreatorDrafts": [
+          {
+            "angle": "Seller education",
+            "hook": "Wonder which condo details you can verify yourself?",
+            "script": "Check your unit number, square footage, tax bill, HOA fees, and any recent upgrades. Pull the tax statement, review the HOA portal, and measure rooms with a tape. Having these facts ready shows you’re organized and builds buyer confidence.",
+            "takeaway": "You can confidently confirm key facts before listing.",
+            "caption": "Get clear on your condo’s facts—follow for more NYC seller tips.",
+            "hashtags": [
+              "#NYCRealEstate",
+              "#CondoSelling",
+              "#SellerTips"
+            ],
+            "suggestedNextStep": "Gather these documents and share them with your agent.",
+            "reasonToFollow": "Practical guidance for NYC condo owners to prepare their unit for sale.",
+            "videoConcept": "On‑camera walkthrough with checklist overlay.",
+            "suggestedScenes": [
+              "Host introduces the question on screen",
+              "Display a checklist of details to verify",
+              "Show pulling a tax bill and HOA portal screenshot",
+              "Close with a quick tip and call to action"
+            ],
+            "supportingClaimIds": []
+          },
+          {
+            "angle": "Common seller mistakes",
+            "hook": "Avoid the mistake of skipping essential prep notes for your agent.",
+            "script": "Many sellers forget to list recent repairs, utility bills, or renovation permits. Without these, agents can’t price accurately. Create a one‑page summary: repairs, upgrades, permits, and utility costs. Hand it to your agent to streamline the listing process.",
+            "takeaway": "A complete prep note saves time and avoids price gaps.",
+            "caption": "Don’t let missing info stall your sale—follow for practical prep advice.",
+            "hashtags": [
+              "#NYCRealEstate",
+              "#SellerMistakes",
+              "#PrepTips"
+            ],
+            "suggestedNextStep": "Create a one‑page summary using the provided template.",
+            "reasonToFollow": "Step‑by‑step prep help for Long Island City condo sellers.",
+            "videoConcept": "Host at a desk turning a blank note into a filled prep summary.",
+            "suggestedScenes": [
+              "Host states the common mistake",
+              "Show a blank note page",
+              "Fill in key items: repairs, permits, utilities",
+              "Highlight how the note speeds up the listing"
+            ],
+            "supportingClaimIds": []
+          },
+          {
+            "angle": "Decision-making questions",
+            "hook": "Not sure how to sort known condo facts from unknowns?",
+            "script": "Grab a sheet and draw two columns: Known Details and Unanswered Questions. List unit size, taxes, and recent upgrades under Known. Put things like pending permits or missing paperwork under Unanswered. Color‑code them and share the list with your agent to focus the next steps.",
+            "takeaway": "A clear split lets you focus on what matters next.",
+            "caption": "Organize your info and ask the right questions—follow for more guidance.",
+            "hashtags": [
+              "#NYCRealEstate",
+              "#SellerHelp",
+              "#DecisionMaking"
+            ],
+            "suggestedNextStep": "Create a two‑column list today.",
+            "reasonToFollow": "Guidance on organizing condo information for a smoother sale.",
+            "videoConcept": "Whiteboard split screen showing examples of known and unknown items.",
+            "suggestedScenes": [
+              "Host poses the question",
+              "Draw two columns on a whiteboard",
+              "Add sample known details",
+              "Add sample unanswered questions",
+              "Summarize the benefit of the list"
+            ],
+            "supportingClaimIds": []
+          }
+        ],
+        "optimizerDecisionFeedback": [
+          {
+            "feedback": [
+              {
+                "draftIndex": 0,
+                "field": "homeowner_relevance, practical_viewer_value, consultation_next_step_clarity",
+                "instruction": "Ensure the script explicitly addresses Long Island City condo owners. Provide a concrete, practical checklist of details they can personally verify (like square footage, tax bill, HOA fees) and make the CTA a clear, respectful invitation, such as downloading the checklist or asking a question in the comments, rather than just telling them to share documents with an agent."
+              },
+              {
+                "draftIndex": 1,
+                "field": "topic_distinctiveness, homeowner_relevance, consultation_next_step_clarity",
+                "instruction": "Differentiate this draft by focusing specifically on common mistakes LIC condo sellers make when preparing notes for a professional agent. The CTA must be a clear, respectful call to action, such as downloading a one-page summary template, rather than telling the viewer to create and hand over a summary directly."
+              },
+              {
+                "draftIndex": 2,
+                "field": "topic_distinctiveness, homeowner_relevance, practical_viewer_value, consultation_next_step_clarity",
+                "instruction": "Tailor the two-column list concept specifically to Long Island City condo owners distinguishing known unit facts from unanswered questions. The practical value must be clearer, and the CTA should be a specific, respectful prompt like commenting 'KNOW' to get the template, instead of just telling them to share the list with their agent."
+              }
+            ]
+          },
+          {
+            "feedback": [
+              {
+                "draftIndex": 0,
+                "field": "suggestedNextStep",
+                "instruction": "Make the next step a specific, respectful question or action the seller can take when meeting with their agent, rather than just 'share them'."
+              },
+              {
+                "draftIndex": 1,
+                "field": "script",
+                "instruction": "Focus more on the specific mistakes condo sellers make when they don't prepare these notes, to increase topic distinctiveness and homeowner relevance."
+              },
+              {
+                "draftIndex": 2,
+                "field": "takeaway",
+                "instruction": "Ensure the takeaway is highly practical and directly tied to the decision-making questions topic, explaining how separating knowns from unknowns helps the seller in the listing process."
+              }
+            ]
+          }
+        ],
+        "method": "Observed first Creator handoff versus final two-agent output; no causal ablation.",
+        "changedDrafts": 0
+      },
+      "audience": "lic_condo_owner",
+      "questions": [
+        "Which unit details can I personally confirm?",
+        "Which preparation notes should I bring to a professional?",
+        "How can I separate known details from unanswered questions?"
+      ],
+      "status": "ready_for_review",
+      "success": true,
+      "elapsedMs": 67647,
+      "writer": "agent_system",
+      "draftCount": 3,
+      "handoffsSent": 1,
+      "handoffsMatched": 1,
+      "roles": [
+        "content_creator",
+        "listing_optimizer"
+      ],
+      "stopReason": "ready_for_human_review",
+      "modelCalls": 8,
+      "revisionHandoffs": 0,
+      "providerAttempts": [
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "rate_limited"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "truncated_response"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        }
+      ],
+      "humanApprovalRequired": true,
+      "automaticallyPublished": false,
+      "customerContacted": false,
+      "humanEditorialReview": "pending",
+      "assistantEditorialAssessment": {
+        "assessment": "Needs revision",
+        "concern": "Unsupported certainty and an invented resource.",
+        "example": "Claims missing notes prevent accurate pricing; offers a provided template that the brief does not contain.",
+        "action": "Use a simple question list; remove pricing certainty and the nonexistent template."
+      }
     },
     {
       "id": "lic-first-meeting",
-      "status": "not_run",
-      "reason": "provider_not_configured",
-      "success": null
+      "output": [
+        {
+          "id": "content-draft-01",
+          "audience": "lic_condo_owner",
+          "audienceLabel": "Long Island City condo owners",
+          "researchTopicId": "fictional-topic-01",
+          "angle": "Seller education",
+          "hook": "Wondering how to make our first meeting count?",
+          "script": "I’m a NYC realtor—here’s three things to bring: a copy of your lease, recent tax bill, and a list of any upgrades. I’ll review market comps, explain the process, and answer your top concerns. That way we leave with a clear game plan.",
+          "takeaway": "Bring those three items and you’ll leave the first meeting with a concrete selling roadmap.",
+          "videoConcept": "Quick office walkthrough with checklist graphics.",
+          "suggestedScenes": [
+            "Host greets camera, holds up a lease document.",
+            "Cut to tax bill on table, zoom in.",
+            "Show a notepad with upgrades listed.",
+            "Host points to a whiteboard with meeting agenda."
+          ],
+          "caption": "Get a clear plan from day one—follow for practical NYC condo seller tips.",
+          "reasonToFollow": "Practical step‑by‑step guidance for Long Island City condo owners.",
+          "hashtags": [
+            "#NYCRealEstate",
+            "#CondoSeller",
+            "#SellerTips"
+          ],
+          "suggestedNextStep": "Schedule a 15‑minute call to confirm the documents and set a meeting date.",
+          "sourceRefs": [
+            {
+              "id": "fictional-source-01",
+              "title": "Fictional LIC Condo Seller Question Notes",
+              "url": "https://fictional.example/sellerspark/source-01",
+              "date": "2026-10-20"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        },
+        {
+          "id": "content-draft-02",
+          "audience": "lic_condo_owner",
+          "audienceLabel": "Long Island City condo owners",
+          "researchTopicId": "fictional-topic-02",
+          "angle": "Common seller mistakes",
+          "hook": "Missing this key question can stall your sale.",
+          "script": "Many sellers forget to ask: ‘What are the hidden costs of selling?’ I’ll break down staging fees, closing costs, and potential tax impacts. Knowing these up front prevents surprise expenses and keeps your timeline on track.",
+          "takeaway": "Ask about hidden costs early to avoid budget shocks later.",
+          "videoConcept": "Host at a desk with cost breakdown overlay.",
+          "suggestedScenes": [
+            "Host looks concerned, holds up a question card.",
+            "Overlay graphic listing hidden costs.",
+            "Host explains each cost briefly.",
+            "Call‑to‑action text on screen."
+          ],
+          "caption": "Avoid surprise fees—follow for more NYC condo selling insights.",
+          "reasonToFollow": "Learn the pitfalls Long Island City sellers often overlook.",
+          "hashtags": [
+            "#SellerMistakes",
+            "#NYCCondo",
+            "#RealEstateAdvice"
+          ],
+          "suggestedNextStep": "Request a cost‑breakdown worksheet during our next chat.",
+          "sourceRefs": [
+            {
+              "id": "fictional-source-02",
+              "title": "Fictional LIC Condo Planning Notes",
+              "url": "https://fictional.example/sellerspark/source-02",
+              "date": "2026-10-20"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        },
+        {
+          "id": "content-draft-03",
+          "audience": "lic_condo_owner",
+          "audienceLabel": "Long Island City condo owners",
+          "researchTopicId": "fictional-topic-03",
+          "angle": "Decision-making questions",
+          "hook": "What should you ask before picking your next step?",
+          "script": "Before deciding to list, rent, or hold, ask: ‘What’s the current buyer demand for my building?’ I’ll share recent inquiry data, price trends, and how long listings typically stay on market in LIC. That info guides your next move.",
+          "takeaway": "Ask about current buyer demand to choose the right path.",
+          "videoConcept": "Host presents a simple chart on a tablet.",
+          "suggestedScenes": [
+            "Host holds up a question card.",
+            "Screen capture of recent buyer inquiry stats.",
+            "Host points to a trend line chart.",
+            "Closing shot with contact info."
+          ],
+          "caption": "Make informed choices—follow for data‑driven NYC seller advice.",
+          "reasonToFollow": "Get data‑backed guidance for Long Island City condo owners.",
+          "hashtags": [
+            "#DecisionMaking",
+            "#LICCondo",
+            "#RealEstateData"
+          ],
+          "suggestedNextStep": "Book a market snapshot session to get the latest demand numbers.",
+          "sourceRefs": [
+            {
+              "id": "fictional-source-03",
+              "title": "Fictional LIC Condo Consultation Notes",
+              "url": "https://fictional.example/sellerspark/source-03",
+              "date": "2026-10-20"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        }
+      ],
+      "trace": [
+        {
+          "sequence": 1,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "590a4b50-ae95-4c2f-b4f4-d6f2c889b49d:1",
+          "to": "content_creator",
+          "revision": 0
+        },
+        {
+          "sequence": 10,
+          "agent": "content_creator",
+          "event": "handoff_sent",
+          "to": "listing_optimizer",
+          "handoffId": "5a120979-b2b0-4e05-baed-35b10d7fbf55",
+          "payloadDigest": "2336086bcbf5ee2459c962ec0a408bd9a586079512209e88bda7ac84f213d12d",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 11,
+          "agent": "listing_optimizer",
+          "event": "handoff_received",
+          "from": "content_creator",
+          "handoffId": "5a120979-b2b0-4e05-baed-35b10d7fbf55",
+          "payloadDigest": "2336086bcbf5ee2459c962ec0a408bd9a586079512209e88bda7ac84f213d12d",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 12,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "590a4b50-ae95-4c2f-b4f4-d6f2c889b49d:2",
+          "to": "listing_optimizer",
+          "revision": 0
+        },
+        {
+          "sequence": 21,
+          "agent": "listing_optimizer",
+          "event": "ready_for_human_review"
+        }
+      ],
+      "contributionComparison": {
+        "firstCreatorDrafts": [
+          {
+            "angle": "Seller education",
+            "hook": "Wondering how to make our first meeting count?",
+            "script": "I’m a NYC realtor—here’s three things to bring: a copy of your lease, recent tax bill, and a list of any upgrades. I’ll review market comps, explain the process, and answer your top concerns. That way we leave with a clear game plan.",
+            "takeaway": "Bring those three items and you’ll leave the first meeting with a concrete selling roadmap.",
+            "caption": "Get a clear plan from day one—follow for practical NYC condo seller tips.",
+            "hashtags": [
+              "#NYCRealEstate",
+              "#CondoSeller",
+              "#SellerTips"
+            ],
+            "suggestedNextStep": "Schedule a 15‑minute call to confirm the documents and set a meeting date.",
+            "reasonToFollow": "Practical step‑by‑step guidance for Long Island City condo owners.",
+            "videoConcept": "Quick office walkthrough with checklist graphics.",
+            "suggestedScenes": [
+              "Host greets camera, holds up a lease document.",
+              "Cut to tax bill on table, zoom in.",
+              "Show a notepad with upgrades listed.",
+              "Host points to a whiteboard with meeting agenda."
+            ],
+            "supportingClaimIds": []
+          },
+          {
+            "angle": "Common seller mistakes",
+            "hook": "Missing this key question can stall your sale.",
+            "script": "Many sellers forget to ask: ‘What are the hidden costs of selling?’ I’ll break down staging fees, closing costs, and potential tax impacts. Knowing these up front prevents surprise expenses and keeps your timeline on track.",
+            "takeaway": "Ask about hidden costs early to avoid budget shocks later.",
+            "caption": "Avoid surprise fees—follow for more NYC condo selling insights.",
+            "hashtags": [
+              "#SellerMistakes",
+              "#NYCCondo",
+              "#RealEstateAdvice"
+            ],
+            "suggestedNextStep": "Request a cost‑breakdown worksheet during our next chat.",
+            "reasonToFollow": "Learn the pitfalls Long Island City sellers often overlook.",
+            "videoConcept": "Host at a desk with cost breakdown overlay.",
+            "suggestedScenes": [
+              "Host looks concerned, holds up a question card.",
+              "Overlay graphic listing hidden costs.",
+              "Host explains each cost briefly.",
+              "Call‑to‑action text on screen."
+            ],
+            "supportingClaimIds": []
+          },
+          {
+            "angle": "Decision-making questions",
+            "hook": "What should you ask before picking your next step?",
+            "script": "Before deciding to list, rent, or hold, ask: ‘What’s the current buyer demand for my building?’ I’ll share recent inquiry data, price trends, and how long listings typically stay on market in LIC. That info guides your next move.",
+            "takeaway": "Ask about current buyer demand to choose the right path.",
+            "caption": "Make informed choices—follow for data‑driven NYC seller advice.",
+            "hashtags": [
+              "#DecisionMaking",
+              "#LICCondo",
+              "#RealEstateData"
+            ],
+            "suggestedNextStep": "Book a market snapshot session to get the latest demand numbers.",
+            "reasonToFollow": "Get data‑backed guidance for Long Island City condo owners.",
+            "videoConcept": "Host presents a simple chart on a tablet.",
+            "suggestedScenes": [
+              "Host holds up a question card.",
+              "Screen capture of recent buyer inquiry stats.",
+              "Host points to a trend line chart.",
+              "Closing shot with contact info."
+            ],
+            "supportingClaimIds": []
+          }
+        ],
+        "optimizerDecisionFeedback": [],
+        "method": "Observed first Creator handoff versus final two-agent output; no causal ablation.",
+        "changedDrafts": 0
+      },
+      "audience": "lic_condo_owner",
+      "questions": [
+        "What would make a first meeting useful?",
+        "Which question do sellers forget to prepare?",
+        "What should I ask before choosing a next step?"
+      ],
+      "status": "ready_for_review",
+      "success": true,
+      "elapsedMs": 33401,
+      "writer": "agent_system",
+      "draftCount": 3,
+      "handoffsSent": 1,
+      "handoffsMatched": 1,
+      "roles": [
+        "content_creator",
+        "listing_optimizer"
+      ],
+      "stopReason": "ready_for_human_review",
+      "modelCalls": 6,
+      "revisionHandoffs": 0,
+      "providerAttempts": [
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "rate_limited"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "truncated_response"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        }
+      ],
+      "humanApprovalRequired": true,
+      "automaticallyPublished": false,
+      "customerContacted": false,
+      "humanEditorialReview": "pending",
+      "assistantEditorialAssessment": {
+        "assessment": "Needs revision",
+        "concern": "Invented speaker identity and service/data promises.",
+        "example": "'I’m a NYC realtor' and promises to share inquiry data, price trends and a cost worksheet.",
+        "action": "Do not invent the speaker's credentials or data access; turn these into questions for a professional."
+      }
     },
     {
       "id": "lic-home-story",
-      "status": "not_run",
-      "reason": "provider_not_configured",
-      "success": null
+      "output": [
+        {
+          "id": "content-draft-01",
+          "audience": "lic_condo_owner",
+          "audienceLabel": "Long Island City condo owners",
+          "researchTopicId": "fictional-topic-01",
+          "angle": "Seller education",
+          "hook": "Want to describe your favorite room honestly and still sell?",
+          "script": "Talk about the room you love, but stick to facts: size, light, view, and any quirks. Mention why it works for you, like morning coffee or a home office vibe. Keep it concise and genuine—buyers trust real stories over hype.",
+          "takeaway": "Honest, specific details build buyer trust and highlight the room’s real appeal.",
+          "videoConcept": "Quick on‑camera talk with cut‑away text overlays of room features.",
+          "suggestedScenes": [
+            "Host on camera introducing the question.",
+            "Overlay bullet points of factual room details.",
+            "Close‑up of host summarizing the trust benefit."
+          ],
+          "caption": "Learn how truthful room descriptions can boost your condo sale.",
+          "reasonToFollow": "Practical tips for NYC condo owners to market their homes effectively.",
+          "hashtags": [
+            "#NYCRealEstate",
+            "#CondoSelling",
+            "#SellerTips"
+          ],
+          "suggestedNextStep": "Offer to walk the buyer through the room during a showing.",
+          "sourceRefs": [
+            {
+              "id": "fictional-source-01",
+              "title": "Fictional LIC Condo Seller Question Notes",
+              "url": "https://fictional.example/sellerspark/source-01",
+              "date": "2026-10-20"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        },
+        {
+          "id": "content-draft-02",
+          "audience": "lic_condo_owner",
+          "audienceLabel": "Long Island City condo owners",
+          "researchTopicId": "fictional-topic-02",
+          "angle": "Common seller mistakes",
+          "hook": "Guessing details about your condo? That’s a big mistake.",
+          "script": "Many sellers assume things like square footage or building fees without checking. One common error: listing a balcony size that’s actually smaller. Instead, verify every everyday detail—taxes, utilities, storage—before you post. Accurate info prevents buyer doubts and saves time.",
+          "takeaway": "Confirm every everyday detail to avoid costly buyer skepticism.",
+          "videoConcept": "Host lists common guess errors with on‑screen checkmarks and corrections.",
+          "suggestedScenes": [
+            "Host stating the mistake question.",
+            "Split screen showing guessed vs. verified detail.",
+            "Host urging a fact‑check before listing."
+          ],
+          "caption": "Avoid the top detail‑guessing mistake when selling your LIC condo.",
+          "reasonToFollow": "Get reliable, mistake‑proof guidance for selling NYC condos.",
+          "hashtags": [
+            "#SellerMistakes",
+            "#NYCCondo",
+            "#RealEstateAdvice"
+          ],
+          "suggestedNextStep": "Schedule a quick audit of your listing facts with your agent.",
+          "sourceRefs": [
+            {
+              "id": "fictional-source-02",
+              "title": "Fictional LIC Condo Planning Notes",
+              "url": "https://fictional.example/sellerspark/source-02",
+              "date": "2026-10-20"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        },
+        {
+          "id": "content-draft-03",
+          "audience": "lic_condo_owner",
+          "audienceLabel": "Long Island City condo owners",
+          "researchTopicId": "fictional-topic-03",
+          "angle": "Decision-making questions",
+          "hook": "Not sure which detail will wow buyers? Let’s pick the best one.",
+          "script": "Start with what a buyer experiences first: the view or natural light. Choose the detail that most improves daily life—like a floor‑to‑ceiling window overlooking the skyline. Explain why it matters: better mood, energy savings, and resale value. That focused story sticks.",
+          "takeaway": "Pick the detail that impacts daily living the most for maximum buyer impact.",
+          "videoConcept": "Host walks through the condo, pointing out the standout feature.",
+          "suggestedScenes": [
+            "Host asks the decision question on camera.",
+            "Footage of the highlighted feature (e.g., window view).",
+            "Host summarizing why that detail sells."
+          ],
+          "caption": "How to choose the single condo detail that sells.",
+          "reasonToFollow": "Learn decision‑making tricks to craft compelling condo listings.",
+          "hashtags": [
+            "#DecisionMaking",
+            "#NYCHomes",
+            "#SellerStrategy"
+          ],
+          "suggestedNextStep": "Create a one‑sentence highlight for your listing using that detail.",
+          "sourceRefs": [
+            {
+              "id": "fictional-source-03",
+              "title": "Fictional LIC Condo Consultation Notes",
+              "url": "https://fictional.example/sellerspark/source-03",
+              "date": "2026-10-20"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        }
+      ],
+      "trace": [
+        {
+          "sequence": 1,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "b9f2ef69-7b78-4172-b6b3-76807400be34:1",
+          "to": "content_creator",
+          "revision": 0
+        },
+        {
+          "sequence": 10,
+          "agent": "content_creator",
+          "event": "handoff_sent",
+          "to": "listing_optimizer",
+          "handoffId": "306cfcd2-41c5-4015-8324-80138c8a3186",
+          "payloadDigest": "8fb4b7c0e305364362c5fc8080bd2334d279574c8d12861eec2ed06cb03b5c15",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 11,
+          "agent": "listing_optimizer",
+          "event": "handoff_received",
+          "from": "content_creator",
+          "handoffId": "306cfcd2-41c5-4015-8324-80138c8a3186",
+          "payloadDigest": "8fb4b7c0e305364362c5fc8080bd2334d279574c8d12861eec2ed06cb03b5c15",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 12,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "b9f2ef69-7b78-4172-b6b3-76807400be34:2",
+          "to": "listing_optimizer",
+          "revision": 0
+        },
+        {
+          "sequence": 27,
+          "agent": "listing_optimizer",
+          "event": "ready_for_human_review"
+        }
+      ],
+      "contributionComparison": {
+        "firstCreatorDrafts": [
+          {
+            "angle": "Seller education",
+            "hook": "Want to describe your favorite room honestly and still sell?",
+            "script": "Talk about the room you love, but stick to facts: size, light, view, and any quirks. Mention why it works for you, like morning coffee or a home office vibe. Keep it concise and genuine—buyers trust real stories over hype.",
+            "takeaway": "Honest, specific details build buyer trust and highlight the room’s real appeal.",
+            "caption": "Learn how truthful room descriptions can boost your condo sale.",
+            "hashtags": [
+              "#NYCRealEstate",
+              "#CondoSelling",
+              "#SellerTips"
+            ],
+            "suggestedNextStep": "Offer to walk the buyer through the room during a showing.",
+            "reasonToFollow": "Practical tips for NYC condo owners to market their homes effectively.",
+            "videoConcept": "Quick on‑camera talk with cut‑away text overlays of room features.",
+            "suggestedScenes": [
+              "Host on camera introducing the question.",
+              "Overlay bullet points of factual room details.",
+              "Close‑up of host summarizing the trust benefit."
+            ],
+            "supportingClaimIds": []
+          },
+          {
+            "angle": "Common seller mistakes",
+            "hook": "Guessing details about your condo? That’s a big mistake.",
+            "script": "Many sellers assume things like square footage or building fees without checking. One common error: listing a balcony size that’s actually smaller. Instead, verify every everyday detail—taxes, utilities, storage—before you post. Accurate info prevents buyer doubts and saves time.",
+            "takeaway": "Confirm every everyday detail to avoid costly buyer skepticism.",
+            "caption": "Avoid the top detail‑guessing mistake when selling your LIC condo.",
+            "hashtags": [
+              "#SellerMistakes",
+              "#NYCCondo",
+              "#RealEstateAdvice"
+            ],
+            "suggestedNextStep": "Schedule a quick audit of your listing facts with your agent.",
+            "reasonToFollow": "Get reliable, mistake‑proof guidance for selling NYC condos.",
+            "videoConcept": "Host lists common guess errors with on‑screen checkmarks and corrections.",
+            "suggestedScenes": [
+              "Host stating the mistake question.",
+              "Split screen showing guessed vs. verified detail.",
+              "Host urging a fact‑check before listing."
+            ],
+            "supportingClaimIds": []
+          },
+          {
+            "angle": "Decision-making questions",
+            "hook": "Not sure which detail will wow buyers? Let’s pick the best one.",
+            "script": "Start with what a buyer experiences first: the view or natural light. Choose the detail that most improves daily life—like a floor‑to‑ceiling window overlooking the skyline. Explain why it matters: better mood, energy savings, and resale value. That focused story sticks.",
+            "takeaway": "Pick the detail that impacts daily living the most for maximum buyer impact.",
+            "caption": "How to choose the single condo detail that sells.",
+            "hashtags": [
+              "#DecisionMaking",
+              "#NYCHomes",
+              "#SellerStrategy"
+            ],
+            "suggestedNextStep": "Create a one‑sentence highlight for your listing using that detail.",
+            "reasonToFollow": "Learn decision‑making tricks to craft compelling condo listings.",
+            "videoConcept": "Host walks through the condo, pointing out the standout feature.",
+            "suggestedScenes": [
+              "Host asks the decision question on camera.",
+              "Footage of the highlighted feature (e.g., window view).",
+              "Host summarizing why that detail sells."
+            ],
+            "supportingClaimIds": []
+          }
+        ],
+        "optimizerDecisionFeedback": [
+          {
+            "feedback": [
+              {
+                "draftIndex": 1,
+                "field": "script",
+                "instruction": "Rewrite the script to lead with the assigned topic (describing a favorite room truthfully) and make the practical viewer value and reason-to-follow criteria pass. Keep the hook recognizable, the delivery natural, and the CTA respectful. Do not promise results or overstate buyer impact."
+              },
+              {
+                "draftIndex": 2,
+                "field": "script",
+                "instruction": "Rewrite the script to lead with the assigned topic (confirming everyday details instead of guessing) and make the practical viewer value and reason-to-follow criteria pass. Keep the hook recognizable, the delivery natural, and the CTA respectful. Do not promise results or overstate buyer impact."
+              },
+              {
+                "draftIndex": 2,
+                "field": "takeaway",
+                "instruction": "Also strengthen the takeaway so it gives a concrete action tied to confirming everyday details."
+              }
+            ]
+          }
+        ],
+        "method": "Observed first Creator handoff versus final two-agent output; no causal ablation.",
+        "changedDrafts": 0
+      },
+      "audience": "lic_condo_owner",
+      "questions": [
+        "How do I describe a favorite room truthfully?",
+        "Which everyday details should I confirm instead of guessing?",
+        "How do I choose the most useful firsthand detail to share?"
+      ],
+      "status": "ready_for_review",
+      "success": true,
+      "elapsedMs": 42510,
+      "writer": "agent_system",
+      "draftCount": 3,
+      "handoffsSent": 1,
+      "handoffsMatched": 1,
+      "roles": [
+        "content_creator",
+        "listing_optimizer"
+      ],
+      "stopReason": "ready_for_human_review",
+      "modelCalls": 8,
+      "revisionHandoffs": 0,
+      "providerAttempts": [
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "rate_limited"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "truncated_response"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        }
+      ],
+      "humanApprovalRequired": true,
+      "automaticallyPublished": false,
+      "customerContacted": false,
+      "humanEditorialReview": "pending",
+      "assistantEditorialAssessment": {
+        "assessment": "Needs revision",
+        "concern": "Unverified buyer, energy and resale claims.",
+        "example": "Says a window improves mood, energy savings and resale value.",
+        "action": "Describe only the owner's firsthand room experience; remove those claims."
+      }
     },
     {
       "id": "lic-next-chapter",
-      "status": "not_run",
-      "reason": "provider_not_configured",
-      "success": null
+      "output": [
+        {
+          "id": "content-draft-01",
+          "audience": "lic_condo_owner",
+          "audienceLabel": "Long Island City condo owners",
+          "researchTopicId": "fictional-topic-01",
+          "angle": "Seller education",
+          "hook": "Wondering what your move should unlock for your LIC condo life?",
+          "script": "Think beyond price—ask yourself what lifestyle changes you want. More space? Better commute? A fresh start? Pinpoint those goals, then match them to neighborhoods, amenities, and timing. This clarity guides every listing decision and keeps you focused on what truly matters.",
+          "takeaway": "Define the personal outcomes you want before pricing or listing.",
+          "videoConcept": "Goal‑focused seller guide",
+          "suggestedScenes": [
+            "Host on balcony with city view, asking the hook question.",
+            "Bullet list of common move goals appearing on screen.",
+            "Host summarizing how to translate goals into listing strategy."
+          ],
+          "caption": "Clarify your move goals for smarter selling decisions.",
+          "reasonToFollow": "Practical tips to align your selling strategy with personal priorities.",
+          "hashtags": [
+            "#LICSellers",
+            "#CondoMove",
+            "#NYCRealEstate"
+          ],
+          "suggestedNextStep": "Schedule a quick chat to map your move goals to market options.",
+          "sourceRefs": [
+            {
+              "id": "fictional-source-01",
+              "title": "Fictional LIC Condo Seller Question Notes",
+              "url": "https://fictional.example/sellerspark/source-01",
+              "date": "2026-10-20"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        },
+        {
+          "id": "content-draft-02",
+          "audience": "lic_condo_owner",
+          "audienceLabel": "Long Island City condo owners",
+          "researchTopicId": "fictional-topic-02",
+          "angle": "Common seller mistakes",
+          "hook": "Avoid this rushed decision mistake when selling your LIC condo.",
+          "script": "Many owners list too quickly, thinking speed beats strategy. The biggest slip? Skipping a pre‑sale market analysis. Without data, you risk underpricing or over‑investing in upgrades. Take a moment for a quick comparative review—then set a price that reflects true demand.",
+          "takeaway": "Never list without a brief market analysis first.",
+          "videoConcept": "Mistake‑avoidance quick tip",
+          "suggestedScenes": [
+            "Host in living room, holding a “For Sale” sign, looking concerned.",
+            "Screen split showing a quick market analysis graphic.",
+            "Host nodding, emphasizing the importance of data before listing."
+          ],
+          "caption": "Don’t let haste cost you—get the right price first.",
+          "reasonToFollow": "Avoid costly shortcuts with evidence‑based selling steps.",
+          "hashtags": [
+            "#SellerMistakes",
+            "#LICCondo",
+            "#RealEstateTips"
+          ],
+          "suggestedNextStep": "Book a 15‑minute market snapshot call.",
+          "sourceRefs": [
+            {
+              "id": "fictional-source-02",
+              "title": "Fictional LIC Condo Planning Notes",
+              "url": "https://fictional.example/sellerspark/source-02",
+              "date": "2026-10-20"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        },
+        {
+          "id": "content-draft-03",
+          "audience": "lic_condo_owner",
+          "audienceLabel": "Long Island City condo owners",
+          "researchTopicId": "fictional-topic-03",
+          "angle": "Decision-making questions",
+          "hook": "What priorities should guide your next conversation about selling?",
+          "script": "When you talk to an agent, focus on three things: timeline flexibility, financial goals, and post‑sale living plans. Ask how they’ll align marketing with your schedule, protect your profit margin, and support your next home search. Clear priorities keep the conversation productive and on‑track.",
+          "takeaway": "Lead conversations with timeline, money, and next‑home priorities.",
+          "videoConcept": "Priority‑driven seller interview prep",
+          "suggestedScenes": [
+            "Host at a desk with a notebook titled “Seller Agenda.”",
+            "Close‑up of three bullet points: timeline, finances, next home.",
+            "Host role‑playing a brief agent call, highlighting the questions."
+          ],
+          "caption": "Set clear priorities for a focused seller‑agent chat.",
+          "reasonToFollow": "Learn how to steer seller discussions toward your key goals.",
+          "hashtags": [
+            "#DecisionMaking",
+            "#LICSeller",
+            "#HomeSelling"
+          ],
+          "suggestedNextStep": "Prepare a three‑point agenda for your next agent meeting.",
+          "sourceRefs": [
+            {
+              "id": "fictional-source-03",
+              "title": "Fictional LIC Condo Consultation Notes",
+              "url": "https://fictional.example/sellerspark/source-03",
+              "date": "2026-10-20"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        }
+      ],
+      "trace": [
+        {
+          "sequence": 1,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "742c8603-f3c2-49e5-ac11-f370a4bee8a0:1",
+          "to": "content_creator",
+          "revision": 0
+        },
+        {
+          "sequence": 10,
+          "agent": "content_creator",
+          "event": "handoff_sent",
+          "to": "listing_optimizer",
+          "handoffId": "bb6e83aa-2124-4772-9365-6be0747a121b",
+          "payloadDigest": "3cc159a4327cc0829acf0b914811885d206bb801d9d0cbac13ec11c84bcb537d",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 11,
+          "agent": "listing_optimizer",
+          "event": "handoff_received",
+          "from": "content_creator",
+          "handoffId": "bb6e83aa-2124-4772-9365-6be0747a121b",
+          "payloadDigest": "3cc159a4327cc0829acf0b914811885d206bb801d9d0cbac13ec11c84bcb537d",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 12,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "742c8603-f3c2-49e5-ac11-f370a4bee8a0:2",
+          "to": "listing_optimizer",
+          "revision": 0
+        },
+        {
+          "sequence": 21,
+          "agent": "listing_optimizer",
+          "event": "ready_for_human_review"
+        }
+      ],
+      "contributionComparison": {
+        "firstCreatorDrafts": [
+          {
+            "angle": "Seller education",
+            "hook": "Wondering what your move should unlock for your LIC condo life?",
+            "script": "Think beyond price—ask yourself what lifestyle changes you want. More space? Better commute? A fresh start? Pinpoint those goals, then match them to neighborhoods, amenities, and timing. This clarity guides every listing decision and keeps you focused on what truly matters.",
+            "takeaway": "Define the personal outcomes you want before pricing or listing.",
+            "caption": "Clarify your move goals for smarter selling decisions.",
+            "hashtags": [
+              "#LICSellers",
+              "#CondoMove",
+              "#NYCRealEstate"
+            ],
+            "suggestedNextStep": "Schedule a quick chat to map your move goals to market options.",
+            "reasonToFollow": "Practical tips to align your selling strategy with personal priorities.",
+            "videoConcept": "Goal‑focused seller guide",
+            "suggestedScenes": [
+              "Host on balcony with city view, asking the hook question.",
+              "Bullet list of common move goals appearing on screen.",
+              "Host summarizing how to translate goals into listing strategy."
+            ],
+            "supportingClaimIds": []
+          },
+          {
+            "angle": "Common seller mistakes",
+            "hook": "Avoid this rushed decision mistake when selling your LIC condo.",
+            "script": "Many owners list too quickly, thinking speed beats strategy. The biggest slip? Skipping a pre‑sale market analysis. Without data, you risk underpricing or over‑investing in upgrades. Take a moment for a quick comparative review—then set a price that reflects true demand.",
+            "takeaway": "Never list without a brief market analysis first.",
+            "caption": "Don’t let haste cost you—get the right price first.",
+            "hashtags": [
+              "#SellerMistakes",
+              "#LICCondo",
+              "#RealEstateTips"
+            ],
+            "suggestedNextStep": "Book a 15‑minute market snapshot call.",
+            "reasonToFollow": "Avoid costly shortcuts with evidence‑based selling steps.",
+            "videoConcept": "Mistake‑avoidance quick tip",
+            "suggestedScenes": [
+              "Host in living room, holding a “For Sale” sign, looking concerned.",
+              "Screen split showing a quick market analysis graphic.",
+              "Host nodding, emphasizing the importance of data before listing."
+            ],
+            "supportingClaimIds": []
+          },
+          {
+            "angle": "Decision-making questions",
+            "hook": "What priorities should guide your next conversation about selling?",
+            "script": "When you talk to an agent, focus on three things: timeline flexibility, financial goals, and post‑sale living plans. Ask how they’ll align marketing with your schedule, protect your profit margin, and support your next home search. Clear priorities keep the conversation productive and on‑track.",
+            "takeaway": "Lead conversations with timeline, money, and next‑home priorities.",
+            "caption": "Set clear priorities for a focused seller‑agent chat.",
+            "hashtags": [
+              "#DecisionMaking",
+              "#LICSeller",
+              "#HomeSelling"
+            ],
+            "suggestedNextStep": "Prepare a three‑point agenda for your next agent meeting.",
+            "reasonToFollow": "Learn how to steer seller discussions toward your key goals.",
+            "videoConcept": "Priority‑driven seller interview prep",
+            "suggestedScenes": [
+              "Host at a desk with a notebook titled “Seller Agenda.”",
+              "Close‑up of three bullet points: timeline, finances, next home.",
+              "Host role‑playing a brief agent call, highlighting the questions."
+            ],
+            "supportingClaimIds": []
+          }
+        ],
+        "optimizerDecisionFeedback": [],
+        "method": "Observed first Creator handoff versus final two-agent output; no causal ablation.",
+        "changedDrafts": 0
+      },
+      "audience": "lic_condo_owner",
+      "questions": [
+        "What do I want a move to make possible?",
+        "How do I avoid making a rushed decision?",
+        "Which priorities should guide my next conversation?"
+      ],
+      "status": "ready_for_review",
+      "success": true,
+      "elapsedMs": 31761,
+      "writer": "agent_system",
+      "draftCount": 3,
+      "handoffsSent": 1,
+      "handoffsMatched": 1,
+      "roles": [
+        "content_creator",
+        "listing_optimizer"
+      ],
+      "stopReason": "ready_for_human_review",
+      "modelCalls": 6,
+      "revisionHandoffs": 0,
+      "providerAttempts": [
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "rate_limited"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "truncated_response"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        }
+      ],
+      "humanApprovalRequired": true,
+      "automaticallyPublished": false,
+      "customerContacted": false,
+      "humanEditorialReview": "pending",
+      "assistantEditorialAssessment": {
+        "assessment": "Needs revision",
+        "concern": "Market and profit claims beyond the supplied questions.",
+        "example": "'Many owners list too quickly' and advice to 'protect your profit margin'.",
+        "action": "Focus on personal move priorities, without asserting market consequences."
+      }
     },
     {
       "id": "brooklyn-timing",
-      "status": "not_run",
-      "reason": "provider_not_configured",
-      "success": null
+      "output": [],
+      "trace": [
+        {
+          "sequence": 1,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "12e88d36-627c-4933-b21f-1f0712a0d9c6:1",
+          "to": "content_creator",
+          "revision": 0
+        },
+        {
+          "sequence": 10,
+          "agent": "content_creator",
+          "event": "handoff_sent",
+          "to": "listing_optimizer",
+          "handoffId": "8dabbf43-6291-46d9-a444-a13d1387c834",
+          "payloadDigest": "d1f5ab5331d2905edc9867a743baa58b161801be6ca59c2e07a19c4d706fde58",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 11,
+          "agent": "listing_optimizer",
+          "event": "handoff_received",
+          "from": "content_creator",
+          "handoffId": "8dabbf43-6291-46d9-a444-a13d1387c834",
+          "payloadDigest": "d1f5ab5331d2905edc9867a743baa58b161801be6ca59c2e07a19c4d706fde58",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 12,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "12e88d36-627c-4933-b21f-1f0712a0d9c6:2",
+          "to": "listing_optimizer",
+          "revision": 0
+        },
+        {
+          "sequence": 21,
+          "agent": "listing_optimizer",
+          "event": "handoff_sent",
+          "to": "content_creator",
+          "handoffId": "55a6ee91-e62a-4edf-9802-508ed6b411af",
+          "payloadDigest": "1f5ca515c622a2ec8aa28964a80774cbe72d5e8480cf856f4b8e10fc627f691a",
+          "fields": [
+            "feedback",
+            "confidence",
+            "audience",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 22,
+          "agent": "content_creator",
+          "event": "handoff_received",
+          "from": "listing_optimizer",
+          "handoffId": "55a6ee91-e62a-4edf-9802-508ed6b411af",
+          "payloadDigest": "1f5ca515c622a2ec8aa28964a80774cbe72d5e8480cf856f4b8e10fc627f691a",
+          "fields": [
+            "feedback",
+            "confidence",
+            "audience",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 23,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "12e88d36-627c-4933-b21f-1f0712a0d9c6:3",
+          "to": "content_creator",
+          "revision": 1
+        },
+        {
+          "sequence": 32,
+          "agent": "content_creator",
+          "event": "handoff_sent",
+          "to": "listing_optimizer",
+          "handoffId": "69cfdf47-758b-4d0c-a651-0959ccf99576",
+          "payloadDigest": "7abfb22b4838bac8258681ed60774599175cefc0971c246faf4a5a53ba5ad431",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 33,
+          "agent": "listing_optimizer",
+          "event": "handoff_received",
+          "from": "content_creator",
+          "handoffId": "69cfdf47-758b-4d0c-a651-0959ccf99576",
+          "payloadDigest": "7abfb22b4838bac8258681ed60774599175cefc0971c246faf4a5a53ba5ad431",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 34,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "12e88d36-627c-4933-b21f-1f0712a0d9c6:4",
+          "to": "listing_optimizer",
+          "revision": 1
+        },
+        {
+          "sequence": 43,
+          "agent": "listing_optimizer",
+          "event": "handoff_sent",
+          "to": "content_creator",
+          "handoffId": "c13741c6-37ff-411f-874d-dae5747bf1a3",
+          "payloadDigest": "1842c2f3f1db220637f900df97049b26073a8f8388d0124952d2407cd1e4102a",
+          "fields": [
+            "feedback",
+            "confidence",
+            "audience",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 44,
+          "agent": "content_creator",
+          "event": "handoff_received",
+          "from": "listing_optimizer",
+          "handoffId": "c13741c6-37ff-411f-874d-dae5747bf1a3",
+          "payloadDigest": "1842c2f3f1db220637f900df97049b26073a8f8388d0124952d2407cd1e4102a",
+          "fields": [
+            "feedback",
+            "confidence",
+            "audience",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 45,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "12e88d36-627c-4933-b21f-1f0712a0d9c6:5",
+          "to": "content_creator",
+          "revision": 2
+        },
+        {
+          "sequence": 54,
+          "agent": "content_creator",
+          "event": "handoff_sent",
+          "to": "listing_optimizer",
+          "handoffId": "98e91d24-8e00-4f57-a666-4eddbfc84dc1",
+          "payloadDigest": "899b3ee67a8f87565f7ff3e973174a65a62788f71671a3860d1d726154f3673f",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 55,
+          "agent": "listing_optimizer",
+          "event": "handoff_received",
+          "from": "content_creator",
+          "handoffId": "98e91d24-8e00-4f57-a666-4eddbfc84dc1",
+          "payloadDigest": "899b3ee67a8f87565f7ff3e973174a65a62788f71671a3860d1d726154f3673f",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 56,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "12e88d36-627c-4933-b21f-1f0712a0d9c6:6",
+          "to": "listing_optimizer",
+          "revision": 2
+        },
+        {
+          "sequence": 65,
+          "agent": "system",
+          "event": "stopped",
+          "code": "revision_limit"
+        }
+      ],
+      "contributionComparison": {
+        "firstCreatorDrafts": [
+          {
+            "angle": "Seller education",
+            "hook": "Wondering which timing questions to ask before you list your Brooklyn townhouse?",
+            "script": "Start with your ideal move‑in date, then ask about market trends, closing timeline, and any flexibility on lease‑back options. Knowing these lets you align your sale with personal plans and market windows.",
+            "takeaway": "Clear timing questions help you sync your sale with your life and the market.",
+            "caption": "Get the right timing questions for a smooth Brooklyn townhouse sale.",
+            "hashtags": [
+              "#BrooklynRealEstate",
+              "#SellerTips",
+              "#HomeSale"
+            ],
+            "suggestedNextStep": "Schedule a quick call to map your timeline and market outlook.",
+            "reasonToFollow": "Practical timing guidance for Brooklyn homeowners planning a sale.",
+            "videoConcept": "Host at a kitchen counter with a checklist overlay.",
+            "suggestedScenes": [
+              "Host greets, holds up a printed checklist.",
+              "Close‑up of checklist items: move‑in date, market trends, closing timeline, lease‑back.",
+              "Host points to each item while speaking, ends with a smile.",
+              "Text overlay summarizing the three key questions."
+            ],
+            "supportingClaimIds": []
+          },
+          {
+            "angle": "Common seller mistakes",
+            "hook": "What’s the one question most Brooklyn townhouse owners forget in the first meeting?",
+            "script": "Many skip asking about the property's tax assessment history. Missing that can surprise you with higher costs. Bring it up early to budget accurately and negotiate smarter.",
+            "takeaway": "Ask about tax assessment history to avoid hidden expenses.",
+            "caption": "Don’t overlook tax assessments when meeting your agent.",
+            "hashtags": [
+              "#BrooklynHomes",
+              "#SellerMistakes",
+              "#RealEstateAdvice"
+            ],
+            "suggestedNextStep": "Ask your agent for the last three years of tax assessments.",
+            "reasonToFollow": "Avoid costly oversights with insider seller tips.",
+            "videoConcept": "Host standing by a whiteboard drawing a tax document.",
+            "suggestedScenes": [
+              "Host opens with the hook, gestures to a blank whiteboard.",
+              "Draw a simple tax form, highlight assessment line.",
+              "Host explains why it matters, points to a calculator graphic.",
+              "Call‑to‑action text appears: ‘Ask your agent today!’"
+            ],
+            "supportingClaimIds": []
+          },
+          {
+            "angle": "Decision-making questions",
+            "hook": "How can you pinpoint the info you need before deciding to sell your townhouse?",
+            "script": "Create a decision matrix: list priorities like price, timing, and renovation costs. Rate each factor’s importance and gather data—recent comps, repair estimates, and financing options. This visual guide clarifies your next move.",
+            "takeaway": "A simple matrix turns vague worries into clear priorities.",
+            "caption": "Use a decision matrix to clarify your Brooklyn sale plan.",
+            "hashtags": [
+              "#DecisionMaking",
+              "#BrooklynSeller",
+              "#HomeSelling"
+            ],
+            "suggestedNextStep": "Download a free matrix template from our bio link.",
+            "reasonToFollow": "Step‑by‑step tools for confident selling decisions.",
+            "videoConcept": "Host at a desk filling out a printed matrix.",
+            "suggestedScenes": [
+              "Host introduces the matrix concept, shows a blank grid.",
+              "Zoom on filling priority columns: price, timing, repairs.",
+              "Host adds sample data from recent comps and repair quotes.",
+              "Final shot of completed matrix with a thumbs‑up."
+            ],
+            "supportingClaimIds": []
+          }
+        ],
+        "optimizerDecisionFeedback": [
+          {
+            "confidence": 0.8,
+            "feedback": [
+              {
+                "draftIndex": 1,
+                "field": "script",
+                "instruction": "Refine the script to better address the required topic and ensure all check criteria pass."
+              },
+              {
+                "draftIndex": 2,
+                "field": "script",
+                "instruction": "Improve topic distinctiveness and viewer value for the second draft."
+              }
+            ]
+          },
+          {
+            "confidence": 0.9,
+            "feedback": [
+              {
+                "draftIndex": 1,
+                "field": "script",
+                "instruction": "Refine draft 2 to clearly address the topic of what might be forgotten in a first meeting, enhancing viewer value and topic distinctiveness."
+              },
+              {
+                "draftIndex": 2,
+                "field": "script",
+                "instruction": "Refine draft 3 to distinctly address the decision-making information needed before selling a Brooklyn townhouse."
+              }
+            ]
+          },
+          {
+            "confidence": 0.95,
+            "feedback": [
+              {
+                "draftIndex": 2,
+                "field": "script",
+                "instruction": "Refine draft 3 to explicitly address how to identify the information needed before deciding to sell a Brooklyn townhouse."
+              }
+            ]
+          }
+        ],
+        "method": "Observed first Creator handoff versus final two-agent output; no causal ablation.",
+        "changedDrafts": 0
+      },
+      "audience": "brooklyn_townhouse_owner",
+      "questions": [
+        "Which timing questions should I prepare before discussing a sale?",
+        "What might I forget to ask in a first meeting?",
+        "How do I identify the information I need before deciding?"
+      ],
+      "status": "needs_more_research",
+      "success": false,
+      "elapsedMs": 63938,
+      "writer": "agent_system",
+      "draftCount": 0,
+      "handoffsSent": 5,
+      "handoffsMatched": 5,
+      "roles": [
+        "content_creator",
+        "listing_optimizer"
+      ],
+      "stopReason": "revision_limit",
+      "modelCalls": 18,
+      "revisionHandoffs": 2,
+      "providerAttempts": [
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "rate_limited"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "truncated_response"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        }
+      ],
+      "humanApprovalRequired": true,
+      "automaticallyPublished": false,
+      "customerContacted": false,
+      "humanEditorialReview": "pending",
+      "assistantEditorialAssessment": {
+        "assessment": "No draft returned",
+        "concern": "Optimizer repeatedly requested corrections; coordinator stopped after two revision handoffs.",
+        "example": "No final draft set returned.",
+        "action": "Review the correction requests and task clarity; do not remove the revision limit just to pass."
+      }
     },
     {
       "id": "brooklyn-details",
-      "status": "not_run",
-      "reason": "provider_not_configured",
-      "success": null
+      "output": [
+        {
+          "id": "content-draft-01",
+          "audience": "brooklyn_townhouse_owner",
+          "audienceLabel": "Brooklyn townhouse owners",
+          "researchTopicId": "fictional-brooklyn-topic-01",
+          "angle": "Seller education",
+          "hook": "Wondering which home details you can confidently share?",
+          "script": "I’m a Brooklyn townhouse seller—here’s the list of details you know firsthand: your renovation timeline, original construction year, and any upgrades you performed yourself. These are facts you can state without doubt, building buyer trust instantly.",
+          "takeaway": "Share only details you’ve personally experienced to keep your listing accurate.",
+          "videoConcept": "Direct-to-camera explanation with on-screen checklist.",
+          "suggestedScenes": [
+            "Intro hook with a friendly smile.",
+            "Show a handwritten list of known details.",
+            "Overlay bullet points of the three key details.",
+            "Close with call to action."
+          ],
+          "caption": "Get reliable listing tips for Brooklyn townhouses—follow for more practical seller guidance.",
+          "reasonToFollow": "Follow for more practical NYC seller questions you can bring to a future conversation.",
+          "hashtags": [
+            "#BrooklynRealEstate",
+            "#SellerTips",
+            "#Townhouse"
+          ],
+          "suggestedNextStep": "Schedule a quick call to review your property’s unique features.",
+          "sourceRefs": [
+            {
+              "id": "fictional-brooklyn-source-01",
+              "title": "Fictional Brooklyn Townhouse Seller Notes",
+              "url": "https://fictional.example/sellerspark/brooklyn-source-01",
+              "date": "2026-10-21"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        },
+        {
+          "id": "content-draft-02",
+          "audience": "brooklyn_townhouse_owner",
+          "audienceLabel": "Brooklyn townhouse owners",
+          "researchTopicId": "fictional-brooklyn-topic-02",
+          "angle": "Common seller mistakes",
+          "hook": "Avoid this common mistake: adding unverified home details.",
+          "script": "Many Brooklyn sellers list square footage from old tax records—often inaccurate. Instead, get a recent appraisal or city measurement to confirm. That simple step prevents buyer pushback and keeps your listing credible.",
+          "takeaway": "Verify any detail you’re unsure about before publishing.",
+          "videoConcept": "Split-screen: mistake vs correct approach.",
+          "suggestedScenes": [
+            "Hook with a frustrated seller.",
+            "Show outdated tax record screenshot.",
+            "Cut to professional appraiser measuring the home.",
+            "Summarize the fix and next step."
+          ],
+          "caption": "Avoid listing errors—follow for more Brooklyn seller advice.",
+          "reasonToFollow": "Follow for more NYC seller prompts that turn broad concerns into useful questions.",
+          "hashtags": [
+            "#NYCRealEstate",
+            "#SellerMistakes",
+            "#BrooklynHomes"
+          ],
+          "suggestedNextStep": "Contact a local appraiser for an up‑to‑date measurement.",
+          "sourceRefs": [
+            {
+              "id": "fictional-brooklyn-source-02",
+              "title": "Fictional Brooklyn Townhouse Planning Notes",
+              "url": "https://fictional.example/sellerspark/brooklyn-source-02",
+              "date": "2026-10-21"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        },
+        {
+          "id": "content-draft-03",
+          "audience": "brooklyn_townhouse_owner",
+          "audienceLabel": "Brooklyn townhouse owners",
+          "researchTopicId": "fictional-brooklyn-topic-03",
+          "angle": "Decision-making questions",
+          "hook": "What should you verify with a pro before describing your townhouse?",
+          "script": "Before you write your listing, have a structural engineer check the foundation, a plumber inspect the plumbing, and a certified inspector review the roof. Their reports give you solid facts to share and protect you from misstatements.",
+          "takeaway": "Professional verification ensures accurate, trustworthy listings.",
+          "videoConcept": "Narrated walkthrough with pop‑up icons for each professional.",
+          "suggestedScenes": [
+            "Hook with a question overlay.",
+            "Show a checklist of professionals.",
+            "Clip of each expert inspecting a part of the house.",
+            "End with a summary and next step."
+          ],
+          "caption": "Get pro‑verified listing details—follow for more NYC seller guidance.",
+          "reasonToFollow": "Follow for more calm NYC homeowner questions before making a selling decision.",
+          "hashtags": [
+            "#HomeInspection",
+            "#BrooklynSeller",
+            "#RealEstateAdvice"
+          ],
+          "suggestedNextStep": "Book a pre‑listing inspection with a trusted contractor.",
+          "sourceRefs": [
+            {
+              "id": "fictional-brooklyn-source-03",
+              "title": "Fictional Brooklyn Townhouse Consultation Notes",
+              "url": "https://fictional.example/sellerspark/brooklyn-source-03",
+              "date": "2026-10-21"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        }
+      ],
+      "trace": [
+        {
+          "sequence": 1,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "42963ed7-1da7-4849-a4c5-4214b1ca180e:1",
+          "to": "content_creator",
+          "revision": 0
+        },
+        {
+          "sequence": 10,
+          "agent": "content_creator",
+          "event": "handoff_sent",
+          "to": "listing_optimizer",
+          "handoffId": "2fb10845-7513-41df-aa1e-e1e3560dbe57",
+          "payloadDigest": "728308daf79f8d2d0cb6b6f6928105ba138df91f8a17f153b4304821f71375db",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 11,
+          "agent": "listing_optimizer",
+          "event": "handoff_received",
+          "from": "content_creator",
+          "handoffId": "2fb10845-7513-41df-aa1e-e1e3560dbe57",
+          "payloadDigest": "728308daf79f8d2d0cb6b6f6928105ba138df91f8a17f153b4304821f71375db",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 12,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "42963ed7-1da7-4849-a4c5-4214b1ca180e:2",
+          "to": "listing_optimizer",
+          "revision": 0
+        },
+        {
+          "sequence": 30,
+          "agent": "listing_optimizer",
+          "event": "ready_for_human_review"
+        }
+      ],
+      "contributionComparison": {
+        "firstCreatorDrafts": [
+          {
+            "angle": "Seller education",
+            "hook": "Wondering which home details you can confidently share?",
+            "script": "I’m a Brooklyn townhouse seller—here’s the list of details you know firsthand: your renovation timeline, original construction year, and any upgrades you performed yourself. These are facts you can state without doubt, building buyer trust instantly.",
+            "takeaway": "Share only details you’ve personally experienced to keep your listing accurate.",
+            "caption": "Get reliable listing tips for Brooklyn townhouses—follow for more practical seller guidance.",
+            "hashtags": [
+              "#BrooklynRealEstate",
+              "#SellerTips",
+              "#Townhouse"
+            ],
+            "suggestedNextStep": "Schedule a quick call to review your property’s unique features.",
+            "videoConcept": "Direct-to-camera explanation with on-screen checklist.",
+            "suggestedScenes": [
+              "Intro hook with a friendly smile.",
+              "Show a handwritten list of known details.",
+              "Overlay bullet points of the three key details.",
+              "Close with call to action."
+            ],
+            "supportingClaimIds": []
+          },
+          {
+            "angle": "Common seller mistakes",
+            "hook": "Avoid this common mistake: adding unverified home details.",
+            "script": "Many Brooklyn sellers list square footage from old tax records—often inaccurate. Instead, get a recent appraisal or city measurement to confirm. That simple step prevents buyer pushback and keeps your listing credible.",
+            "takeaway": "Verify any detail you’re unsure about before publishing.",
+            "caption": "Avoid listing errors—follow for more Brooklyn seller advice.",
+            "hashtags": [
+              "#NYCRealEstate",
+              "#SellerMistakes",
+              "#BrooklynHomes"
+            ],
+            "suggestedNextStep": "Contact a local appraiser for an up‑to‑date measurement.",
+            "videoConcept": "Split-screen: mistake vs correct approach.",
+            "suggestedScenes": [
+              "Hook with a frustrated seller.",
+              "Show outdated tax record screenshot.",
+              "Cut to professional appraiser measuring the home.",
+              "Summarize the fix and next step."
+            ],
+            "supportingClaimIds": []
+          },
+          {
+            "angle": "Decision-making questions",
+            "hook": "What should you verify with a pro before describing your townhouse?",
+            "script": "Before you write your listing, have a structural engineer check the foundation, a plumber inspect the plumbing, and a certified inspector review the roof. Their reports give you solid facts to share and protect you from misstatements.",
+            "takeaway": "Professional verification ensures accurate, trustworthy listings.",
+            "caption": "Get pro‑verified listing details—follow for more NYC seller guidance.",
+            "hashtags": [
+              "#HomeInspection",
+              "#BrooklynSeller",
+              "#RealEstateAdvice"
+            ],
+            "suggestedNextStep": "Book a pre‑listing inspection with a trusted contractor.",
+            "videoConcept": "Narrated walkthrough with pop‑up icons for each professional.",
+            "suggestedScenes": [
+              "Hook with a question overlay.",
+              "Show a checklist of professionals.",
+              "Clip of each expert inspecting a part of the house.",
+              "End with a summary and next step."
+            ],
+            "supportingClaimIds": []
+          }
+        ],
+        "optimizerDecisionFeedback": [
+          {
+            "feedback": [
+              {
+                "draftIndex": 0,
+                "field": "suggestedNextStep",
+                "instruction": "Make the next step more specific to the topic of identifying firsthand details, such as listing the three home details you know firsthand and discussing how to present them."
+              },
+              {
+                "draftIndex": 1,
+                "field": "caption",
+                "instruction": "Explicitly mention 'Brooklyn townhouse owners' in the caption to strengthen homeowner relevance."
+              },
+              {
+                "draftIndex": 2,
+                "field": "suggestedNextStep",
+                "instruction": "Specify the next step to book a pre-listing inspection with a professional experienced in Brooklyn townhouses."
+              },
+              {
+                "draftIndex": 2,
+                "field": "caption",
+                "instruction": "Add 'Brooklyn townhouse owner' context to the caption."
+              }
+            ]
+          },
+          {
+            "feedback": [
+              {
+                "draftIndex": 0,
+                "field": "suggestedNextStep",
+                "instruction": "Make the suggested next step more specific, advisory, and free of any promises of results. For example: 'Discuss your townhouse's specific features with a local real estate professional to ensure your listing is accurate.'"
+              },
+              {
+                "draftIndex": 1,
+                "field": "script",
+                "instruction": "Increase homeowner relevance by explicitly mentioning 'Brooklyn townhouse' or 'townhouse owner' in the script and hook."
+              },
+              {
+                "draftIndex": 2,
+                "field": "suggestedNextStep",
+                "instruction": "Revise the suggested next step to be a clear, respectful, and non-promotional action, such as 'Schedule a pre-listing inspection with a certified local inspector.'"
+              },
+              {
+                "draftIndex": 2,
+                "field": "hook",
+                "instruction": "Specify 'Brooklyn townhouse' in the hook to directly address the target audience."
+              }
+            ]
+          },
+          {
+            "feedback": [
+              {
+                "draftIndex": 0,
+                "field": "suggestedNextStep",
+                "instruction": "Revise the suggested next step to be a specific, respectful seller conversation prompt that does not promise results, e.g., 'Schedule a call to review your property’s unique features.' is good, but ensure it is clearly a conversation starter, not a guarantee."
+              },
+              {
+                "draftIndex": 1,
+                "field": "script",
+                "instruction": "Add explicit Brooklyn townhouse seller context to the script or caption to improve homeowner relevance, e.g., mention 'Brooklyn townhouse sellers' or 'your Brooklyn home'."
+              },
+              {
+                "draftIndex": 2,
+                "field": "suggestedNextStep",
+                "instruction": "Revise the suggested next step to be a specific, respectful seller conversation prompt that does not promise results, and add Brooklyn townhouse context to the script or caption."
+              }
+            ]
+          }
+        ],
+        "method": "Observed first Creator handoff versus final two-agent output; no causal ablation.",
+        "changedDrafts": 0
+      },
+      "audience": "brooklyn_townhouse_owner",
+      "questions": [
+        "Which home details do I know firsthand?",
+        "How do I avoid including an unconfirmed detail?",
+        "What should I verify with a professional before describing my home?"
+      ],
+      "status": "ready_for_review",
+      "success": true,
+      "elapsedMs": 52910,
+      "writer": "agent_system",
+      "draftCount": 3,
+      "handoffsSent": 1,
+      "handoffsMatched": 1,
+      "roles": [
+        "content_creator",
+        "listing_optimizer"
+      ],
+      "stopReason": "ready_for_human_review",
+      "modelCalls": 9,
+      "revisionHandoffs": 0,
+      "providerAttempts": [
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "rate_limited"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "rate_limited"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        }
+      ],
+      "humanApprovalRequired": true,
+      "automaticallyPublished": false,
+      "customerContacted": false,
+      "humanEditorialReview": "pending",
+      "assistantEditorialAssessment": {
+        "assessment": "Needs revision",
+        "concern": "Invented identity, assumed knowledge, and overly prescriptive professional services.",
+        "example": "Assumes the speaker is a townhouse seller and knows construction year; recommends multiple inspections and an appraisal.",
+        "action": "Ask which details are known and which need verification; avoid assuming facts or mandatory paid services."
+      }
     },
     {
       "id": "brooklyn-low-pressure",
-      "status": "not_run",
-      "reason": "provider_not_configured",
-      "success": null
+      "output": [
+        {
+          "id": "content-draft-01",
+          "audience": "brooklyn_townhouse_owner",
+          "audienceLabel": "Brooklyn townhouse owners",
+          "researchTopicId": "fictional-brooklyn-topic-01",
+          "angle": "Seller education",
+          "hook": "Want a low-pressure chat about your Brooklyn townhouse?",
+          "script": "Start with an informal coffee chat focused entirely on your timeline and curiosity. Ask open-ended questions like what’s prompting your interest. Listen actively and note any details to explore later without rushing.",
+          "takeaway": "A casual first conversation builds trust without feeling like a sales pitch.",
+          "videoConcept": "Coffee chat scenario with text overlays of key questions.",
+          "suggestedScenes": [
+            "Host greets camera, holding a coffee mug.",
+            "Cut to text overlay: “Ask open-ended why now?”",
+            "Host nods, notes on a pad, smiles."
+          ],
+          "caption": "Learn how to start a low-pressure seller chat—follow for more NYC home-selling tips.",
+          "reasonToFollow": "Practical guidance on navigating Brooklyn townhouse sales.",
+          "hashtags": [
+            "#BrooklynRealEstate",
+            "#SellerTips",
+            "#LowPressure"
+          ],
+          "suggestedNextStep": "Offer to send a brief, no-obligation market snapshot tailored to their building.",
+          "sourceRefs": [
+            {
+              "id": "fictional-brooklyn-source-01",
+              "title": "Fictional Brooklyn Townhouse Seller Notes",
+              "url": "https://fictional.example/sellerspark/brooklyn-source-01",
+              "date": "2026-10-21"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        },
+        {
+          "id": "content-draft-02",
+          "audience": "brooklyn_townhouse_owner",
+          "audienceLabel": "Brooklyn townhouse owners",
+          "researchTopicId": "fictional-brooklyn-topic-02",
+          "angle": "Common seller mistakes",
+          "hook": "Ever walked into a seller meeting and felt lost?",
+          "script": "The big mistake is arriving without an outline of goals and timeline, which makes meetings hard to follow. Instead, prep a clear one-page list of your top priorities to keep the discussion focused and easy to track.",
+          "takeaway": "A simple agenda prevents chaos and keeps the meeting on track.",
+          "videoConcept": "Host flips through a messy notebook vs. a clean agenda sheet.",
+          "suggestedScenes": [
+            "Host shows a chaotic scribble notebook.",
+            "Switch to a tidy one-page agenda graphic.",
+            "Host points to bullet points: goals, timeline, questions."
+          ],
+          "caption": "Avoid the common prep mistake—follow for practical NYC seller guidance.",
+          "reasonToFollow": "Clear advice to avoid common preparation mistakes.",
+          "hashtags": [
+            "#SellerMistakes",
+            "#BrooklynHomes",
+            "#RealEstateAdvice"
+          ],
+          "suggestedNextStep": "Suggest a quick 5-minute agenda review call before their next meeting.",
+          "sourceRefs": [
+            {
+              "id": "fictional-brooklyn-source-02",
+              "title": "Fictional Brooklyn Townhouse Planning Notes",
+              "url": "https://fictional.example/sellerspark/brooklyn-source-02",
+              "date": "2026-10-21"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        },
+        {
+          "id": "content-draft-03",
+          "audience": "brooklyn_townhouse_owner",
+          "audienceLabel": "Brooklyn townhouse owners",
+          "researchTopicId": "fictional-brooklyn-topic-03",
+          "angle": "Decision-making questions",
+          "hook": "How do you ask a useful question without committing to sell?",
+          "script": "Focus on gathering market context by asking about general neighborhood activity or property features. Framing inquiries around curiosity keeps the discussion informative and leaves all major decisions entirely in your hands.",
+          "takeaway": "Curiosity-driven questions gather intel while keeping pressure low.",
+          "videoConcept": "Host at a desk, typing a question into a phone, then showing a reply.",
+          "suggestedScenes": [
+            "Host looks at camera, raises eyebrows.",
+            "Text overlay: “Ask about market vibe, not price.”",
+            "Host types question on phone, sends."
+          ],
+          "caption": "Ask the right question, stay in control—follow for more NYC seller insights.",
+          "reasonToFollow": "Actionable decision-making tips for Brooklyn homeowners.",
+          "hashtags": [
+            "#DecisionMaking",
+            "#NYCRealEstate",
+            "#SellerStrategy"
+          ],
+          "suggestedNextStep": "Invite them to a free market insight email tailored to their street.",
+          "sourceRefs": [
+            {
+              "id": "fictional-brooklyn-source-03",
+              "title": "Fictional Brooklyn Townhouse Consultation Notes",
+              "url": "https://fictional.example/sellerspark/brooklyn-source-03",
+              "date": "2026-10-21"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        }
+      ],
+      "trace": [
+        {
+          "sequence": 1,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "29f569f2-5b08-44a9-b7d2-56629c8dc3b9:1",
+          "to": "content_creator",
+          "revision": 0
+        },
+        {
+          "sequence": 10,
+          "agent": "content_creator",
+          "event": "handoff_sent",
+          "to": "listing_optimizer",
+          "handoffId": "d9bbe75e-aa7e-45ae-8d12-b99616b5501a",
+          "payloadDigest": "ab1bce43302f54292b5ce05b6332c41c4df9920400324de5d192df7f8e7f7574",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 11,
+          "agent": "listing_optimizer",
+          "event": "handoff_received",
+          "from": "content_creator",
+          "handoffId": "d9bbe75e-aa7e-45ae-8d12-b99616b5501a",
+          "payloadDigest": "ab1bce43302f54292b5ce05b6332c41c4df9920400324de5d192df7f8e7f7574",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 12,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "29f569f2-5b08-44a9-b7d2-56629c8dc3b9:2",
+          "to": "listing_optimizer",
+          "revision": 0
+        },
+        {
+          "sequence": 21,
+          "agent": "listing_optimizer",
+          "event": "handoff_sent",
+          "to": "content_creator",
+          "handoffId": "039d82c4-932a-4fd1-8f3b-f6d66f1b243d",
+          "payloadDigest": "aa5c5c3db2561695eacb39beca986e3a2079a5c7a94be0e983b016ff71e2531b",
+          "fields": [
+            "feedback",
+            "confidence",
+            "audience",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 22,
+          "agent": "content_creator",
+          "event": "handoff_received",
+          "from": "listing_optimizer",
+          "handoffId": "039d82c4-932a-4fd1-8f3b-f6d66f1b243d",
+          "payloadDigest": "aa5c5c3db2561695eacb39beca986e3a2079a5c7a94be0e983b016ff71e2531b",
+          "fields": [
+            "feedback",
+            "confidence",
+            "audience",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 23,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "29f569f2-5b08-44a9-b7d2-56629c8dc3b9:3",
+          "to": "content_creator",
+          "revision": 1
+        },
+        {
+          "sequence": 32,
+          "agent": "content_creator",
+          "event": "handoff_sent",
+          "to": "listing_optimizer",
+          "handoffId": "30f8dbe8-537f-4e92-b289-6a1b51e2c03c",
+          "payloadDigest": "d6c672ac0f15233e411972fd8532156487473129467af48dda977fbc23f7f90a",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 33,
+          "agent": "listing_optimizer",
+          "event": "handoff_received",
+          "from": "content_creator",
+          "handoffId": "30f8dbe8-537f-4e92-b289-6a1b51e2c03c",
+          "payloadDigest": "d6c672ac0f15233e411972fd8532156487473129467af48dda977fbc23f7f90a",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 34,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "29f569f2-5b08-44a9-b7d2-56629c8dc3b9:4",
+          "to": "listing_optimizer",
+          "revision": 1
+        },
+        {
+          "sequence": 43,
+          "agent": "listing_optimizer",
+          "event": "ready_for_human_review"
+        }
+      ],
+      "contributionComparison": {
+        "firstCreatorDrafts": [
+          {
+            "angle": "Seller education",
+            "hook": "Want a low‑pressure chat about selling your Brooklyn townhouse?",
+            "script": "Start with a casual coffee meet‑up, no numbers, just talk about why you’re curious. Ask open‑ended questions like, “What’s prompting you to think about selling?” Keep it friendly, listen, and note any concerns for a later deeper dive.",
+            "takeaway": "A relaxed first conversation builds trust without feeling like a sales pitch.",
+            "caption": "Learn how to start a low‑pressure seller chat—follow for more NYC home‑selling tips.",
+            "hashtags": [
+              "#BrooklynRealEstate",
+              "#SellerTips",
+              "#LowPressure"
+            ],
+            "suggestedNextStep": "Offer to send a brief, no‑obligation market snapshot tailored to their building.",
+            "videoConcept": "Coffee chat scenario with text overlays of key questions.",
+            "suggestedScenes": [
+              "Host greets camera, holding a coffee mug.",
+              "Cut to text overlay: “Ask open‑ended why now?”",
+              "Host nods, notes on a pad, smiles.",
+              "Close‑up of a simple market snapshot flyer."
+            ],
+            "supportingClaimIds": []
+          },
+          {
+            "angle": "Common seller mistakes",
+            "hook": "Ever walked into a seller meeting and felt lost?",
+            "script": "The biggest mistake: coming without a clear agenda. You’ll ramble, miss key points, and the buyer feels confused. Instead, prep a one‑page outline: goals, timeline, and top questions. Bring it, stay on track, and the meeting flows smoothly.",
+            "takeaway": "A simple agenda prevents chaos and shows you’re organized.",
+            "caption": "Avoid the common prep mistake—follow for practical NYC seller guidance.",
+            "hashtags": [
+              "#SellerMistakes",
+              "#BrooklynHomes",
+              "#RealEstateAdvice"
+            ],
+            "suggestedNextStep": "Suggest a quick 5‑minute agenda review call before their next meeting.",
+            "videoConcept": "Host flips through a messy notebook vs. a clean agenda sheet.",
+            "suggestedScenes": [
+              "Host shows a chaotic scribble notebook.",
+              "Switch to a tidy one‑page agenda graphic.",
+              "Host points to bullet points: goals, timeline, questions.",
+              "Host smiles, thumbs up."
+            ],
+            "supportingClaimIds": []
+          },
+          {
+            "angle": "Decision-making questions",
+            "hook": "How do you ask a useful question without sounding like you’re ready to sell?",
+            "script": "Frame it as curiosity: “What’s the current market vibe for townhouses on my block?” or “How would a buyer view my building’s unique features?” These keep the focus on information, not commitment, and give you data to decide later.",
+            "takeaway": "Curiosity‑driven questions gather intel while keeping pressure low.",
+            "caption": "Ask the right question, stay in control—follow for more NYC seller insights.",
+            "hashtags": [
+              "#DecisionMaking",
+              "#NYCRealEstate",
+              "#SellerStrategy"
+            ],
+            "suggestedNextStep": "Invite them to a free market insight email tailored to their street.",
+            "videoConcept": "Host at a desk, typing a question into a phone, then showing a reply.",
+            "suggestedScenes": [
+              "Host looks at camera, raises eyebrows.",
+              "Text overlay: “Ask about market vibe, not price.”",
+              "Host types question on phone, sends.",
+              "Pop‑up graphic of a helpful market report."
+            ],
+            "supportingClaimIds": []
+          }
+        ],
+        "optimizerDecisionFeedback": [
+          {
+            "confidence": 0.8,
+            "feedback": [
+              {
+                "draftIndex": 0,
+                "field": "script",
+                "instruction": "Revise the script to better address the specific assigned topic and source evidence regarding low-pressure seller conversations for Brooklyn townhouse owners."
+              },
+              {
+                "draftIndex": 1,
+                "field": "script",
+                "instruction": "Enhance topic distinctiveness and homeowner relevance regarding common preparation mistakes that make meetings hard to follow."
+              },
+              {
+                "draftIndex": 2,
+                "field": "script",
+                "instruction": "Strengthen the connection to the assigned decision-making questions topic and provide clearer, grounded takeaways."
+              }
+            ]
+          }
+        ],
+        "method": "Observed first Creator handoff versus final two-agent output; no causal ablation.",
+        "changedDrafts": 3
+      },
+      "audience": "brooklyn_townhouse_owner",
+      "questions": [
+        "How can I start a low-pressure seller conversation?",
+        "What preparation mistake makes a meeting harder to follow?",
+        "How do I choose a useful question without committing to sell?"
+      ],
+      "status": "ready_for_review",
+      "success": true,
+      "elapsedMs": 32823,
+      "writer": "agent_system",
+      "draftCount": 3,
+      "handoffsSent": 3,
+      "handoffsMatched": 3,
+      "roles": [
+        "content_creator",
+        "listing_optimizer"
+      ],
+      "stopReason": "ready_for_human_review",
+      "modelCalls": 12,
+      "revisionHandoffs": 1,
+      "providerAttempts": [
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "rate_limited"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "truncated_response"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        }
+      ],
+      "humanApprovalRequired": true,
+      "automaticallyPublished": false,
+      "customerContacted": false,
+      "humanEditorialReview": "pending",
+      "assistantEditorialAssessment": {
+        "assessment": "Needs revision",
+        "concern": "Speaker/viewer role drift and invented free offerings.",
+        "example": "Switches to advising an agent to listen to a homeowner; offers a free street-specific market email.",
+        "action": "Address the seller consistently; remove unconfirmed offerings."
+      }
     },
     {
       "id": "brooklyn-checklist",
-      "status": "not_run",
-      "reason": "provider_not_configured",
-      "success": null
+      "output": [
+        {
+          "id": "content-draft-01",
+          "audience": "brooklyn_townhouse_owner",
+          "audienceLabel": "Brooklyn townhouse owners",
+          "researchTopicId": "fictional-brooklyn-topic-01",
+          "angle": "Seller education",
+          "hook": "What belongs in my own list of seller questions?",
+          "script": "When building your list of seller questions for your Brooklyn townhouse, include timeline expectations, repair needs, neighborhood trends, and financial goals. Write them down in a checklist so you stay organized from day one.",
+          "takeaway": "A structured seller question list keeps you organized and fully prepared.",
+          "videoConcept": "Checklist walkthrough",
+          "suggestedScenes": [
+            "Host on a Brooklyn street holding a notebook.",
+            "Close-up of a printed checklist with key question categories.",
+            "Host ticking off items while speaking."
+          ],
+          "caption": "Build a reliable seller question list for your Brooklyn home. Follow for more practical guidance.",
+          "reasonToFollow": "Practical guidance for Brooklyn townhouse sellers.",
+          "hashtags": [
+            "#BrooklynRealEstate",
+            "#SellerTips",
+            "#HomeSelling"
+          ],
+          "suggestedNextStep": "Offer to review the homeowner's draft checklist and suggest any missing items.",
+          "sourceRefs": [
+            {
+              "id": "fictional-brooklyn-source-01",
+              "title": "Fictional Brooklyn Townhouse Seller Notes",
+              "url": "https://fictional.example/sellerspark/brooklyn-source-01",
+              "date": "2026-10-21"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        },
+        {
+          "id": "content-draft-02",
+          "audience": "brooklyn_townhouse_owner",
+          "audienceLabel": "Brooklyn townhouse owners",
+          "researchTopicId": "fictional-brooklyn-topic-02",
+          "angle": "Common seller mistakes",
+          "hook": "Are you mixing facts with assumptions when prepping your Brooklyn townhouse for sale?",
+          "script": "A common slip is assuming the market will stay hot without checking recent comps. Instead, pull the latest sales data and compare your home’s condition. If you skip this, you might overprice and stall the sale. Use real data, not gut feelings.",
+          "takeaway": "Rely on verified market data, not assumptions, to set a realistic price.",
+          "videoConcept": "Fact vs. assumption split screen",
+          "suggestedScenes": [
+            "Host standing beside a For Sale sign.",
+            "Screen split: one side with market data, other with guesswork.",
+            "Host highlighting the data side as the correct approach."
+          ],
+          "caption": "Avoid the biggest pricing mistake in Brooklyn. Follow for more seller guidance.",
+          "reasonToFollow": "Practical guidance for Brooklyn townhouse sellers.",
+          "hashtags": [
+            "#NYCRealEstate",
+            "#SellerMistakes",
+            "#PricingTips"
+          ],
+          "suggestedNextStep": "Suggest a quick market analysis session to verify current comps.",
+          "sourceRefs": [
+            {
+              "id": "fictional-brooklyn-source-02",
+              "title": "Fictional Brooklyn Townhouse Planning Notes",
+              "url": "https://fictional.example/sellerspark/brooklyn-source-02",
+              "date": "2026-10-21"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        },
+        {
+          "id": "content-draft-03",
+          "audience": "brooklyn_townhouse_owner",
+          "audienceLabel": "Brooklyn townhouse owners",
+          "researchTopicId": "fictional-brooklyn-topic-03",
+          "angle": "Decision-making questions",
+          "hook": "How can I organize the questions I still need answered?",
+          "script": "To weigh how to organize the questions you still need answered about selling your Brooklyn townhouse, ask yourself whether you need expert guidance on valuation, legal requirements, or timing first, then prioritize your immediate next conversation.",
+          "takeaway": "Weighing your remaining questions helps you prioritize your next expert consultation.",
+          "videoConcept": "Decision-making framework breakdown",
+          "suggestedScenes": [
+            "Host standing in front of a townhouse discussing decision-making.",
+            "Text overlay displaying valuation versus legal questions.",
+            "Host explaining how to prioritize the first expert to call."
+          ],
+          "caption": "Organize your seller questions with a clear decision framework. Follow for more NYC seller help.",
+          "reasonToFollow": "Practical guidance for Brooklyn townhouse sellers.",
+          "hashtags": [
+            "#HomeSelling",
+            "#BrooklynHomes",
+            "#SellerAdvice"
+          ],
+          "suggestedNextStep": "Invite the homeowner to share their current question list for a quick organization review.",
+          "sourceRefs": [
+            {
+              "id": "fictional-brooklyn-source-03",
+              "title": "Fictional Brooklyn Townhouse Consultation Notes",
+              "url": "https://fictional.example/sellerspark/brooklyn-source-03",
+              "date": "2026-10-21"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        }
+      ],
+      "trace": [
+        {
+          "sequence": 1,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "152dc17a-12a2-4afd-8b29-98d6d8a1e21f:1",
+          "to": "content_creator",
+          "revision": 0
+        },
+        {
+          "sequence": 10,
+          "agent": "content_creator",
+          "event": "handoff_sent",
+          "to": "listing_optimizer",
+          "handoffId": "46dfe17e-6d81-4e3a-a8eb-ce2c36c9e2e6",
+          "payloadDigest": "9c54d970c56541284c1c9f642ed12c10e771b40cb538c99b011d28885fbf2782",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 11,
+          "agent": "listing_optimizer",
+          "event": "handoff_received",
+          "from": "content_creator",
+          "handoffId": "46dfe17e-6d81-4e3a-a8eb-ce2c36c9e2e6",
+          "payloadDigest": "9c54d970c56541284c1c9f642ed12c10e771b40cb538c99b011d28885fbf2782",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 12,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "152dc17a-12a2-4afd-8b29-98d6d8a1e21f:2",
+          "to": "listing_optimizer",
+          "revision": 0
+        },
+        {
+          "sequence": 21,
+          "agent": "listing_optimizer",
+          "event": "handoff_sent",
+          "to": "content_creator",
+          "handoffId": "3fb1d2b3-4907-44ca-9f4b-95d931a53238",
+          "payloadDigest": "aa8454a08d3da982fde22bc2e754a74e6916ba42253187adea7833b665f3a8d6",
+          "fields": [
+            "feedback",
+            "confidence",
+            "audience",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 22,
+          "agent": "content_creator",
+          "event": "handoff_received",
+          "from": "listing_optimizer",
+          "handoffId": "3fb1d2b3-4907-44ca-9f4b-95d931a53238",
+          "payloadDigest": "aa8454a08d3da982fde22bc2e754a74e6916ba42253187adea7833b665f3a8d6",
+          "fields": [
+            "feedback",
+            "confidence",
+            "audience",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 23,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "152dc17a-12a2-4afd-8b29-98d6d8a1e21f:3",
+          "to": "content_creator",
+          "revision": 1
+        },
+        {
+          "sequence": 32,
+          "agent": "content_creator",
+          "event": "handoff_sent",
+          "to": "listing_optimizer",
+          "handoffId": "cfc563c8-86b8-4779-864b-8c6a4d668808",
+          "payloadDigest": "65f089c50356d13cbb9a33dc5481d7a7a55cfe1b4a099058f40448807eefd79e",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 33,
+          "agent": "listing_optimizer",
+          "event": "handoff_received",
+          "from": "content_creator",
+          "handoffId": "cfc563c8-86b8-4779-864b-8c6a4d668808",
+          "payloadDigest": "65f089c50356d13cbb9a33dc5481d7a7a55cfe1b4a099058f40448807eefd79e",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 34,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "152dc17a-12a2-4afd-8b29-98d6d8a1e21f:4",
+          "to": "listing_optimizer",
+          "revision": 1
+        },
+        {
+          "sequence": 43,
+          "agent": "listing_optimizer",
+          "event": "handoff_sent",
+          "to": "content_creator",
+          "handoffId": "4c1b4a41-da4c-4003-a753-c4b05089b283",
+          "payloadDigest": "54d91d2d440c48eb3ba7fdc06fb64d7b5edbed93263970af69644a4bf54c00ea",
+          "fields": [
+            "feedback",
+            "confidence",
+            "audience",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 44,
+          "agent": "content_creator",
+          "event": "handoff_received",
+          "from": "listing_optimizer",
+          "handoffId": "4c1b4a41-da4c-4003-a753-c4b05089b283",
+          "payloadDigest": "54d91d2d440c48eb3ba7fdc06fb64d7b5edbed93263970af69644a4bf54c00ea",
+          "fields": [
+            "feedback",
+            "confidence",
+            "audience",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 45,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "152dc17a-12a2-4afd-8b29-98d6d8a1e21f:5",
+          "to": "content_creator",
+          "revision": 2
+        },
+        {
+          "sequence": 54,
+          "agent": "content_creator",
+          "event": "handoff_sent",
+          "to": "listing_optimizer",
+          "handoffId": "5cb78d0c-2ec9-44ba-989a-f01af73c7c5b",
+          "payloadDigest": "a485756622d1cdfeeb342b2fa4833f396de1d18660f7ca41ff41377af8ac2ae2",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 55,
+          "agent": "listing_optimizer",
+          "event": "handoff_received",
+          "from": "content_creator",
+          "handoffId": "5cb78d0c-2ec9-44ba-989a-f01af73c7c5b",
+          "payloadDigest": "a485756622d1cdfeeb342b2fa4833f396de1d18660f7ca41ff41377af8ac2ae2",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 56,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "152dc17a-12a2-4afd-8b29-98d6d8a1e21f:6",
+          "to": "listing_optimizer",
+          "revision": 2
+        },
+        {
+          "sequence": 65,
+          "agent": "listing_optimizer",
+          "event": "ready_for_human_review"
+        }
+      ],
+      "contributionComparison": {
+        "firstCreatorDrafts": [
+          {
+            "angle": "Seller education",
+            "hook": "Wondering what questions you should ask when selling your Brooklyn townhouse?",
+            "script": "Start with the basics: price expectations, timeline, and needed repairs. Then add neighborhood trends, tax implications, and moving logistics. Write them down in a simple checklist so you stay organized and confident throughout the sale.",
+            "takeaway": "A clear, personalized question list keeps you in control and avoids missed details.",
+            "caption": "Get a solid question checklist for selling your Brooklyn home. Follow for more practical seller tips.",
+            "hashtags": [
+              "#BrooklynRealEstate",
+              "#SellerTips",
+              "#HomeSelling"
+            ],
+            "suggestedNextStep": "Offer to review the homeowner's draft checklist and suggest any missing items.",
+            "videoConcept": "Checklist walkthrough",
+            "suggestedScenes": [
+              "Host on a Brooklyn street holding a notebook.",
+              "Close‑up of a printed checklist with key question categories.",
+              "Host ticking off items while speaking."
+            ],
+            "supportingClaimIds": []
+          },
+          {
+            "angle": "Common seller mistakes",
+            "hook": "Are you mixing facts with assumptions when prepping your Brooklyn townhouse for sale?",
+            "script": "A common slip is assuming the market will stay hot without checking recent comps. Instead, pull the latest sales data and compare your home’s condition. If you skip this, you might overprice and stall the sale. Use real data, not gut feelings.",
+            "takeaway": "Rely on verified market data, not assumptions, to set a realistic price.",
+            "caption": "Avoid the biggest pricing mistake in Brooklyn. Follow for more seller guidance.",
+            "hashtags": [
+              "#NYCRealEstate",
+              "#SellerMistakes",
+              "#PricingTips"
+            ],
+            "suggestedNextStep": "Suggest a quick market analysis session to verify current comps.",
+            "videoConcept": "Fact vs. assumption split screen",
+            "suggestedScenes": [
+              "Host standing beside a “For Sale” sign.",
+              "Screen split: one side with market data, other with guesswork.",
+              "Host highlighting the data side as the correct approach."
+            ],
+            "supportingClaimIds": []
+          },
+          {
+            "angle": "Decision-making questions",
+            "hook": "Struggling to organize the remaining questions about selling your Brooklyn townhouse?",
+            "script": "Group them into three buckets: financial (price, taxes), logistical (timeline, moving), and legal (disclosures, contracts). Use a simple mind‑map on a whiteboard or app, then prioritize the top three in each bucket. This visual order helps you tackle each area step‑by‑step.",
+            "takeaway": "A three‑bucket system turns a messy list into a clear action plan.",
+            "caption": "Organize your seller questions with a quick three‑bucket method. Follow for more NYC seller help.",
+            "hashtags": [
+              "#HomeSelling",
+              "#BrooklynHomes",
+              "#SellerAdvice"
+            ],
+            "suggestedNextStep": "Invite the homeowner to share their current question list for a quick organization review.",
+            "videoConcept": "Whiteboard mind‑map demo",
+            "suggestedScenes": [
+              "Host drawing three circles on a whiteboard.",
+              "Writing sample questions into each circle.",
+              "Host pointing to the prioritized top items."
+            ],
+            "supportingClaimIds": []
+          }
+        ],
+        "optimizerDecisionFeedback": [
+          {
+            "confidence": 0.9,
+            "feedback": [
+              {
+                "draftIndex": 0,
+                "field": "script",
+                "instruction": "Revise draft 1 to explicitly incorporate the supplied topic 'What belongs in my own list of seller questions?' and ensure all criteria pass."
+              },
+              {
+                "draftIndex": 2,
+                "field": "script",
+                "instruction": "Revise draft 3 to explicitly incorporate the supplied topic 'How can I organize the questions I still need answered?' with a clear practical takeaway."
+              }
+            ]
+          },
+          {
+            "confidence": 0.85,
+            "feedback": [
+              {
+                "draftIndex": 2,
+                "field": "script",
+                "instruction": "Revise draft 3 to explicitly incorporate the supplied topic 'How can I organize the questions I still need answered?' with a clear practical takeaway."
+              }
+            ]
+          }
+        ],
+        "method": "Observed first Creator handoff versus final two-agent output; no causal ablation.",
+        "changedDrafts": 2
+      },
+      "audience": "brooklyn_townhouse_owner",
+      "questions": [
+        "What belongs in my own list of seller questions?",
+        "How do I avoid confusing facts with assumptions?",
+        "How can I organize the questions I still need answered?"
+      ],
+      "status": "ready_for_review",
+      "success": true,
+      "elapsedMs": 54814,
+      "writer": "agent_system",
+      "draftCount": 3,
+      "handoffsSent": 5,
+      "handoffsMatched": 5,
+      "roles": [
+        "content_creator",
+        "listing_optimizer"
+      ],
+      "stopReason": "ready_for_human_review",
+      "modelCalls": 18,
+      "revisionHandoffs": 2,
+      "providerAttempts": [
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "rate_limited"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "truncated_response"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        }
+      ],
+      "humanApprovalRequired": true,
+      "automaticallyPublished": false,
+      "customerContacted": false,
+      "humanEditorialReview": "pending",
+      "assistantEditorialAssessment": {
+        "assessment": "Needs revision",
+        "concern": "Unsupported market implications and generic money claims.",
+        "example": "Mentions a market staying hot, overpricing and stalled sales without evidence.",
+        "action": "Keep the checklist about facts versus unanswered questions; source or remove the market claims."
+      }
     },
     {
       "id": "brooklyn-followup",
-      "status": "not_run",
-      "reason": "provider_not_configured",
-      "success": null
+      "output": [
+        {
+          "id": "content-draft-01",
+          "audience": "brooklyn_townhouse_owner",
+          "audienceLabel": "Brooklyn townhouse owners",
+          "researchTopicId": "fictional-brooklyn-topic-01",
+          "angle": "Seller education",
+          "hook": "Wondering how to keep notes from your first buyer chat?",
+          "script": "After the intro, jot down key details—buyer’s timeline, budget, and any concerns—in a digital notebook or simple spreadsheet. Review before your next call to stay on track.",
+          "takeaway": "Organized notes keep conversations focused and build trust.",
+          "videoConcept": "Quick tip walkthrough",
+          "suggestedScenes": [
+            "Close‑up of phone screen showing note app",
+            "Bullet list of what to capture",
+            "Speaker summarizing benefits"
+          ],
+          "caption": "Keep your seller notes tidy for smoother deals.",
+          "reasonToFollow": "Follow for more practical NYC seller questions you can bring to a future conversation.",
+          "hashtags": [
+            "#NYCRealEstate",
+            "#SellerTips",
+            "#BrooklynHomes"
+          ],
+          "suggestedNextStep": "Offer to share a quick note‑taking template in a follow‑up email.",
+          "sourceRefs": [
+            {
+              "id": "fictional-brooklyn-source-01",
+              "title": "Fictional Brooklyn Townhouse Seller Notes",
+              "url": "https://fictional.example/sellerspark/brooklyn-source-01",
+              "date": "2026-10-21"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        },
+        {
+          "id": "content-draft-02",
+          "audience": "brooklyn_townhouse_owner",
+          "audienceLabel": "Brooklyn townhouse owners",
+          "researchTopicId": "fictional-brooklyn-topic-02",
+          "angle": "Common seller mistakes",
+          "hook": "Don’t forget this follow‑up question that many Brooklyn sellers miss!",
+          "script": "A common slip is skipping to ask, ‘What’s your biggest concern about the selling timeline?’ Instead, ask ‘What would make this process feel smoother for you?’ It uncovers hidden hurdles and shows you care.",
+          "takeaway": "Ask the right follow‑up to avoid missing critical concerns.",
+          "videoConcept": "Mistake & fix",
+          "suggestedScenes": [
+            "Speaker pointing to question on whiteboard",
+            "Example conversation clip",
+            "Highlight the alternative question"
+          ],
+          "caption": "Ask the right follow‑up to keep sellers happy.",
+          "reasonToFollow": "Follow for more NYC seller prompts that turn broad concerns into useful questions.",
+          "hashtags": [
+            "#NYCRealEstate",
+            "#SellerMistakes",
+            "#BrooklynHomes"
+          ],
+          "suggestedNextStep": "Schedule a brief call to discuss their concerns further.",
+          "sourceRefs": [
+            {
+              "id": "fictional-brooklyn-source-02",
+              "title": "Fictional Brooklyn Townhouse Planning Notes",
+              "url": "https://fictional.example/sellerspark/brooklyn-source-02",
+              "date": "2026-10-21"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        },
+        {
+          "id": "content-draft-03",
+          "audience": "brooklyn_townhouse_owner",
+          "audienceLabel": "Brooklyn townhouse owners",
+          "researchTopicId": "fictional-brooklyn-topic-03",
+          "angle": "Decision-making questions",
+          "hook": "Not sure what to ask after a client explains their needs?",
+          "script": "Listen for clues—if they mention budget limits, ask, ‘Which features are non‑negotiable?’ If they talk about timing, follow with, ‘What’s your ideal move‑in date?’ Tailor each next question to their cues.",
+          "takeaway": "Use their words to guide the next question.",
+          "videoConcept": "Decision‑making flow",
+          "suggestedScenes": [
+            "Speaker listening to mock client",
+            "Highlight cue words on screen",
+            "Show question examples"
+          ],
+          "caption": "Turn client cues into smart follow‑ups.",
+          "reasonToFollow": "Follow for more calm NYC homeowner questions before making a selling decision.",
+          "hashtags": [
+            "#NYCRealEstate",
+            "#DecisionMaking",
+            "#BrooklynHomes"
+          ],
+          "suggestedNextStep": "Create a cue‑card checklist for future calls.",
+          "sourceRefs": [
+            {
+              "id": "fictional-brooklyn-source-03",
+              "title": "Fictional Brooklyn Townhouse Consultation Notes",
+              "url": "https://fictional.example/sellerspark/brooklyn-source-03",
+              "date": "2026-10-21"
+            }
+          ],
+          "uncertaintyWarnings": [],
+          "claimsUsed": [],
+          "warnings": [],
+          "unsupportedClaims": [],
+          "humanApprovalRequired": true,
+          "automaticallyPublished": false,
+          "customerContacted": false
+        }
+      ],
+      "trace": [
+        {
+          "sequence": 1,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "be8ecdde-66be-48bc-927a-4b21d3add916:1",
+          "to": "content_creator",
+          "revision": 0
+        },
+        {
+          "sequence": 10,
+          "agent": "content_creator",
+          "event": "handoff_sent",
+          "to": "listing_optimizer",
+          "handoffId": "1fdaba58-2770-4cde-b421-00b93456e779",
+          "payloadDigest": "c5c67d3c8d0cc74361e3b9740385263637f558e2b14d168e0b79397f9df1e4dd",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 11,
+          "agent": "listing_optimizer",
+          "event": "handoff_received",
+          "from": "content_creator",
+          "handoffId": "1fdaba58-2770-4cde-b421-00b93456e779",
+          "payloadDigest": "c5c67d3c8d0cc74361e3b9740385263637f558e2b14d168e0b79397f9df1e4dd",
+          "fields": [
+            "task",
+            "audience",
+            "candidate",
+            "sourceRefs",
+            "warnings",
+            "uncertaintyWarnings",
+            "confidence",
+            "uncertainties",
+            "revision"
+          ]
+        },
+        {
+          "sequence": 12,
+          "agent": "orchestrator",
+          "event": "task_assigned",
+          "taskId": "be8ecdde-66be-48bc-927a-4b21d3add916:2",
+          "to": "listing_optimizer",
+          "revision": 0
+        },
+        {
+          "sequence": 24,
+          "agent": "listing_optimizer",
+          "event": "ready_for_human_review"
+        }
+      ],
+      "contributionComparison": {
+        "firstCreatorDrafts": [
+          {
+            "angle": "Seller education",
+            "hook": "Wondering how to keep notes from your first buyer chat?",
+            "script": "After the intro, jot down key details—buyer’s timeline, budget, and any concerns—in a digital notebook or simple spreadsheet. Review before your next call to stay on track.",
+            "takeaway": "Organized notes keep conversations focused and build trust.",
+            "caption": "Keep your seller notes tidy for smoother deals.",
+            "hashtags": [
+              "#NYCRealEstate",
+              "#SellerTips",
+              "#BrooklynHomes"
+            ],
+            "suggestedNextStep": "Offer to share a quick note‑taking template in a follow‑up email.",
+            "videoConcept": "Quick tip walkthrough",
+            "suggestedScenes": [
+              "Close‑up of phone screen showing note app",
+              "Bullet list of what to capture",
+              "Speaker summarizing benefits"
+            ],
+            "supportingClaimIds": []
+          },
+          {
+            "angle": "Common seller mistakes",
+            "hook": "Don’t forget this follow‑up question that many Brooklyn sellers miss!",
+            "script": "A common slip is skipping to ask, ‘What’s your biggest concern about the selling timeline?’ Instead, ask ‘What would make this process feel smoother for you?’ It uncovers hidden hurdles and shows you care.",
+            "takeaway": "Ask the right follow‑up to avoid missing critical concerns.",
+            "caption": "Ask the right follow‑up to keep sellers happy.",
+            "hashtags": [
+              "#NYCRealEstate",
+              "#SellerMistakes",
+              "#BrooklynHomes"
+            ],
+            "suggestedNextStep": "Schedule a brief call to discuss their concerns further.",
+            "videoConcept": "Mistake & fix",
+            "suggestedScenes": [
+              "Speaker pointing to question on whiteboard",
+              "Example conversation clip",
+              "Highlight the alternative question"
+            ],
+            "supportingClaimIds": []
+          },
+          {
+            "angle": "Decision-making questions",
+            "hook": "Not sure what to ask after a client explains their needs?",
+            "script": "Listen for clues—if they mention budget limits, ask, ‘Which features are non‑negotiable?’ If they talk about timing, follow with, ‘What’s your ideal move‑in date?’ Tailor each next question to their cues.",
+            "takeaway": "Use their words to guide the next question.",
+            "caption": "Turn client cues into smart follow‑ups.",
+            "hashtags": [
+              "#NYCRealEstate",
+              "#DecisionMaking",
+              "#BrooklynHomes"
+            ],
+            "suggestedNextStep": "Create a cue‑card checklist for future calls.",
+            "videoConcept": "Decision‑making flow",
+            "suggestedScenes": [
+              "Speaker listening to mock client",
+              "Highlight cue words on screen",
+              "Show question examples"
+            ],
+            "supportingClaimIds": []
+          }
+        ],
+        "optimizerDecisionFeedback": [
+          {
+            "confidence": 0.8,
+            "feedback": [
+              {
+                "draftIndex": 0,
+                "field": "homeowner_relevance",
+                "instruction": "Ensure the draft explicitly references the Brooklyn townhouse owner audience context and answers the specific research topic clearly."
+              },
+              {
+                "draftIndex": 1,
+                "field": "hook_strength",
+                "instruction": "Strengthen the hook to be more engaging and specific for Brooklyn sellers."
+              },
+              {
+                "draftIndex": 2,
+                "field": "topic_distinctiveness",
+                "instruction": "Refine the advice to ensure it is distinct and directly grounded in the third research topic on decision-making questions."
+              }
+            ]
+          }
+        ],
+        "method": "Observed first Creator handoff versus final two-agent output; no causal ablation.",
+        "changedDrafts": 0
+      },
+      "audience": "brooklyn_townhouse_owner",
+      "questions": [
+        "How should I keep notes from an introductory conversation?",
+        "Which follow-up question should I avoid forgetting?",
+        "How do I decide what to ask next after hearing an explanation?"
+      ],
+      "status": "ready_for_review",
+      "success": true,
+      "elapsedMs": 39888,
+      "writer": "agent_system",
+      "draftCount": 3,
+      "handoffsSent": 1,
+      "handoffsMatched": 1,
+      "roles": [
+        "content_creator",
+        "listing_optimizer"
+      ],
+      "stopReason": "ready_for_human_review",
+      "modelCalls": 7,
+      "revisionHandoffs": 0,
+      "providerAttempts": [
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "responded"
+        },
+        {
+          "provider": "groq",
+          "status": "rate_limited"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "responded"
+        },
+        {
+          "provider": "openrouter",
+          "status": "truncated_response"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        },
+        {
+          "provider": "gemini",
+          "status": "responded"
+        }
+      ],
+      "humanApprovalRequired": true,
+      "automaticallyPublished": false,
+      "customerContacted": false,
+      "humanEditorialReview": "pending",
+      "assistantEditorialAssessment": {
+        "assessment": "Needs revision",
+        "concern": "Wrong audience/perspective.",
+        "example": "The first hook is about a buyer chat; later scripts discuss clients' budgets and move-in dates.",
+        "action": "Rewrite for townhouse owners taking notes after a seller consultation."
+      }
     }
-  ]
+  ],
+  "assistantEditorialReview": {
+    "reviewer": "AI assistant; not an independent human or peer",
+    "method": "Read every returned hook, script and CTA against its fictional questions; flagged identity, audience, evidence and invented-offer issues",
+    "readyForPublicUse": 0,
+    "needsRevision": 8,
+    "noOutput": 2,
+    "limitation": "This qualitative review does not replace Crystal's judgment or independent peer testing."
+  }
 }
